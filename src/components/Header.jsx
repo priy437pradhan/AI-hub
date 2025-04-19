@@ -3,35 +3,63 @@ import { useState } from 'react'
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [activeDropdown, setActiveDropdown] = useState(null)
+  
+  const menuItems = [
+    {
+      title: "Photo Editing Tool",
+      submenu: ["AI Assistant", "Data Analysis", "Voice Recognition", "Image Generation"]
+    },
+   
+    
+    {
+      title: "AI Tool",
+      submenu: ["Documentation", "API Reference", "Tutorials", "Community Forum"]
+    }
+  ]
+
+  const toggleDropdown = (index) => {
+    setActiveDropdown(activeDropdown === index ? null : index)
+  }
 
   return (
     <header className="sticky top-0 z-50 bg-white shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
-          {/* Logo */}
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <span className="text-2xl font-bold text-primary">AI-hub</span>
             </div>
             
-            {/* Desktop Navigation */}
             <nav className="hidden md:ml-10 md:flex md:space-x-8">
-              <a href="#" className="text-gray-900 hover:text-primary px-3 py-2 text-sm font-medium">Products</a>
-              <a href="#" className="text-gray-900 hover:text-primary px-3 py-2 text-sm font-medium">Features</a>
-              <a href="#" className="text-gray-900 hover:text-primary px-3 py-2 text-sm font-medium">Pricing</a>
-              <a href="#" className="text-gray-900 hover:text-primary px-3 py-2 text-sm font-medium">Resources</a>
+              {menuItems.map((item, index) => (
+                <div key={index} className="relative group">
+                  <a href="#" className="text-gray-900 hover:text-primary px-3 py-2 text-sm font-medium">{item.title}</a>
+                  <div className="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg hidden group-hover:block">
+                    <div className="py-1">
+                      {item.submenu.map((subItem, subIndex) => (
+                        <a 
+                          key={subIndex}
+                          href="#" 
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          {subItem}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
             </nav>
           </div>
           
-          {/* Desktop CTA */}
           <div className="hidden md:flex items-center">
             <a href="#" className="text-gray-900 hover:text-primary px-4 py-2 text-sm font-medium">Sign In</a>
-            <a href="#" className="ml-4 px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-opacity-90 rounded-lg">
+            <a href="#" className="ml-4 px-4 py-2 text-sm font-medium text-gray-900 hover:text-primary hover:bg-opacity-90 rounded-lg">
               Try Free
             </a>
           </div>
           
-          {/* Mobile menu button */}
           <div className="md:hidden">
             <button
               type="button"
@@ -53,17 +81,44 @@ export default function Header() {
         </div>
       </div>
       
-      {/* Mobile menu */}
       {isMenuOpen && (
-        <div className="md:hidden">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            <a href="#" className="block px-3 py-2 text-base font-medium text-gray-900 hover:text-primary">Products</a>
-            <a href="#" className="block px-3 py-2 text-base font-medium text-gray-900 hover:text-primary">Features</a>
-            <a href="#" className="block px-3 py-2 text-base font-medium text-gray-900 hover:text-primary">Pricing</a>
-            <a href="#" className="block px-3 py-2 text-base font-medium text-gray-900 hover:text-primary">Resources</a>
-            <div className="pt-4 pb-3 border-t border-gray-200">
-              <a href="#" className="block px-3 py-2 text-base font-medium text-gray-900 hover:text-primary">Sign In</a>
-              <a href="#" className="block mt-2 px-3 py-2 text-base font-medium text-white bg-primary rounded-lg">Try Free</a>
+        <div className="md:hidden bg-white rounded-lg shadow-lg mx-4 mb-4">
+          <div className="py-2">
+            {menuItems.map((item, index) => (
+              <div key={index} className="border-b border-gray-100 last:border-b-0">
+                <button
+                  onClick={() => toggleDropdown(index)}
+                  className="flex items-center justify-between w-full px-4 py-3 text-left"
+                >
+                  <span className="font-medium text-gray-800">{item.title}</span>
+                  <svg 
+                    className={`w-4 h-4 transition-transform duration-200 ${activeDropdown === index ? 'transform rotate-180' : ''}`} 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {activeDropdown === index && (
+                  <div className="bg-gray-50 px-4 py-2">
+                    {item.submenu.map((subItem, subIndex) => (
+                      <a 
+                        key={subIndex} 
+                        href="#" 
+                        className="block py-2 text-sm text-gray-600 hover:text-primary"
+                      >
+                        {subItem}
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+            <div className="px-4 py-3">
+              <a href="#" className="block w-full py-2 text-center text-gray-800 hover:text-primary font-medium border border-gray-200 rounded-lg">Sign In</a>
+              <a href="#" className="block w-full py-2 mt-2 text-center text-gray-900 hover:text-primary font-medium border border-gray-200 rounded-lg">Try Free</a>
             </div>
           </div>
         </div>

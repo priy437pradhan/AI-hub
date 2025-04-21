@@ -61,7 +61,7 @@ export default function Header() {
             <a href="#" className="ml-4 px-4 py-2 text-sm font-medium text-gray-900 dark:text-gray-200 hover:text-primary hover:bg-opacity-90 rounded-lg">
               Try Free
             </a>
-            {/* <ThemeToggle /> */}
+            
           </div>
           
           <div className="md:hidden">
@@ -124,7 +124,7 @@ export default function Header() {
               <a href="#" className="block w-full py-2 text-center text-gray-800 dark:text-gray-200 hover:text-primary font-medium border border-gray-200 dark:border-gray-700 rounded-lg">Sign In</a>
               <a href="#" className="block w-full py-2 mt-2 text-center text-gray-900 dark:text-gray-200 hover:text-primary font-medium border border-gray-200 dark:border-gray-700 rounded-lg">Try Free</a>
               <div className="mt-2 flex justify-center">
-                <ThemeToggle />
+                
               </div>
             </div>
           </div>

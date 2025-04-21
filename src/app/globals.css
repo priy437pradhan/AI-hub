@@ -2,9 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-
-
-
 * {
   margin: 0;
   padding: 0;
@@ -20,11 +17,104 @@ body {
 
 a {
   text-decoration: none;
-  color: #0070f3;
+  color: #ff5c35;
 }
 
 a:hover {
   text-decoration: underline;
 }
 
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 255, 255, 255;
+  --background-end-rgb: 255, 255, 255;
+}
 
+.dark {
+  --foreground-rgb: 224, 224, 224;
+  --background-start-rgb: 18, 18, 18;
+  --background-end-rgb: 30, 30, 30; 
+}
+
+@layer base {
+  body {
+    @apply bg-white dark:bg-dark-bg text-gray-900 dark:text-dark-text;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-gray-900 dark:text-white;
+  }
+  
+  a {
+    @apply text-primary dark:text-dark-accent hover:text-primary-700 dark:hover:text-primary-300;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary dark:bg-primary-600 hover:bg-primary-600 dark:hover:bg-primary-700 text-white;
+  }
+  
+  .card {
+    @apply bg-white dark:bg-dark-card shadow-lg rounded-lg overflow-hidden border border-gray-200 dark:border-dark-border;
+  }
+}
+
+/* Updated styles for MainContent component */
+.bg-gradient-to-br.from-blue-50.via-blue-100.to-blue-50 {
+  @apply from-primary-50 via-primary-100 to-primary-50;
+}
+
+.bg-blue-600 {
+  @apply bg-primary;
+}
+
+.hover\:bg-blue-700:hover {
+  @apply hover:bg-primary-600;
+}
+
+.text-blue-600 {
+  @apply text-primary;
+}
+
+.bg-sky-500 {
+  @apply bg-primary-500;
+}
+
+.bg-sky-300 {
+  @apply bg-primary-300;
+}
+
+.via-sky-300 {
+  @apply via-primary-300;
+}
+
+.bg-blue-100 {
+  @apply bg-primary-100;
+}
+
+.text-blue-600 {
+  @apply text-primary;
+}
+
+/* For PhotoEditorHero gradient */
+.from-pink-500.via-yellow-400.to-blue-600 {
+  @apply from-primary-400 via-primary-300 to-primary-600;
+}
+
+/* For AIImageGeneratorHero component */
+.border-blue-400 {
+  @apply border-primary-400;
+}
+
+.text-blue-500 {
+  @apply text-primary-500;
+}
+
+.hover\:bg-blue-50:hover {
+  @apply hover:bg-primary-50;
+}
+
+.from-cyan-100.to-purple-100 {
+  @apply from-primary-50 to-primary-100;
+}

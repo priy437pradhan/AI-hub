@@ -19,7 +19,7 @@ return (
          </a>
       </div>
       <EditorPreview />
-      <div className="mt-10 lg:mt-0 lg:pt-36 pr-24 pl-20 z-10">
+      <div className="mt-10 lg:mt-0 lg:pt-36 lg:pr-24 lg:pl-20 z-10">
   <h2 className="text-2xl font-semibold text-gray-800 mb-6">
     Discover popular features
   </h2>

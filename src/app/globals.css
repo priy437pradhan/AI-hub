@@ -60,7 +60,7 @@ a:hover {
   }
 }
 
-/* Updated styles for MainContent component */
+
 .bg-gradient-to-br.from-blue-50.via-blue-100.to-blue-50 {
   @apply from-primary-50 via-primary-100 to-primary-50;
 }
@@ -97,12 +97,12 @@ a:hover {
   @apply text-primary;
 }
 
-/* For PhotoEditorHero gradient */
+
 .from-pink-500.via-yellow-400.to-blue-600 {
   @apply from-primary-400 via-primary-300 to-primary-600;
 }
 
-/* For AIImageGeneratorHero component */
+
 .border-blue-400 {
   @apply border-primary-400;
 }

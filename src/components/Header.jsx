@@ -1,6 +1,6 @@
 "use client"
 import { useState } from 'react'
-import ThemeToggle from './ThemeToggle'  
+// import ThemeToggle from './ThemeToggle'  
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -61,7 +61,7 @@ export default function Header() {
             <a href="#" className="ml-4 px-4 py-2 text-sm font-medium text-gray-900 dark:text-gray-200 hover:text-primary hover:bg-opacity-90 rounded-lg">
               Try Free
             </a>
-            <ThemeToggle />
+            {/* <ThemeToggle /> */}
           </div>
           
           <div className="md:hidden">

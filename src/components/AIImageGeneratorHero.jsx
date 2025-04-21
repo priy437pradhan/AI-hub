@@ -2,6 +2,9 @@
 
 import React, { useState } from 'react';
 import AniOne from '../images/animation-one.webp';
+import Replace from '../images/Replace.webp';
+import Extended from '../images/Extended.webp';
+import Avtar from '../images/Avtar.webp';
 
 const AIImageGeneratorHero = () => {
  
@@ -21,13 +24,13 @@ const AIImageGeneratorHero = () => {
       { src: AniOne.src, alt: 'Cyberpunk woman with neon aesthetics', prompt: 'A cyberpunk woman with neon lights in a futuristic city' },
     ],
     'AI Replace': [
-      { src: AniOne.src, alt: 'Object replaced in beach scene', prompt: 'Replace the umbrella with a palm tree' },
+      { src: Replace.src, alt: 'Object replaced in beach scene', prompt: 'Replace the umbrella with a palm tree' },
     ],
     'AI Expand': [
-      { src: AniOne.src, alt: 'Landscape image expanded', prompt: 'Expand this mountain view to show more sky' },
+      { src: Extended.src, alt: 'Landscape image expanded', prompt: 'Expand this mountain view to show more sky' },
     ],
     'AI Avatar': [
-      { src: AniOne.src, alt: 'AI generated avatar', prompt: 'Create a fantasy warrior avatar with armor' },
+      { src: Avtar.src, alt: 'AI generated avatar', prompt: 'Create a fantasy warrior avatar with armor' },
     ],
   };
 

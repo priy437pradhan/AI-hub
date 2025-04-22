@@ -1,6 +1,10 @@
 "use client"
 
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, HashRouter, Routes, Route } from 'react-router-dom';
+
+const Router = process.env.NODE_ENV === 'production' ? HashRouter : BrowserRouter;
+
+
 import Header from '../components/Header';
 import Homepage from '../pages/Homepage';
 import Footer from '../components/Footer';
@@ -11,10 +15,13 @@ export default function Home() {
     <Router>
       <div className="landing-container">
         <Header />
+       
         <Routes>
           <Route path="/" element={<Homepage />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          
         </Routes>
+       
         <Footer />
       </div>
     </Router>

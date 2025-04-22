@@ -37,7 +37,7 @@ export default function EditorPreview() {
               key={index}
               className={`flex items-center gap-1 md:gap-2 p-1 md:p-2 mb-1 rounded cursor-pointer transition-colors ${
                 activeToolIndex === index
-                  ? "text-blue-500 font-semibold"
+                  ? "text-primary-500 font-semibold"
                   : "hover:bg-gray-700"
               }`}
             >

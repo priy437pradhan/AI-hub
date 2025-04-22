@@ -1,23 +1,22 @@
+"use client"
+
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Header from '../components/Header';
-import MainContent from '../components/MainContent';
-import AIImageGeneratorHero from '../components/AIImageGeneratorHero'
-import PhotoFiltersEffectsSection from '../components/PhotoFiltersEffectsSection';
-import PhotoEditorHero from '../components/PhotoEditorHero';
-import PricingSection from '../components/PricingSection'
-import Faq from '../components/Faq.jsx'
+import Homepage from '../pages/Homepage';
 import Footer from '../components/Footer';
+import Dashboard from '../pages/DashBoard';
 
 export default function Home() {
   return (
-    <div className="landing-container">
-      <Header />
-      <MainContent />
-      <AIImageGeneratorHero />
-      <PhotoFiltersEffectsSection />
-      <PhotoEditorHero />
-      <PricingSection />
-      <Faq />
-      <Footer />
-    </div>
+    <Router>
+      <div className="landing-container">
+        <Header />
+        <Routes>
+          <Route path="/" element={<Homepage />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+        </Routes>
+        <Footer />
+      </div>
+    </Router>
   );
 }

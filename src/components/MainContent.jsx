@@ -13,7 +13,7 @@ return (
          </p>
          <a 
             href="#edit-now" 
-            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-7 rounded-lg inline-block transition-colors"
+            className="bg-primary hover:bg-primary-600 text-white font-semibold py-3 px-7 rounded-lg inline-block transition-colors"
             >
          Edit photo for free
          </a>
@@ -36,13 +36,12 @@ return (
         key={index}
         className="relative overflow-hidden bg-white rounded-xl p-4 flex items-center border border-gray-200 shadow-md cursor-pointer group transition-all duration-300"
       >
-        {/* Hover BG effect - left to right */}
-        <div className="absolute inset-0 bg-sky-500 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-in-out z-0"></div>
+       
+        <div className="absolute inset-0 bg-primary-500 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-in-out z-0"></div>
 
-        {/* Fading gradient */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-sky-300 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-0"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary-300 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-0"></div>
 
-        {/* Content */}
+        
         <span className="text-xl mr-2 relative z-10 transition-colors duration-500 group-hover:text-white">
           {feature.icon}
         </span>

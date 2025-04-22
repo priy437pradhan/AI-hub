@@ -54,7 +54,7 @@ const AIImageGeneratorHero = () => {
               key={tab.id}
               className={`px-6 py-2 rounded-full transition-colors ${
                 activeTab === tab.name 
-                  ? 'border border-blue-400 text-blue-500 hover:bg-blue-50' 
+                  ? 'border border-primary-400 text-primary-500 hover:bg-blue-50' 
                   : 'text-gray-700 hover:bg-gray-50'
               }`}
               onClick={() => setActiveTab(tab.name)}

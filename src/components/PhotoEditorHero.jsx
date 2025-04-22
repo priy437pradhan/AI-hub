@@ -15,8 +15,8 @@ const PhotoEditorHero = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Step 1 */}
         <div className="border rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
-          <div className="bg-blue-100 h-12 w-12 rounded-lg flex items-center justify-center mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="bg-primary-100 h-12 w-12 rounded-lg flex items-center justify-center mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
             </svg>
           </div>
@@ -28,8 +28,8 @@ const PhotoEditorHero = () => {
 
         {/* Step 2 */}
         <div className="border rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
-          <div className="bg-blue-100 h-12 w-12 rounded-lg flex items-center justify-center mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="bg-primary-100 h-12 w-12 rounded-lg flex items-center justify-center mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
             </svg>
           </div>
@@ -41,8 +41,8 @@ const PhotoEditorHero = () => {
 
         {/* Step 3 */}
         <div className="border rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
-          <div className="bg-blue-100 h-12 w-12 rounded-lg flex items-center justify-center mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="bg-primary-100 h-12 w-12 rounded-lg flex items-center justify-center mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
             </svg>
           </div>
@@ -53,7 +53,7 @@ const PhotoEditorHero = () => {
         </div>
       </div>
 
-      <div className="h-2 bg-gradient-to-r from-pink-500 via-yellow-400 to-blue-600 mt-16 rounded-full"></div>
+      <div className="h-2 bg-gradient-to-r from-primary-400 via-primary-300 to-primary-600 mt-16 rounded-full"></div>
     </section>
   );
 };

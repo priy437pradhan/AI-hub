@@ -8,22 +8,78 @@ export default function Header() {
   
   const menuItems = [
     {
-      title: "Photo Editing Tool",
-      submenu: ["AI Assistant", "Data Analysis", "Voice Recognition", "Image Generation"]
+      title: "Photo Editing Tools",
+      submenu: [ "Crop image", 
+        "Resize image",
+         "Circle Crop",
+         "Add Border to Photo",
+         "Overlay Images",
+        "Blur Image",
+        "Convert images",
+        "Compress images",
+        "Watermark photos"]
     },
     {
-      title: "AI Tool",
-      submenu: ["Documentation", "API Reference", "Tutorials", "Community Forum"]
+      title: "Templates",
+      submenu: [ "Logo Maker",
+        "Flyer Maker",
+        "Poster Maker",
+        "Business Card Maker",
+         "Resume Maker",
+        "Card Maker",
+        "YouTube Thumbnail Maker",
+"YouTube Cover Maker",
+"Instagram Post Maker",
+"Facebook Cover Maker"
+      ]
     },
     {
-      title: "Pricing",
-      submenu: ["Documentation", "API Reference", "Tutorials", "Community Forum"]
+      title: "AI Image Tool",
+      submenu: [ "Photo to Sketch",
+        "Photo to Cartoon",
+        "Background Changer",
+        "Blur Background",
+        "Background Remover",
+        "Face Swap"]
     }
   ]
 
   const toggleDropdown = (index) => {
     setActiveDropdown(activeDropdown === index ? null : index)
   }
+
+  // Function to split submenu items into columns
+  const renderSubmenuColumns = (submenuItems) => {
+    const firstColumn = submenuItems.slice(0, 5);
+    const secondColumn = submenuItems.slice(5);
+    
+    return (
+      <div className="grid grid-cols-2 gap-2 w-96">
+        <div className="py-1">
+          {firstColumn.map((subItem, subIndex) => (
+            <a 
+              key={subIndex}
+              href="#" 
+              className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
+            >
+              {subItem}
+            </a>
+          ))}
+        </div>
+        <div className="py-1">
+          {secondColumn.map((subItem, subIndex) => (
+            <a 
+              key={subIndex + 5}
+              href="#" 
+              className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
+            >
+              {subItem}
+            </a>
+          ))}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <header className="sticky top-0 z-50 bg-white dark:bg-gray-800 shadow-sm">
@@ -38,18 +94,8 @@ export default function Header() {
               {menuItems.map((item, index) => (
                 <div key={index} className="relative group">
                   <a href="#" className="text-gray-900 dark:text-gray-200 hover:text-primary px-3 py-2 text-sm font-medium">{item.title}</a>
-                  <div className="absolute left-0 mt-2 w-48 bg-white dark:bg-gray-700 rounded-md shadow-lg hidden group-hover:block">
-                    <div className="py-1">
-                      {item.submenu.map((subItem, subIndex) => (
-                        <a 
-                          key={subIndex}
-                          href="#" 
-                          className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
-                        >
-                          {subItem}
-                        </a>
-                      ))}
-                    </div>
+                  <div className="absolute left-0 mt-2 bg-white dark:bg-gray-700 rounded-md shadow-lg hidden group-hover:block">
+                    {renderSubmenuColumns(item.submenu)}
                   </div>
                 </div>
               ))}
@@ -61,7 +107,6 @@ export default function Header() {
             <a href="#" className="ml-4 px-4 py-2 text-sm font-medium text-gray-900 dark:text-gray-200 hover:text-primary hover:bg-opacity-90 rounded-lg">
               Try Free
             </a>
-            
           </div>
           
           <div className="md:hidden">
@@ -107,15 +152,30 @@ export default function Header() {
                 </button>
                 {activeDropdown === index && (
                   <div className="bg-gray-50 dark:bg-gray-700 px-4 py-2">
-                    {item.submenu.map((subItem, subIndex) => (
-                      <a 
-                        key={subIndex} 
-                        href="#" 
-                        className="block py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-primary"
-                      >
-                        {subItem}
-                      </a>
-                    ))}
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        {item.submenu.slice(0, 5).map((subItem, subIndex) => (
+                          <a 
+                            key={subIndex} 
+                            href="#" 
+                            className="block py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-primary"
+                          >
+                            {subItem}
+                          </a>
+                        ))}
+                      </div>
+                      <div>
+                        {item.submenu.slice(5).map((subItem, subIndex) => (
+                          <a 
+                            key={subIndex + 5} 
+                            href="#" 
+                            className="block py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-primary"
+                          >
+                            {subItem}
+                          </a>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>

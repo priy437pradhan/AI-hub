@@ -8,7 +8,7 @@ const Router = process.env.NODE_ENV === 'production' ? HashRouter : BrowserRoute
 import Header from '../components/Header';
 import Homepage from '../pages/Homepage';
 import Footer from '../components/Footer';
-import Dashboard from '../pages/DashBoard';
+import Dashboard from '../pages/Dashboard';
 
 export default function Home() {
   return (

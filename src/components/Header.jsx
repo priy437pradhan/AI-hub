@@ -1,6 +1,6 @@
 "use client"
+import Link from 'next/link'
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -242,7 +242,6 @@ export default function Header() {
 
 // Modified SignIn component for popup usage
 const SignInPopup = ({ onClose }) => {
-  const navigate = useNavigate()
   const [authMethod, setAuthMethod] = useState('email') 
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
@@ -250,6 +249,7 @@ const SignInPopup = ({ onClose }) => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  // Modified Gmail sign in function without redirection
   const handleGmailSignIn = async () => {
     setLoading(true)
     setError('')
@@ -263,8 +263,6 @@ const SignInPopup = ({ onClose }) => {
       // Close popup
       onClose()
       
-      // Use React Router's navigate instead of window.location
-      navigate('/dashboard')
     } catch (err) {
       setError('Failed to sign in with Gmail. Please try again.')
     } finally {
@@ -272,6 +270,7 @@ const SignInPopup = ({ onClose }) => {
     }
   }
 
+  // Modified form submit function without redirection
   const handleFormSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
@@ -297,8 +296,6 @@ const SignInPopup = ({ onClose }) => {
       // Close popup
       onClose()
       
-      // Use React Router's navigate instead of window.location
-      navigate('/dashboard')
     } catch (err) {
       setError(err.message || 'Failed to sign in. Please check your credentials.')
     } finally {
@@ -475,12 +472,12 @@ const SignInPopup = ({ onClose }) => {
           </div>
         </div>
         <div className="mt-6">
-          <a
+          <Link
             href="/signup"
             className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-primary bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
           >
             Create an account
-          </a>
+          </Link>
         </div>
       </div>
     </div>

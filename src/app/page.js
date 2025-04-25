@@ -1,29 +1,17 @@
+// app/page.js
 "use client"
 
-import { BrowserRouter, HashRouter, Routes, Route } from 'react-router-dom';
 
-const Router = process.env.NODE_ENV === 'production' ? HashRouter : BrowserRouter;
-
-
-import Header from '../components/Header';
 import Homepage from '../pages/Homepage';
-import Footer from '../components/Footer';
-import Dashboard from '../pages/Dashboard';
+
+
 
 export default function Home() {
   return (
-    <Router>
-      <div className="landing-container">
-        <Header />
-       
-        <Routes>
-          <Route path="/" element={<Homepage />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          
-        </Routes>
-       
-        <Footer />
-      </div>
-    </Router>
+    <>
+     
+      < Homepage/>
+      
+    </>
   );
 }

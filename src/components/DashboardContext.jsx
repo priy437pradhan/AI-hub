@@ -153,9 +153,9 @@ export default function HomePage() {
             </button>
             <div className="flex items-center">
               <div className="w-8 h-8 bg-gradient-to-br from-primary-300 to-primary-500 rounded-md flex items-center justify-center">
-                <span className="text-white font-bold">f</span>
+                <span className="text-white font-bold">AI</span>
               </div>
-              <span className="ml-2 text-xl font-medium">fotor</span>
+              <span className="ml-2 text-xl font-medium">AI hub</span>
             </div>
           </div>
           
@@ -389,7 +389,7 @@ export default function HomePage() {
             <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <input
               type="text"
-              placeholder="Search Fotor tools"
+              placeholder="Search AI Hub tools"
               className="w-full pl-10 pr-4 py-2 bg-gray-100 dark:bg-dark-card text-gray-800 dark:text-dark-text rounded-lg border-none focus:ring-2 focus:ring-primary-500 focus:outline-none"
             />
           </div>
@@ -527,8 +527,8 @@ export default function HomePage() {
   return (
     <div className={`flex h-screen w-full ${darkMode ? 'dark' : ''}`}>
       <Head>
-        <title>Fotor Clone - Next.js & Tailwind CSS</title>
-        <meta name="description" content="Fotor clone built with Next.js and Tailwind CSS" />
+        <title>AI hub </title>
+        <meta name="description" content="Next.js and Tailwind CSS" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
@@ -541,7 +541,7 @@ export default function HomePage() {
         <div className="w-8 h-8 bg-gradient-to-br from-primary-300 to-primary-500 rounded-md flex items-center justify-center">
           <span className="text-white font-bold">f</span>
         </div>
-        <span className="ml-2 text-xl font-medium text-gray-800 dark:text-dark-text">fotor</span>
+        <span className="ml-2 text-xl font-medium text-gray-800 dark:text-dark-text">AI Hub</span>
       </div>
     </div>
 
@@ -595,7 +595,7 @@ export default function HomePage() {
         {/* Personal Section */}
         <div className="mt-4">
           <div className="px-4 flex items-center justify-between">
-            <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400">MY FOTOR CLOUD</h3>
+            <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400">MY AI Hub CLOUD</h3>
             <ChevronDown size={14} className="text-gray-400" />
           </div>
           <ul className="mt-1">
@@ -628,7 +628,7 @@ export default function HomePage() {
   </div>
 )}
 
-{/* Main Content - Conditionally render based on current view */}
+
 {currentView === 'home' ? renderHomeView() : renderPhotoEditor()}
 </div>
 );

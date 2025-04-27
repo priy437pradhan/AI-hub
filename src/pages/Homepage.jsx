@@ -1,11 +1,11 @@
-import MainContent from '../components/MainContent';
-import AIImageGeneratorHero from '../components/AIImageGeneratorHero'
-import PhotoFiltersEffectsSection from '../components/PhotoFiltersEffectsSection';
-import PhotoEditorHero from '../components/PhotoEditorHero';
-import PricingSection from '../components/PricingSection'
-import Faq from '../components/Faq.jsx'
-import Header from '../components/Header';
-import Footer from '../components/Footer';
+import MainContent from '../Homepage/MainContent';
+import AIImageGeneratorHero from '../Homepage/AIImageGeneratorHero'
+import PhotoFiltersEffectsSection from '../Homepage/PhotoFiltersEffectsSection';
+import PhotoEditorHero from '../Homepage/PhotoEditorHero';
+import PricingSection from '../Homepage/PricingSection'
+import Faq from '../Homepage/Faq.jsx'
+import Header from '../Homepage/Header';
+import Footer from '../Homepage/Footer';
 export default function Homepage() {
   return (
     <div>

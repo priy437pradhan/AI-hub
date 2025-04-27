@@ -1,9 +1,4 @@
-import EditP from '../components/EditingPlatform';
-
-
-
-
-
+import EditP from '../EditingPlatform/EditingPlatform';
 export default function Home() {
   return (
     <>

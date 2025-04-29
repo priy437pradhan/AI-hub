@@ -1,11 +1,12 @@
-'use clint'
+'use client'
 import { useState, useRef, useEffect } from 'react';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
-import ToolPanel from './components/ToolPanel';
+import ToolPanel from './Tools/ToolPanel';
 import ImageCanvas from './components/ImageCanvas';
-import { useCropImage } from './hooks/useCropImage';
-import { aspectRatios } from './data/aspectRatios';
+import { useCropImage } from './Tools/Adjust/hooks/useCropImage';
+import { aspectRatios } from './Tools/Adjust/data/aspectRatios';
+import { useImageTransform } from './Tools/Adjust/hooks/useImageTransform';
 
 export default function AIhubEditor() {
   // State for active tool selection
@@ -21,7 +22,7 @@ export default function AIhubEditor() {
   const fileInputRef = useRef(null);
   const imageRef = useRef(null);
   
-  // Cropping functionality from custom hook
+  
   const {
     cropArea,
     setCropArea,
@@ -33,8 +34,40 @@ export default function AIhubEditor() {
     handleMouseMove,
     handleMouseUp,
     handleResizeStart,
-    performCrop
-  } = useCropImage({ imageRef, aspectRatio, aspectRatios, width, height, setWidth, setHeight, keepAspectRatio });
+    performCrop,
+    getDisplayCropArea
+  } = useCropImage({ 
+    imageRef, 
+    aspectRatio, 
+    aspectRatios, 
+    width, 
+    height, 
+    setWidth, 
+    setHeight, 
+    keepAspectRatio,
+    setKeepAspectRatio,
+    imagePreview 
+  });
+  const {
+    rotationAngle,
+    setRotationAngle,
+    performRotate: performRotateBase,
+    performFlip: performFlipBase
+  } = useImageTransform();
+  
+  // Create wrapper functions to apply the transformations and update the image
+  const performRotate = async (angle) => {
+    const newImageUrl = await performRotateBase(angle);
+    if (newImageUrl) {
+      setImagePreview(newImageUrl);
+    }
+  };
+  const performFlip = async (direction) => {
+    const newImageUrl = await performFlipBase(direction);
+    if (newImageUrl) {
+      setImagePreview(newImageUrl);
+    }
+  };
   
   // Responsive state
   const [isMobile, setIsMobile] = useState(false);
@@ -61,108 +94,6 @@ export default function AIhubEditor() {
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
-  
-  // Initialize crop area when image is loaded
-  useEffect(() => {
-    if (imagePreview && imageRef.current) {
-      const img = imageRef.current;
-      
-      // Wait for image to load to get its dimensions
-      img.onload = () => {
-        const imgWidth = img.naturalWidth;
-        const imgHeight = img.naturalHeight;
-        
-        // Create a crop area centered on the image
-        const size = 425;
-        // Make sure the square fits within the image
-        const finalSize = Math.min(size, imgWidth * 0.9, imgHeight * 0.9);
-        const x = (imgWidth - finalSize) / 2;
-        const y = (imgHeight - finalSize) / 2;
-        
-        setCropArea({
-          x: x,
-          y: y,
-          width: finalSize,
-          height: finalSize
-        });
-        
-        // Update input fields
-        setWidth("425");
-        setHeight("425");
-        
-        // Ensure crop tool is active
-        setActiveTool('adjust');
-        setIsCropping(true);
-      };
-    }
-  }, [imagePreview]);
-  
-  // Update crop area when aspect ratio changes
-  useEffect(() => {
-    if (!imagePreview) return;
-    if (aspectRatio === 'freeform') {
-      // For freeform, don't constrain the ratio but keep current size
-      setKeepAspectRatio(false);
-    } else if (aspectRatio === 'circle') {
-      // For circle, enforce 1:1 ratio
-      setKeepAspectRatio(true);
-      const imgWidth = imageRef.current.naturalWidth;
-      const imgHeight = imageRef.current.naturalHeight;
-      const size = Math.min(imgWidth, imgHeight) * 0.8;
-      setCropArea({
-        x: (imgWidth - size) / 2,
-        y: (imgHeight - size) / 2,
-        width: size,
-        height: size
-      });
-      setWidth(Math.round(size).toString());
-      setHeight(Math.round(size).toString());
-    } else if (aspectRatio === 'triangle' || aspectRatio === 'heart') {
-      // For triangle and heart, start with a square but will apply shape mask when cropping
-      setKeepAspectRatio(true);
-      const imgWidth = imageRef.current.naturalWidth;
-      const imgHeight = imageRef.current.naturalHeight;
-      const size = Math.min(imgWidth, imgHeight) * 0.8;
-      setCropArea({
-        x: (imgWidth - size) / 2,
-        y: (imgHeight - size) / 2,
-        width: size,
-        height: size
-      });
-      setWidth(Math.round(size).toString());
-      setHeight(Math.round(size).toString());
-    } else if (aspectRatio !== 'original') {
-      const selectedRatio = aspectRatios.find(r => r.id === aspectRatio);
-      if (selectedRatio?.dimensions) {
-        const { width: rWidth, height: rHeight } = selectedRatio.dimensions;
-        const imgWidth = imageRef.current.naturalWidth;
-        const imgHeight = imageRef.current.naturalHeight;
-        // Calculate new crop dimensions based on aspect ratio
-        let newWidth, newHeight;
-        if ((imgWidth / imgHeight) > (rWidth / rHeight)) {
-          // Image is wider than target ratio
-          newHeight = imgHeight * 0.8;
-          newWidth = newHeight * (rWidth / rHeight);
-        } else {
-          // Image is taller than target ratio
-          newWidth = imgWidth * 0.8;
-          newHeight = newWidth * (rHeight / rWidth);
-        }
-        // Center the crop area
-        const newX = (imgWidth - newWidth) / 2;
-        const newY = (imgHeight - newHeight) / 2;
-        setCropArea({
-          x: newX,
-          y: newY,
-          width: newWidth,
-          height: newHeight
-        });
-        // Update input fields
-        setWidth(Math.round(newWidth).toString());
-        setHeight(Math.round(newHeight).toString());
-      }
-    }
-  }, [aspectRatio, imagePreview]);
   
   const handleFileChange = (event) => {
     const file = event.target.files[0];
@@ -258,6 +189,10 @@ export default function AIhubEditor() {
             cropArea={cropArea}
             setCropArea={setCropArea}
             imageRef={imageRef}
+            performFlip={performFlip}
+            performRotate={performRotate}
+            rotationAngle={rotationAngle}
+            setRotationAngle={setRotationAngle}
           />
         )}
         
@@ -269,6 +204,7 @@ export default function AIhubEditor() {
           isCropping={isCropping}
           activeTool={activeTool}
           cropArea={cropArea}
+          setCropArea={setCropArea}
           handleMouseDown={handleMouseDown}
           handleMouseMove={handleMouseMove}
           handleMouseUp={handleMouseUp}
@@ -278,6 +214,7 @@ export default function AIhubEditor() {
           aspectRatio={aspectRatio}
           loadDemoImage={loadDemoImage}
           setImagePreview={setImagePreview}
+          getDisplayCropArea={getDisplayCropArea}
         />
       </div>
     </div>

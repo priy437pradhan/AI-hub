@@ -14,3 +14,4 @@ export const aspectRatios = [
     { id: 'triangle', label: 'Triangle', icon: '△', dimensions: null },
     { id: 'heart', label: 'Heart-shape', icon: '♥', dimensions: null },
   ];
+ 

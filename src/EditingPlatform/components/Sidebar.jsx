@@ -13,9 +13,7 @@ export default function Sidebar({ activeTool, setActiveTool, isMobile, setSideba
     { id: 'frames', icon: <Layers size={20} />, label: 'Frames' },
     { id: 'text', icon: <Type size={20} />, label: 'Text' },
     { id: 'elements', icon: <Square size={20} />, label: 'Elements' },
-    { id: 'uploads', icon: <Upload size={20} />, label: 'Uploads' },
-    { id: 'apps', icon: <Grid size={20} />, label: 'Apps' },
-    { id: 'more', icon: <MoreHorizontal size={20} />, label: 'More' },
+   
   ];
 
   return (
@@ -25,7 +23,7 @@ export default function Sidebar({ activeTool, setActiveTool, isMobile, setSideba
           key={tool.id} 
           onClick={() => {
             setActiveTool(tool.id);
-            if (isMobile) setSidebarOpen(false);
+            
           }}
           className={`w-full flex flex-col items-center py-3 cursor-pointer text-xs ${tool.id === activeTool ? 'bg-gray-700 dark:bg-dark-bg' : 'hover:bg-gray-700 dark:hover:bg-dark-bg'}`}
         >

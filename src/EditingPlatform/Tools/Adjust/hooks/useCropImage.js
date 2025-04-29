@@ -1,7 +1,18 @@
 'use client'
 import { useState, useRef, useEffect } from 'react';
 
-export function useCropImage({ imageRef, aspectRatio, aspectRatios, width, height, setWidth, setHeight, keepAspectRatio }) {
+export function useCropImage({ 
+  imageRef, 
+  aspectRatio, 
+  aspectRatios, 
+  width, 
+  height, 
+  setWidth, 
+  setHeight, 
+  keepAspectRatio,
+  setKeepAspectRatio,
+  imagePreview 
+}) {
   // Crop state
   const [cropArea, setCropArea] = useState({ x: 0, y: 0, width: 0, height: 0 });
   const [isCropping, setIsCropping] = useState(false);
@@ -15,39 +26,148 @@ export function useCropImage({ imageRef, aspectRatio, aspectRatios, width, heigh
   const startYRef = useRef(0);
   const cropStartRef = useRef({ x: 0, y: 0, width: 0, height: 0 });
 
-  // Add this effect to initialize crop area when image loads
+  // Initialize crop area when image is loaded
   useEffect(() => {
-    if (imageRef.current && (!cropArea || cropArea.width === 0)) {
+    if (imagePreview && imageRef.current) {
       const img = imageRef.current;
-      // Make sure the image is loaded
+      
+      const handleImageLoad = () => {
+        const imgWidth = img.naturalWidth;
+        const imgHeight = img.naturalHeight;
+        
+        // Create a crop area centered on the image - default to square
+        const size = 425;
+        // Make sure the square fits within the image
+        const finalSize = Math.min(size, imgWidth * 0.9, imgHeight * 0.9);
+        const x = (imgWidth - finalSize) / 2;
+        const y = (imgHeight - finalSize) / 2;
+        
+        setCropArea({
+          x: x,
+          y: y,
+          width: finalSize,
+          height: finalSize
+        });
+        
+        // Update input fields
+        setWidth(Math.round(finalSize).toString());
+        setHeight(Math.round(finalSize).toString());
+        
+        // Ensure crop tool is active
+        setIsCropping(true);
+      };
+      
+      // Check if image is already loaded
       if (img.complete) {
-        initializeCropArea(img);
+        handleImageLoad();
       } else {
-        img.onload = () => initializeCropArea(img);
+        img.onload = handleImageLoad;
       }
     }
-  }, [imageRef.current]);
-
-  // Initialize crop area based on image dimensions
-  const initializeCropArea = (img) => {
+  }, [imagePreview, imageRef, setWidth, setHeight]);
+  
+  // Update crop area when aspect ratio changes
+  useEffect(() => {
+    if (!imagePreview || !imageRef.current) return;
+    
+    const img = imageRef.current;
     const imgWidth = img.naturalWidth;
     const imgHeight = img.naturalHeight;
     
-    // Default to 80% of the image
-    const newWidth = imgWidth * 0.8;
-    const newHeight = imgHeight * 0.8;
-    const newX = (imgWidth - newWidth) / 2;
-    const newY = (imgHeight - newHeight) / 2;
+    if (aspectRatio === 'freeform') {
+      // For freeform, don't constrain the ratio but keep current size
+      setKeepAspectRatio(false);
+    } else if (aspectRatio === 'circle' || aspectRatio === 'triangle' || aspectRatio === 'heart') {
+      // For special shapes, enforce 1:1 ratio
+      setKeepAspectRatio(true);
+      const size = Math.min(imgWidth, imgHeight) * 0.8;
+      setCropArea({
+        x: (imgWidth - size) / 2,
+        y: (imgHeight - size) / 2,
+        width: size,
+        height: size
+      });
+      setWidth(Math.round(size).toString());
+      setHeight(Math.round(size).toString());
+    } else if (aspectRatio === 'original') {
+      // For original, use the entire image
+      setCropArea({
+        x: 0,
+        y: 0,
+        width: imgWidth,
+        height: imgHeight
+      });
+      setWidth(imgWidth.toString());
+      setHeight(imgHeight.toString());
+    } else {
+      // For standard aspect ratios
+      const selectedRatio = aspectRatios.find(r => r.id === aspectRatio);
+      if (selectedRatio?.dimensions) {
+        const { width: rWidth, height: rHeight } = selectedRatio.dimensions;
+        const ratio = rWidth / rHeight;
+        
+        // Calculate new dimensions while maintaining the aspect ratio
+        let newWidth, newHeight;
+        
+        // Try to maximize the crop area while maintaining the ratio
+        if (imgWidth / imgHeight > ratio) {
+          // Image is wider than the target ratio
+          newHeight = imgHeight * 0.8; // 80% of image height
+          newWidth = newHeight * ratio;
+        } else {
+          // Image is taller than the target ratio
+          newWidth = imgWidth * 0.8; // 80% of image width
+          newHeight = newWidth / ratio;
+        }
+        
+        // Center the crop area
+        const newX = (imgWidth - newWidth) / 2;
+        const newY = (imgHeight - newHeight) / 2;
+        
+        setCropArea({
+          x: newX,
+          y: newY,
+          width: newWidth,
+          height: newHeight
+        });
+        
+        // Update width and height inputs
+        setWidth(Math.round(newWidth).toString());
+        setHeight(Math.round(newHeight).toString());
+        
+        // Make sure to maintain aspect ratio when resizing
+        setKeepAspectRatio(true);
+      }
+    }
+  }, [aspectRatio, imagePreview, aspectRatios, imageRef, setWidth, setHeight, setKeepAspectRatio]);
+
+  // Add useEffect to handle window resize
+  useEffect(() => {
+    const handleResize = () => {
+      // Force re-render to update display crop coordinates
+      if (imageRef.current && cropArea) {
+        setCropArea({...cropArea});
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [cropArea]);
+
+  // Function to get the display coordinates for the crop box
+  const getDisplayCropArea = () => {
+    if (!imageRef.current || !cropArea) return { top: 0, left: 0, width: 0, height: 0 };
     
-    setCropArea({
-      x: newX,
-      y: newY,
-      width: newWidth,
-      height: newHeight
-    });
+    const img = imageRef.current;
+    const scaleX = img.clientWidth / img.naturalWidth;
+    const scaleY = img.clientHeight / img.naturalHeight;
     
-    setWidth(Math.round(newWidth).toString());
-    setHeight(Math.round(newHeight).toString());
+    return {
+      top: cropArea.y * scaleY,
+      left: cropArea.x * scaleX,
+      width: cropArea.width * scaleX,
+      height: cropArea.height * scaleY
+    };
   };
 
   const handleMouseDown = (e) => {
@@ -212,102 +332,6 @@ export function useCropImage({ imageRef, aspectRatio, aspectRatios, width, heigh
     resizeHandleRef.current = null;
   };
 
-  // Function to set up cropping based on aspect ratio
-  const setupCropByAspectRatio = (ratioId) => {
-    if (!imageRef.current) return;
-    
-    const img = imageRef.current;
-    const imgWidth = img.naturalWidth;
-    const imgHeight = img.naturalHeight;
-    
-    // For freeform, just disable keep aspect ratio
-    if (ratioId === 'freeform') {
-      // Use current crop area or default to 80% of image
-      const newWidth = imgWidth * 0.8;
-      const newHeight = imgHeight * 0.8;
-      const newX = (imgWidth - newWidth) / 2;
-      const newY = (imgHeight - newHeight) / 2;
-      
-      setCropArea({
-        x: newX,
-        y: newY,
-        width: newWidth,
-        height: newHeight
-      });
-      
-      setWidth(Math.round(newWidth).toString());
-      setHeight(Math.round(newHeight).toString());
-      return;
-    }
-    
-    // For original ratio, use the whole image
-    if (ratioId === 'original') {
-      setCropArea({
-        x: 0,
-        y: 0,
-        width: imgWidth,
-        height: imgHeight
-      });
-      setWidth(imgWidth.toString());
-      setHeight(imgHeight.toString());
-      return;
-    }
-    
-    // For special shapes (circle, triangle, heart), use 1:1 ratio
-    if (ratioId === 'circle' || ratioId === 'triangle' || ratioId === 'heart') {
-      // For these shapes, we'll use square dimensions
-      const size = Math.min(imgWidth, imgHeight) * 0.8; // 80% of smaller dimension
-      const newX = (imgWidth - size) / 2;
-      const newY = (imgHeight - size) / 2;
-      
-      setCropArea({
-        x: newX,
-        y: newY,
-        width: size,
-        height: size
-      });
-      setWidth(Math.round(size).toString());
-      setHeight(Math.round(size).toString());
-      return;
-    }
-    
-    // For standard aspect ratios
-    const selectedRatio = aspectRatios.find(r => r.id === ratioId);
-    if (selectedRatio?.dimensions) {
-      const { width: rWidth, height: rHeight } = selectedRatio.dimensions;
-      const ratio = rWidth / rHeight;
-      
-      // Calculate new dimensions while maintaining the aspect ratio
-      let newWidth, newHeight;
-      
-      // Try to maximize the crop area while maintaining the ratio
-      if (imgWidth / imgHeight > ratio) {
-        // Image is wider than the target ratio
-        newHeight = imgHeight * 0.8; // 80% of image height
-        newWidth = newHeight * ratio;
-      } else {
-        // Image is taller than the target ratio
-        newWidth = imgWidth * 0.8; // 80% of image width
-        newHeight = newWidth / ratio;
-      }
-      
-      // Center the crop area
-      const newX = (imgWidth - newWidth) / 2;
-      const newY = (imgHeight - newHeight) / 2;
-      
-      setCropArea({
-        x: newX,
-        y: newY,
-        width: newWidth,
-        height: newHeight
-      });
-      
-      // Update width and height inputs
-      setWidth(Math.round(newWidth).toString());
-      setHeight(Math.round(newHeight).toString());
-    }
-  };
-
   // Crop the image
   const performCrop = (format = 'image/jpeg', quality = 0.92) => {
     if (!imageRef.current || !cropArea) return null;
@@ -389,8 +413,6 @@ export function useCropImage({ imageRef, aspectRatio, aspectRatios, width, heigh
     return croppedDataUrl;
   };
   
-  
-
   return {
     cropArea,
     setCropArea,
@@ -404,6 +426,6 @@ export function useCropImage({ imageRef, aspectRatio, aspectRatios, width, heigh
     handleResizeStart,
     performCrop,
     cropBoxRef,
-    setupCropByAspectRatio   
+    getDisplayCropArea   
   };
 }

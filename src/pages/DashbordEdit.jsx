@@ -1,4 +1,4 @@
-import Dashboard from '../DashBoard/DashboardContext';
+import Dashboard from '../components/DashBoard/DashboardContext';
 
 
 

@@ -1,5 +1,5 @@
 
-'use clint'
+'use client'
 import { 
   Sparkles, Sliders, Smile, Layers, Type, Square, Upload, Grid, MoreHorizontal
 } from 'lucide-react';
@@ -17,22 +17,32 @@ export default function Sidebar({ activeTool, setActiveTool, isMobile, setSideba
   ];
 
   return (
-    <div className="w-16 bg-gray-800 dark:bg-dark-card flex flex-col items-center py-2 z-10">
+    <div className="hidden md:flex w-16 bg-gray-800 dark:bg-dark-card flex-col items-center py-2 z-10">
       {sidebarTools.map((tool) => (
         <div 
           key={tool.id} 
           onClick={() => {
             setActiveTool(tool.id);
-            
           }}
-          className={`w-full flex flex-col items-center py-3 cursor-pointer text-xs ${tool.id === activeTool ? 'bg-gray-700 dark:bg-dark-bg' : 'hover:bg-gray-700 dark:hover:bg-dark-bg'}`}
+          className={`w-full flex flex-col items-center py-3 cursor-pointer text-xs ${
+            tool.id === activeTool 
+              ? 'bg-gray-700 dark:bg-dark-bg' 
+              : 'hover:bg-gray-700 dark:hover:bg-dark-bg'
+          }`}
         >
-          <div className={`p-1 rounded-md ${tool.id === activeTool ? 'text-primary-500' : 'text-gray-300'}`}>
+          <div className={`p-1 rounded-md ${
+            tool.id === activeTool ? 'text-primary-500' : 'text-gray-300'
+          }`}>
             {tool.icon}
           </div>
-          <span className={`mt-1 ${tool.id === activeTool ? 'text-primary-500' : 'text-gray-300'}`}>{tool.label}</span>
+          <span className={`mt-1 ${
+            tool.id === activeTool ? 'text-primary-500' : 'text-gray-300'
+          }`}>
+            {tool.label}
+          </span>
         </div>
       ))}
     </div>
   );
+  
 }

@@ -1,4 +1,5 @@
 'use client'
+
 import { useState, useRef, useEffect } from 'react';
 
 export function useCropImage({ 
@@ -26,32 +27,62 @@ export function useCropImage({
   const startYRef = useRef(0);
   const cropStartRef = useRef({ x: 0, y: 0, width: 0, height: 0 });
 
-  // Initialize crop area when image is loaded
   useEffect(() => {
     if (imagePreview && imageRef.current) {
       const img = imageRef.current;
       
       const handleImageLoad = () => {
+        // Get natural dimensions of the image
         const imgWidth = img.naturalWidth;
         const imgHeight = img.naturalHeight;
         
-        // Create a crop area centered on the image - default to square
-        const size = 425;
-        // Make sure the square fits within the image
-        const finalSize = Math.min(size, imgWidth * 0.9, imgHeight * 0.9);
-        const x = (imgWidth - finalSize) / 2;
-        const y = (imgHeight - finalSize) / 2;
+        // Determine if image is landscape, portrait or square
+        const isLandscape = imgWidth > imgHeight;
+        const isPortrait = imgHeight > imgWidth;
+        const isSquare = imgWidth === imgHeight;
         
+        let cropWidth, cropHeight, x, y;
+        
+        // Default crop - aim for an initial crop that's appropriate to the image shape
+        // For square images - use a square crop
+        if (isSquare) {
+          // Use 90% of the image size for the crop
+          cropWidth = cropHeight = Math.min(imgWidth, imgHeight) * 0.9;
+          x = (imgWidth - cropWidth) / 2;
+          y = (imgHeight - cropHeight) / 2;
+        } 
+        // For landscape images - use a crop that preserves the landscape feel
+        else if (isLandscape) {
+          // Use 90% of the height and corresponding width to maintain a pleasing ratio
+          cropHeight = imgHeight * 0.9;
+          // Use 16:9 aspect ratio if image is very wide, otherwise use the image's natural ratio
+          const targetRatio = imgWidth / imgHeight > 1.8 ? 16/9 : imgWidth / imgHeight;
+          cropWidth = Math.min(cropHeight * targetRatio, imgWidth * 0.9);
+          x = (imgWidth - cropWidth) / 2;
+          y = (imgHeight - cropHeight) / 2;
+        } 
+        // For portrait images - use a crop that preserves the portrait feel
+        else {
+          // Use 90% of the width and corresponding height to maintain a pleasing ratio
+          cropWidth = imgWidth * 0.9;
+          // Use 3:4 aspect ratio if image is very tall, otherwise use the image's natural ratio
+          const targetRatio = imgHeight / imgWidth > 1.8 ? 3/4 : imgWidth / imgHeight;
+          cropHeight = Math.min(cropWidth / targetRatio, imgHeight * 0.9);
+          x = (imgWidth - cropWidth) / 2;
+          y = (imgHeight - cropHeight) / 2;
+        }
+        
+        // Set the crop area
         setCropArea({
           x: x,
           y: y,
-          width: finalSize,
-          height: finalSize
+          width: cropWidth,
+          height: cropHeight
         });
         
         // Update input fields
-        setWidth(Math.round(finalSize).toString());
-        setHeight(Math.round(finalSize).toString());
+        setWidth(Math.round(cropWidth).toString());
+        setHeight(Math.round(cropHeight).toString());
         
         // Ensure crop tool is active
         setIsCropping(true);
@@ -159,15 +190,41 @@ export function useCropImage({
     if (!imageRef.current || !cropArea) return { top: 0, left: 0, width: 0, height: 0 };
     
     const img = imageRef.current;
-    const scaleX = img.clientWidth / img.naturalWidth;
-    const scaleY = img.clientHeight / img.naturalHeight;
+    const imgRect = img.getBoundingClientRect();
     
-    return {
+    // Calculate scaling factors based on the rendered image vs natural size
+    const scaleX = imgRect.width / img.naturalWidth;
+    const scaleY = imgRect.height / img.naturalHeight;
+    
+    // Transform natural coordinates to display coordinates
+    const displayBox = {
       top: cropArea.y * scaleY,
       left: cropArea.x * scaleX,
       width: cropArea.width * scaleX,
       height: cropArea.height * scaleY
     };
+    
+    return displayBox;
+  };
+
+  const constrainCropToImage = (newCrop) => {
+    if (!imageRef.current) return newCrop;
+    
+    const img = imageRef.current;
+    const imgWidth = img.naturalWidth;
+    const imgHeight = img.naturalHeight;
+    
+    let { x, y, width, height } = newCrop;
+    
+    // Ensure crop dimensions don't exceed image bounds
+    width = Math.min(width, imgWidth - x);
+    height = Math.min(height, imgHeight - y);
+    
+    // Ensure crop position doesn't go outside image bounds
+    x = Math.max(0, Math.min(x, imgWidth - width));
+    y = Math.max(0, Math.min(y, imgHeight - height));
+    
+    return { x, y, width, height };
   };
 
   const handleMouseDown = (e) => {
@@ -208,6 +265,8 @@ export function useCropImage({
     
     const img = imageRef.current;
     const imgRect = img.getBoundingClientRect();
+    
+    // Calculate scaling factors to convert screen pixels to image pixels
     const scaleX = img.naturalWidth / imgRect.width;
     const scaleY = img.naturalHeight / imgRect.height;
     
@@ -336,6 +395,7 @@ export function useCropImage({
   const performCrop = (format = 'image/jpeg', quality = 0.92) => {
     if (!imageRef.current || !cropArea) return null;
   
+    const img = imageRef.current;
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
   
@@ -395,7 +455,7 @@ export function useCropImage({
   
     // Draw cropped portion of image to canvas
     ctx.drawImage(
-      imageRef.current,
+      img,
       cropArea.x, cropArea.y, cropArea.width, cropArea.height,
       0, 0, cropArea.width, cropArea.height
     );

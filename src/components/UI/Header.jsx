@@ -1,6 +1,6 @@
 
 
-'use clint'
+'use client'
 import { ChevronDown, Upload, Search, Download, Grid } from 'lucide-react';
 
 export default function Header({ 
@@ -13,14 +13,7 @@ export default function Header({
   return (
     <header className="flex items-center justify-between bg-white dark:bg-dark-card px-4 py-3 border-b border-gray-200 dark:border-dark-border">
       <div className="flex items-center space-x-2 md:space-x-4">
-        {isMobile && (
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-1 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-border rounded"
-          >
-            <Grid size={20} />
-          </button>
-        )}
+      
         <div className="flex items-center">
           <div className="h-8 w-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
             <span className="text-white font-bold">AI</span>

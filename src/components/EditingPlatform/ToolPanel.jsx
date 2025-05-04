@@ -198,16 +198,20 @@ export default function ToolPanel({
     setupCropByAspectRatio(ratioId);
   };
 
-  const handleToolToggle = (tool, setActiveToolFunc, currentActiveTool) => {
-    if (currentActiveTool === tool) {
-      setActiveToolFunc(null);
-      if (tool === 'crop' && setIsCropping) setIsCropping(false);
-    } else {
-      if (currentActiveTool === 'crop' && setIsCropping) setIsCropping(false);
-      setActiveToolFunc(tool);
-      if (tool === 'crop' && setIsCropping) setIsCropping(true);
+  // Line ~282-295 in the handleToolToggle function
+const handleToolToggle = (tool, setActiveToolFunc, currentActiveTool) => {
+  if (currentActiveTool === tool) {
+    setActiveToolFunc(null);
+    if (setIsCropping) setIsCropping(false);  // Always turn off cropping when deselecting any tool
+  } else {
+    if (currentActiveTool === 'crop' && setIsCropping) setIsCropping(false);  // Turn off cropping when switching from crop to another tool
+    setActiveToolFunc(tool);
+    // Only set cropping to true if specifically selecting the crop tool
+    if (tool === 'crop' && setIsCropping) {
+      setIsCropping(true);
     }
-  };
+  }
+};
 
  
   const SectionHeader = ({ title, onClick, isActive }) => (
@@ -310,8 +314,7 @@ export default function ToolPanel({
     </button>
   );
 
- 
-  
+
 const renderAdjustToolPanel = () => (
   <div className="rounded-lg overflow-hidden">
     <h2 className="text-gray-200 font-medium mb-2 text-sm">Size & Orientation</h2>
@@ -396,27 +399,27 @@ const renderAdjustToolPanel = () => (
       </PanelSection>
 
       <PanelSection 
-        title="Flip" 
-        isExpanded={activeAdjustTool === 'flip'} 
-        onToggle={() => handleToolToggle('flip', setActiveAdjustTool, activeAdjustTool)}
-      >
-        <div className="grid grid-cols-2 gap-1">
-          <button
-            onClick={() => performFlip('horizontal')}
-            className="flex flex-col items-center justify-center p-2 rounded border border-gray-600 hover:border-blue-500 hover:bg-gray-700 transition-colors"
-          >
-            <FlipHorizontal size={16} className="text-gray-200 mb-1" />
-            <span className="text-xs text-gray-300">Horizontal</span>
-          </button>
-          <button
-            onClick={() => performFlip('vertical')}
-            className="flex flex-col items-center justify-center p-2 rounded border border-gray-600 hover:border-blue-500 hover:bg-gray-700 transition-colors"
-          >
-            <FlipVertical size={16} className="text-gray-200 mb-1" />
-            <span className="text-xs text-gray-300">Vertical</span>
-          </button>
-        </div>
-      </PanelSection>
+  title="Flip" 
+  isExpanded={activeAdjustTool === 'flip'} 
+  onToggle={() => handleToolToggle('flip', setActiveAdjustTool, activeAdjustTool)}
+>
+  <div className="grid grid-cols-2 gap-1">
+    <button
+      onClick={() => performFlip('horizontal')}
+      className="flex flex-col items-center justify-center p-2 rounded border border-gray-600 hover:border-blue-500 hover:bg-gray-700 transition-colors"
+    >
+      <FlipHorizontal size={16} className="text-gray-200 mb-1" />
+      <span className="text-xs text-gray-300">Horizontal</span>
+    </button>
+    <button
+      onClick={() => performFlip('vertical')}
+      className="flex flex-col items-center justify-center p-2 rounded border border-gray-600 hover:border-blue-500 hover:bg-gray-700 transition-colors"
+    >
+      <FlipVertical size={16} className="text-gray-200 mb-1" />
+      <span className="text-xs text-gray-300">Vertical</span>
+    </button>
+  </div>
+</PanelSection>
 
       <PanelSection 
         title="Rotate" 
@@ -852,14 +855,17 @@ const renderAdjustToolPanel = () => (
     const BottomToolbar = () => (
       <div className="flex justify-around items-center h-full px-2">
         <ToolbarButton 
-          icon={<Sliders size={20} />} 
-          label="Adjust" 
-          isActive={activeTool === 'adjust'} 
-          onClick={() => {
-            setSidebarOpen(true);
-            handleToolToggle('adjust', () => {}, activeTool);
-          }} 
-        />
+  icon={<Sliders size={20} />} 
+  label="Adjust" 
+  isActive={activeTool === 'adjust'} 
+  onClick={() => {
+    setSidebarOpen(true);
+    handleToolToggle('adjust', () => {}, activeTool);
+    if (isMobile) {
+      setIsBottomSheetOpen(true);  // This is the key line to add
+    }
+  }} 
+/>
         <ToolbarButton 
           icon={<Wand2 size={20} />} 
           label="AI" 
@@ -920,7 +926,12 @@ const renderAdjustToolPanel = () => (
     // Helper component for toolbar buttons
     const ToolbarButton = ({ icon, label, isActive, onClick }) => (
       <button
-        onClick={onClick}
+        onClick={() => {
+          onClick();
+          if (isMobile) {
+            setIsBottomSheetOpen(true);
+          }
+        }}
         className={`flex flex-col items-center justify-center p-1 ${
           isActive ? 'text-blue-400' : 'text-gray-300'
         }`}
@@ -969,34 +980,35 @@ const renderAdjustToolPanel = () => (
       );
     };
 
-    return (
+    // Around line 953-963 (near the bottom of the component)
+return (
+  <>
+    {/* Conditionally render based on mobile or desktop */}
+    {isMobile ? (
       <>
-        {/* Conditionally render based on mobile or desktop */}
-        {isMobile ? (
-          <>
-            {/* Fixed bottom toolbar */}
-            <div className="fixed bottom-0 left-0 right-0 h-16 bg-gray-900 border-t border-gray-800 z-30">
-              <BottomToolbar />
-            </div>
-            
-            {/* Bottom sheet for expanded tool options */}
-            <BottomSheet 
-              isOpen={isBottomSheetOpen} 
-              onClose={() => setIsBottomSheetOpen(false)}
-            >
-              {renderActiveToolPanel()}
-            </BottomSheet>
-          </>
-        ) : (
-          // Original sidebar layout for desktop
-          <div className="bg-gray-900 h-full overflow-y-auto text-white shadow-lg w-64">
-            <div className="p-3">
-              {renderActiveToolPanel()}
-            </div>
-          </div>
-        )}
+        {/* Fixed bottom toolbar */}
+        <div className="fixed bottom-0 left-0 right-0 h-16 bg-gray-900 border-t border-gray-800 z-30">
+          <BottomToolbar />
+        </div>
+        
+        {/* Bottom sheet for expanded tool options */}
+        <BottomSheet 
+          isOpen={isBottomSheetOpen} 
+          onClose={() => setIsBottomSheetOpen(false)}
+        >
+          {renderActiveToolPanel()}
+        </BottomSheet>
       </>
-    );
+    ) : (
+      // Original sidebar layout for desktop
+      <div className="bg-gray-900 h-full overflow-y-auto text-white shadow-lg w-64">
+        <div className="p-3">
+          {renderActiveToolPanel()}
+        </div>
+      </div>
+    )}
+  </>
+);
 }
 
 

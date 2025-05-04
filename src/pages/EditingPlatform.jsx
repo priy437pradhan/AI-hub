@@ -1,6 +1,6 @@
 'use client'
 import { useState, useRef, useEffect } from 'react';
-
+import Header from '../components/EditingPlatform/Header'
 import Sidebar from '../components/EditingPlatform/Sidebar';
 import ToolPanel from '../components/EditingPlatform/ToolPanel';
 import ImageCanvas from '../components/EditingPlatform/ImageCanvas';
@@ -63,12 +63,12 @@ export default function EditingPlatform() {
     imagePreview 
   });
   
-  // Use the flip image hook
   const {
     isFlippedHorizontally,
     isFlippedVertically,
     performFlipBase
   } = useFlipImage({ imageRef });
+  
   
   // Function to perform rotation
   const performRotateBase = async (angle) => {
@@ -197,6 +197,13 @@ export default function EditingPlatform() {
         onChange={handleFileChange} 
         accept="image/*" 
         className="hidden" 
+      />
+      <Header 
+        isMobile={isMobile}
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+        handleUploadClick={handleUploadClick}
+        downloadImage={downloadImage}
       />
       
       {/* Main Content */}

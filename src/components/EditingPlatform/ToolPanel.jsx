@@ -311,6 +311,7 @@ export default function ToolPanel({
   );
 
  
+  
 const renderAdjustToolPanel = () => (
   <div className="rounded-lg overflow-hidden">
     <h2 className="text-gray-200 font-medium mb-2 text-sm">Size & Orientation</h2>

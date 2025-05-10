@@ -1,11 +1,29 @@
 import React from 'react';
 import { ArrowRight, RotateCcw, RotateCw, FlipHorizontal, FlipVertical } from 'lucide-react';
-import PanelSection from '../common/PanelSection'
+import PanelSection from '../common/PanelSection';
 import ButtonGrid from '../common/ButtonGrid';
 import ActionButton from '../common/ActionButton';
 
-import { aspectRatios, subToolNames } from '../../data/constants';
-
+// Hardcoding the constants based on what we can see in your code
+const subToolNames = {
+  CROP: 'crop',
+  FLIP: 'flip',
+  ROTATE: 'rotate'
+};
+export const aspectRatios = [
+    { id: 'freeform', label: 'Freeform', icon: '⊞', dimensions: null },
+    { id: '1x1', label: '1 x 1', icon: '□', dimensions: { width: 1, height: 1 } },
+    { id: '3x2', label: '3 x 2', icon: '▭', dimensions: { width: 3, height: 2 } },
+    { id: '2x3', label: '2 x 3', icon: '▯', dimensions: { width: 2, height: 3 } },
+    { id: '4x3', label: '4 x 3', icon: '▭', dimensions: { width: 4, height: 3 } },
+    { id: '3x4', label: '3 x 4', icon: '▯', dimensions: { width: 3, height: 4 } },
+    { id: '16x9', label: '16 x 9', icon: '▭', dimensions: { width: 16, height: 9 } },
+    { id: '9x16', label: '9 x 16', icon: '▯', dimensions: { width: 9, height: 16 } },
+    { id: 'original', label: 'Original Ratio', icon: '▣', dimensions: null },
+    { id: 'circle', label: 'Circle', icon: '○', dimensions: null },
+    { id: 'triangle', label: 'Triangle', icon: '△', dimensions: null },
+    { id: 'heart', label: 'Heart-shape', icon: '♥', dimensions: null },
+];
 const AdjustToolPanel = ({
   activeAdjustTool,
   setActiveAdjustTool,
@@ -26,31 +44,50 @@ const AdjustToolPanel = ({
   performFlip,
   performRotate,
 }) => {
-  // Fixed handleToolToggle function
+  console.log("AdjustToolPanel render:", { activeAdjustTool, isCropping: activeAdjustTool === subToolNames.CROP });
+
+  // Fixed handleToolToggle function with explicit logging
   const handleToolToggle = (tool) => {
-    // Always ensure isCropping is false when not using the crop tool
-    if (tool !== subToolNames.CROP && setIsCropping) {
-      setIsCropping(false);
-    }
+    console.log(`Toggling tool from ${activeAdjustTool} to ${tool}`);
     
-    // Toggle the tool - if already active, deactivate it
+    // If clicking the same tool, toggle it off
     if (activeAdjustTool === tool) {
+      console.log("Deactivating tool:", tool);
       setActiveAdjustTool(null);
-      if (setIsCropping) setIsCropping(false);
+      if (tool === subToolNames.CROP && setIsCropping) {
+        console.log("Setting isCropping to false");
+        setIsCropping(false);
+      }
     } else {
       // Switch to the new tool
+      console.log("Activating tool:", tool);
       setActiveAdjustTool(tool);
-      // Only set isCropping to true if specifically switching to crop tool
-      if (tool === subToolNames.CROP && setIsCropping) {
-        setIsCropping(true);
+      
+      // Special handling for crop tool
+      if (tool === subToolNames.CROP) {
+        if (setIsCropping) {
+          console.log("Setting isCropping to true");
+          setIsCropping(true);
+          
+          // Initialize crop area if needed
+          if (!cropArea && imageRef.current) {
+            setupCropByAspectRatio(aspectRatio);
+          }
+        }
+      } else if (setIsCropping) {
+        // Turn off cropping for non-crop tools
+        console.log("Setting isCropping to false (non-crop tool)");
+        setIsCropping(false);
       }
     }
   };
 
   const applyAspectRatio = (ratioId) => {
     if (!imageRef.current) return;
+    console.log("Applying aspect ratio:", ratioId);
     setAspectRatio(ratioId);
     setIsCropping(true);
+    setActiveAdjustTool(subToolNames.CROP);
     setupCropByAspectRatio(ratioId);
   };
 
@@ -76,7 +113,7 @@ const AdjustToolPanel = ({
               onChange={(e) => {
                 const newWidth = e.target.value;
                 setWidth(newWidth);
-                if (keepAspectRatio && cropArea) {
+                if (keepAspectRatio && cropArea && cropArea.width > 0) {
                   const ratio = cropArea.height / cropArea.width;
                   setHeight(Math.round(parseInt(newWidth) * ratio).toString());
                 }
@@ -90,7 +127,7 @@ const AdjustToolPanel = ({
               onChange={(e) => {
                 const newHeight = e.target.value;
                 setHeight(newHeight);
-                if (keepAspectRatio && cropArea) {
+                if (keepAspectRatio && cropArea && cropArea.width > 0) {
                   const ratio = cropArea.width / cropArea.height;
                   setWidth(Math.round(parseInt(newHeight) * ratio).toString());
                 }
@@ -100,7 +137,12 @@ const AdjustToolPanel = ({
             />
             <button
               onClick={() => {
+                console.log("Apply dimensions button clicked");
                 if (!imageRef.current) return;
+                
+                setActiveAdjustTool(subToolNames.CROP);
+                setIsCropping(true);
+                
                 const img = imageRef.current;
                 const imgWidth = img.naturalWidth;
                 const imgHeight = img.naturalHeight;
@@ -108,8 +150,9 @@ const AdjustToolPanel = ({
                 const newHeight = parseInt(height);
                 const newX = Math.max(0, (imgWidth - newWidth) / 2);
                 const newY = Math.max(0, (imgHeight - newHeight) / 2);
+                
+                console.log("Setting crop area:", { newX, newY, newWidth, newHeight });
                 setCropArea({ x: newX, y: newY, width: newWidth, height: newHeight });
-                setIsCropping(true);
               }}
               className="p-1 bg-blue-600 rounded hover:bg-blue-700 transition-colors"
             >
@@ -129,8 +172,18 @@ const AdjustToolPanel = ({
             </label>
           </div>
           <ActionButton 
-            onClick={() => performCrop && performCrop(cropArea)} 
-            disabled={!cropArea || !setIsCropping}
+            onClick={() => {
+              console.log("Apply crop button clicked");
+              if (performCrop) {
+                const croppedUrl = performCrop();
+                console.log("Crop performed, result:", croppedUrl ? "Success" : "Failed");
+                if (croppedUrl) {
+                  // Successfully cropped, turn off crop mode
+                  setIsCropping(false);
+                }
+              }
+            }} 
+            disabled={!cropArea || !performCrop}
           >
             Apply Crop
           </ActionButton>
@@ -144,6 +197,7 @@ const AdjustToolPanel = ({
           <div className="grid grid-cols-2 gap-1">
             <button
               onClick={() => {
+                console.log("Flip horizontal clicked");
                 performFlip('horizontal');
                 // Ensure cropping is disabled when flipping
                 if (setIsCropping) setIsCropping(false);
@@ -155,6 +209,7 @@ const AdjustToolPanel = ({
             </button>
             <button
               onClick={() => {
+                console.log("Flip vertical clicked");
                 performFlip('vertical');
                 // Ensure cropping is disabled when flipping
                 if (setIsCropping) setIsCropping(false);
@@ -175,6 +230,7 @@ const AdjustToolPanel = ({
           <div className="grid grid-cols-2 gap-1">
             <button
               onClick={() => {
+                console.log("Rotate left clicked");
                 performRotate('left');
                 // Ensure cropping is disabled when rotating
                 if (setIsCropping) setIsCropping(false);
@@ -186,6 +242,7 @@ const AdjustToolPanel = ({
             </button>
             <button
               onClick={() => {
+                console.log("Rotate right clicked");
                 performRotate('right');
                 // Ensure cropping is disabled when rotating
                 if (setIsCropping) setIsCropping(false);

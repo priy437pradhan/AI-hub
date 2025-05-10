@@ -7,7 +7,7 @@ export default function ImageCanvas({
   imageRef,
   isCropping,
   activeTool,
-  activeAdjustTool, // Added activeAdjustTool prop
+  activeAdjustTool,
   cropArea,
   setCropArea,
   handleMouseDown,
@@ -23,11 +23,17 @@ export default function ImageCanvas({
   // Get display coordinates for crop overlay
   const displayCrop = getDisplayCropArea ? getDisplayCropArea() : { top: 0, left: 0, width: 0, height: 0 };
   
-  // Improved condition to only show crop overlay when both conditions are true:
-  // 1. isCropping is true
-  // 2. activeTool is 'adjust'
-  // 3. activeAdjustTool is 'crop'
-  const showCropOverlay = isCropping && activeTool === 'adjust' && activeAdjustTool === 'crop';
+  // Only show crop overlay when isCropping is explicitly true
+  const showCropOverlay = isCropping === true;
+  
+  // For debugging - helpful to see these values in the console when troubleshooting
+  console.log("ImageCanvas state:", { 
+    isCropping, 
+    activeAdjustTool, 
+    activeTool,
+    cropArea: cropArea ? { width: cropArea.width, height: cropArea.height } : null,
+    showCropOverlay 
+  });
 
   // Get appropriate clip path based on selected shape
   const getClipPath = () => {
@@ -46,9 +52,9 @@ export default function ImageCanvas({
   return (
     <div 
       className="flex-1 flex items-center justify-center dark:bg-dark-bg mx-20 my-28"
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
+      onMouseMove={isCropping ? handleMouseMove : undefined}
+      onMouseUp={isCropping ? handleMouseUp : undefined}
+      onMouseLeave={isCropping ? handleMouseUp : undefined}
     >
       {!imagePreview ? (
         <div 
@@ -89,7 +95,7 @@ export default function ImageCanvas({
               }}
             />
 
-            {/* Crop overlay with proper positioning */}
+            {/* Crop overlay with proper positioning - ONLY SHOW WHEN isCropping is true */}
             {showCropOverlay && cropArea && cropArea.width > 0 && (
               <>
                 {/* Semi-transparent overlay outside crop area */}
@@ -139,7 +145,7 @@ export default function ImageCanvas({
             )}
           </div>
 
-          {/* Control buttons */}
+          {/* Control buttons - ONLY SHOW WHEN isCropping is true */}
           {showCropOverlay && (
             <div className="absolute bottom-4 right-4 bg-gray-900 bg-opacity-75 p-3 rounded-lg flex space-x-3 z-10">
               <button 

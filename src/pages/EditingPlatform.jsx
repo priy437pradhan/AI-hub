@@ -6,7 +6,7 @@ import ToolPanel from '../components/EditingPlatform/ToolPanel/ToolPanel';
 import BottomToolbar from '../components/EditingPlatform/ToolPanel/BottomToolbar';
 import BottomSheet from '../components/EditingPlatform/ToolPanel/BottomSheet'
 import ImageCanvas from '../components/EditingPlatform/ImageCanvas';
-import  useCropImage  from '../components/EditingPlatform/tools/useCropImage';
+import { useCropImage } from '../components/EditingPlatform/tools/useCropImage';
 import { useFlipImage } from '../components/EditingPlatform/tools/useFlipImage';
 import { useRotateImage } from '../components/EditingPlatform/tools/useRotateImage';
 

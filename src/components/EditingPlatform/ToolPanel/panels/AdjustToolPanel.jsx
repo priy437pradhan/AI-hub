@@ -1,9 +1,8 @@
 import React from 'react';
 import { ArrowRight, RotateCcw, RotateCw, FlipHorizontal, FlipVertical } from 'lucide-react';
 import PanelSection from '../common/PanelSection'
-import  ButtonGrid  from '../common/ButtonGrid';
-import  ActionButton  from '../common/ActionButton';
-
+import ButtonGrid from '../common/ButtonGrid';
+import ActionButton from '../common/ActionButton';
 
 import { aspectRatios, subToolNames } from '../../data/constants';
 
@@ -27,13 +26,21 @@ const AdjustToolPanel = ({
   performFlip,
   performRotate,
 }) => {
+  // Fixed handleToolToggle function
   const handleToolToggle = (tool) => {
+    // Always ensure isCropping is false when not using the crop tool
+    if (tool !== subToolNames.CROP && setIsCropping) {
+      setIsCropping(false);
+    }
+    
+    // Toggle the tool - if already active, deactivate it
     if (activeAdjustTool === tool) {
       setActiveAdjustTool(null);
-      if (setIsCropping) setIsCropping(false);  
+      if (setIsCropping) setIsCropping(false);
     } else {
-      if (activeAdjustTool === subToolNames.CROP && setIsCropping) setIsCropping(false);  
+      // Switch to the new tool
       setActiveAdjustTool(tool);
+      // Only set isCropping to true if specifically switching to crop tool
       if (tool === subToolNames.CROP && setIsCropping) {
         setIsCropping(true);
       }
@@ -136,14 +143,22 @@ const AdjustToolPanel = ({
         >
           <div className="grid grid-cols-2 gap-1">
             <button
-              onClick={() => performFlip('horizontal')}
+              onClick={() => {
+                performFlip('horizontal');
+                // Ensure cropping is disabled when flipping
+                if (setIsCropping) setIsCropping(false);
+              }}
               className="flex flex-col items-center justify-center p-2 rounded border border-gray-600 hover:border-blue-500 hover:bg-gray-700 transition-colors"
             >
               <FlipHorizontal size={16} className="text-gray-200 mb-1" />
               <span className="text-xs text-gray-300">Horizontal</span>
             </button>
             <button
-              onClick={() => performFlip('vertical')}
+              onClick={() => {
+                performFlip('vertical');
+                // Ensure cropping is disabled when flipping
+                if (setIsCropping) setIsCropping(false);
+              }}
               className="flex flex-col items-center justify-center p-2 rounded border border-gray-600 hover:border-blue-500 hover:bg-gray-700 transition-colors"
             >
               <FlipVertical size={16} className="text-gray-200 mb-1" />
@@ -159,14 +174,22 @@ const AdjustToolPanel = ({
         >
           <div className="grid grid-cols-2 gap-1">
             <button
-              onClick={() => performRotate('left')}
+              onClick={() => {
+                performRotate('left');
+                // Ensure cropping is disabled when rotating
+                if (setIsCropping) setIsCropping(false);
+              }}
               className="flex flex-col items-center justify-center p-2 rounded border border-gray-600 hover:border-blue-500 hover:bg-gray-700 transition-colors"
             >
               <RotateCcw size={16} className="text-gray-200 mb-1" />
               <span className="text-xs text-gray-300">Left 90°</span>
             </button>
             <button
-              onClick={() => performRotate('right')}
+              onClick={() => {
+                performRotate('right');
+                // Ensure cropping is disabled when rotating
+                if (setIsCropping) setIsCropping(false);
+              }}
               className="flex flex-col items-center justify-center p-2 rounded border border-gray-600 hover:border-blue-500 hover:bg-gray-700 transition-colors"
             >
               <RotateCw size={16} className="text-gray-200 mb-1" />

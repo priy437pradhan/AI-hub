@@ -7,6 +7,7 @@ export default function ImageCanvas({
   imageRef,
   isCropping,
   activeTool,
+  activeAdjustTool, // Added activeAdjustTool prop
   cropArea,
   setCropArea,
   handleMouseDown,
@@ -21,7 +22,12 @@ export default function ImageCanvas({
 }) {
   // Get display coordinates for crop overlay
   const displayCrop = getDisplayCropArea ? getDisplayCropArea() : { top: 0, left: 0, width: 0, height: 0 };
-  const showCropOverlay = isCropping && activeTool === 'adjust';
+  
+  // Improved condition to only show crop overlay when both conditions are true:
+  // 1. isCropping is true
+  // 2. activeTool is 'adjust'
+  // 3. activeAdjustTool is 'crop'
+  const showCropOverlay = isCropping && activeTool === 'adjust' && activeAdjustTool === 'crop';
 
   // Get appropriate clip path based on selected shape
   const getClipPath = () => {

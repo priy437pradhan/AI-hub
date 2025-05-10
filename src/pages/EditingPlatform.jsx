@@ -6,8 +6,9 @@ import ToolPanel from '../components/EditingPlatform/ToolPanel/ToolPanel';
 import BottomToolbar from '../components/EditingPlatform/ToolPanel/BottomToolbar';
 import BottomSheet from '../components/EditingPlatform/ToolPanel/BottomSheet'
 import ImageCanvas from '../components/EditingPlatform/ImageCanvas';
-import { useCropImage } from '../components/EditingPlatform/tools/Crop';
+import  useCropImage  from '../components/EditingPlatform/tools/useCropImage';
 import { useFlipImage } from '../components/EditingPlatform/tools/useFlipImage';
+import { useRotateImage } from '../components/EditingPlatform/tools/useRotateImage';
 
 export const aspectRatios = [
     { id: 'freeform', label: 'Freeform', icon: '⊞', dimensions: null },
@@ -38,6 +39,7 @@ export default function EditingPlatform() {
 
   // State for active tool selection
   const [activeTool, setActiveTool] = useState(toolNames.ADJUST);
+  const [activeAdjustTool, setActiveAdjustTool] = useState(null);
   const [aspectRatio, setAspectRatio] = useState('freeform');
   const [width, setWidth] = useState('475');
   const [height, setHeight] = useState('475');
@@ -79,60 +81,89 @@ export default function EditingPlatform() {
     imagePreview 
   });
   
+  // Use the flip image hook
   const {
     isFlippedHorizontally,
     isFlippedVertically,
     performFlipBase
   } = useFlipImage({ imageRef });
   
+  // Use the rotate image hook
+  const { 
+    rotationDegrees, 
+    performRotateBase 
+  } = useRotateImage({ imageRef });
   
-  // Function to perform rotation
-  const performRotateBase = async (angle) => {
-    if (!imageRef.current) return null;
+  // Setup crop by aspect ratio function
+  const setupCropByAspectRatio = (ratioId) => {
+    if (!imageRef.current) return;
     
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
     const img = imageRef.current;
+    const imgWidth = img.naturalWidth;
+    const imgHeight = img.naturalHeight;
     
-    // For 90-degree rotations, we need to swap width and height
-    const swapDimensions = angle === 'left' || angle === 'right';
-    canvas.width = swapDimensions ? img.naturalHeight : img.naturalWidth;
-    canvas.height = swapDimensions ? img.naturalWidth : img.naturalHeight;
+    // Default to a centered crop at 80% of the image
+    let newWidth = imgWidth * 0.8;
+    let newHeight = imgHeight * 0.8;
     
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // Move to the center of the canvas
-    ctx.translate(canvas.width / 2, canvas.height / 2);
-    
-    // Rotate based on direction
-    if (angle === 'left') {
-      ctx.rotate(-Math.PI / 2);
-    } else if (angle === 'right') {
-      ctx.rotate(Math.PI / 2);
+    // Adjust dimensions based on selected aspect ratio
+    if (ratioId !== 'freeform' && ratioId !== 'original') {
+      const selectedRatio = aspectRatios.find(r => r.id === ratioId);
+      if (selectedRatio?.dimensions) {
+        const { width: rWidth, height: rHeight } = selectedRatio.dimensions;
+        const ratio = rWidth / rHeight;
+        
+        // Calculate dimensions while maintaining the aspect ratio
+        if (imgWidth / imgHeight > ratio) {
+          // Image is wider than the target ratio
+          newHeight = imgHeight * 0.8;
+          newWidth = newHeight * ratio;
+        } else {
+          // Image is taller than the target ratio
+          newWidth = imgWidth * 0.8;
+          newHeight = newWidth / ratio;
+        }
+      }
+    } else if (ratioId === 'original') {
+      newWidth = imgWidth;
+      newHeight = imgHeight;
     }
     
-    // Draw the image centered
-    ctx.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
+    // Center the crop area
+    const newX = (imgWidth - newWidth) / 2;
+    const newY = (imgHeight - newHeight) / 2;
     
-    // Reset transformation
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    // Update crop area
+    setCropArea({
+      x: newX,
+      y: newY,
+      width: newWidth,
+      height: newHeight
+    });
     
-    return canvas.toDataURL('image/jpeg');
+    // Update width and height inputs
+    setWidth(Math.round(newWidth).toString());
+    setHeight(Math.round(newHeight).toString());
   };
   
   // Wrapper functions for the image transformations
-  const performRotate = async (angle) => {
-    const newImageUrl = await performRotateBase(angle);
-    if (newImageUrl) {
-      setImagePreview(newImageUrl);
+  const performRotate = async (direction) => {
+    // Make sure crop mode is off
+    setIsCropping(false);
+    
+    const rotatedImageUrl = await performRotateBase(direction);
+    if (rotatedImageUrl) {
+      setImagePreview(rotatedImageUrl);
     }
   };
   
   const performFlip = async (direction) => {
-    const newImageUrl = await performFlipBase(direction);
-    if (newImageUrl) {
-      setImagePreview(newImageUrl);
+    // Make sure crop mode is off
+    setIsCropping(false);
+    
+    const flippedImageUrl = await performFlipBase(direction);
+    if (flippedImageUrl) {
+      setImagePreview(flippedImageUrl);
     }
   };
   
@@ -148,7 +179,7 @@ export default function EditingPlatform() {
         setSidebarOpen(false);
       } else {
         setSidebarOpen(true);
-      }
+      } 
     };
     checkMobile();
     window.addEventListener('resize', checkMobile);
@@ -187,7 +218,6 @@ export default function EditingPlatform() {
     link.href = croppedImage || imagePreview;
     link.click();
   };
-  
   
   const demoImages = [
     '/path/to/demo-image-1.jpg',
@@ -238,6 +268,8 @@ export default function EditingPlatform() {
         {(!isMobile || (isMobile && activeTool !== toolNames.ADJUST)) && (
           <ToolPanel 
             activeTool={activeTool}
+            activeAdjustTool={activeAdjustTool}
+            setActiveAdjustTool={setActiveAdjustTool}
             isMobile={isMobile}
             setSidebarOpen={setSidebarOpen}
             aspectRatio={aspectRatio}
@@ -253,6 +285,7 @@ export default function EditingPlatform() {
             cropArea={cropArea}
             setCropArea={setCropArea}
             imageRef={imageRef}
+            setupCropByAspectRatio={setupCropByAspectRatio}
             performFlip={performFlip}
             performRotate={performRotate}
           />
@@ -266,6 +299,7 @@ export default function EditingPlatform() {
             imageRef={imageRef}
             isCropping={isCropping}
             activeTool={activeTool}
+            activeAdjustTool={activeAdjustTool}
             cropArea={cropArea}
             setCropArea={setCropArea}
             handleMouseDown={handleMouseDown}
@@ -302,6 +336,8 @@ export default function EditingPlatform() {
           >
             <ToolPanel 
               activeTool={activeTool}
+              activeAdjustTool={activeAdjustTool}
+              setActiveAdjustTool={setActiveAdjustTool}
               isMobile={isMobile}
               setSidebarOpen={setSidebarOpen}
               aspectRatio={aspectRatio}
@@ -317,6 +353,7 @@ export default function EditingPlatform() {
               cropArea={cropArea}
               setCropArea={setCropArea}
               imageRef={imageRef}
+              setupCropByAspectRatio={setupCropByAspectRatio}
               performFlip={performFlip}
               performRotate={performRotate}
             />

@@ -2,7 +2,9 @@
 import { useState, useRef, useEffect } from 'react';
 import Header from '../components/EditingPlatform/Header'
 import Sidebar from '../components/EditingPlatform/Sidebar';
-import ToolPanel from '../components/EditingPlatform/ToolPanel';
+import ToolPanel from '../components/EditingPlatform/ToolPanel/ToolPanel';
+import BottomToolbar from '../components/EditingPlatform/ToolPanel/BottomToolbar';
+import BottomSheet from '../components/EditingPlatform/ToolPanel/BottomSheet'
 import ImageCanvas from '../components/EditingPlatform/ImageCanvas';
 import { useCropImage } from '../components/EditingPlatform/tools/Crop';
 import { useFlipImage } from '../components/EditingPlatform/tools/useFlipImage';
@@ -23,12 +25,26 @@ export const aspectRatios = [
 ];
 
 export default function EditingPlatform() {
+  // Tool constants
+  const toolNames = {
+    ADJUST: 'adjust',
+    AI: 'ai',
+    EFFECTS: 'effects',
+    BEAUTY: 'beauty',
+    FRAMES: 'frames',
+    TEXT: 'text',
+    ELEMENTS: 'elements'
+  };
+
   // State for active tool selection
-  const [activeTool, setActiveTool] = useState('adjust');
+  const [activeTool, setActiveTool] = useState(toolNames.ADJUST);
   const [aspectRatio, setAspectRatio] = useState('freeform');
   const [width, setWidth] = useState('475');
   const [height, setHeight] = useState('475');
   const [keepAspectRatio, setKeepAspectRatio] = useState(false);
+  
+  // Bottom sheet state for mobile
+  const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
   
   // State for image upload
   const [uploadedImage, setUploadedImage] = useState(null);
@@ -149,7 +165,7 @@ export default function EditingPlatform() {
         setCroppedImage(null);
       };
       reader.readAsDataURL(file);
-      setActiveTool('adjust');
+      setActiveTool(toolNames.ADJUST);
       setIsCropping(true);
     }
   };
@@ -172,7 +188,7 @@ export default function EditingPlatform() {
     link.click();
   };
   
-  // Sample demo images - you can replace these with your actual demo images
+  
   const demoImages = [
     '/path/to/demo-image-1.jpg',
     '/path/to/demo-image-2.jpg'
@@ -183,7 +199,7 @@ export default function EditingPlatform() {
     setImagePreview(demoImages[index]);
     setUploadedImage("demo-image");
     setCroppedImage(null);
-    setActiveTool('adjust');
+    setActiveTool(toolNames.ADJUST);
     setIsCropping(true);
     setAspectRatio('freeform');
   };
@@ -208,8 +224,8 @@ export default function EditingPlatform() {
       
       {/* Main Content */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar Component */}
-        {sidebarOpen && (
+        {/* Sidebar Component - Desktop Only */}
+        {sidebarOpen && !isMobile && (
           <Sidebar 
             activeTool={activeTool}
             setActiveTool={setActiveTool}
@@ -219,7 +235,7 @@ export default function EditingPlatform() {
         )}
         
         {/* Tool Panel Component */}
-        {(!isMobile || (isMobile && activeTool !== 'adjust')) && (
+        {(!isMobile || (isMobile && activeTool !== toolNames.ADJUST)) && (
           <ToolPanel 
             activeTool={activeTool}
             isMobile={isMobile}
@@ -242,27 +258,71 @@ export default function EditingPlatform() {
           />
         )}
         
-        {/* Canvas Area */}
-        <ImageCanvas 
-          imagePreview={imagePreview}
-          handleUploadClick={handleUploadClick}
-          imageRef={imageRef}
-          isCropping={isCropping}
-          activeTool={activeTool}
-          cropArea={cropArea}
-          setCropArea={setCropArea}
-          handleMouseDown={handleMouseDown}
-          handleMouseMove={handleMouseMove}
-          handleMouseUp={handleMouseUp}
-          handleResizeStart={handleResizeStart}
-          performCrop={performCrop}
-          setIsCropping={setIsCropping}
-          aspectRatio={aspectRatio}
-          loadDemoImage={loadDemoImage}
-          setImagePreview={setImagePreview}
-          getDisplayCropArea={getDisplayCropArea}
-        />
+        {/* Canvas Area - Takes full width on mobile */}
+        <div className={`flex-1 ${isMobile ? 'pb-16' : ''}`}>
+          <ImageCanvas 
+            imagePreview={imagePreview}
+            handleUploadClick={handleUploadClick}
+            imageRef={imageRef}
+            isCropping={isCropping}
+            activeTool={activeTool}
+            cropArea={cropArea}
+            setCropArea={setCropArea}
+            handleMouseDown={handleMouseDown}
+            handleMouseMove={handleMouseMove}
+            handleMouseUp={handleMouseUp}
+            handleResizeStart={handleResizeStart}
+            performCrop={performCrop}
+            setIsCropping={setIsCropping}
+            aspectRatio={aspectRatio}
+            loadDemoImage={loadDemoImage}
+            setImagePreview={setImagePreview}
+            getDisplayCropArea={getDisplayCropArea}
+          />
+        </div>
       </div>
+      
+      {/* Mobile Bottom Toolbar */}
+      {isMobile && (
+        <>
+          <div className="fixed bottom-0 left-0 right-0 h-16 bg-gray-900 border-t border-gray-800 z-30">
+            <BottomToolbar 
+              activeTool={activeTool} 
+              setActiveTool={setActiveTool}
+              setSidebarOpen={setSidebarOpen} 
+              isMobile={isMobile}
+              setIsBottomSheetOpen={setIsBottomSheetOpen} 
+            />
+          </div>
+          
+          {/* Bottom Sheet for Mobile Tool Options */}
+          <BottomSheet 
+            isOpen={isBottomSheetOpen} 
+            onClose={() => setIsBottomSheetOpen(false)}
+          >
+            <ToolPanel 
+              activeTool={activeTool}
+              isMobile={isMobile}
+              setSidebarOpen={setSidebarOpen}
+              aspectRatio={aspectRatio}
+              setAspectRatio={setAspectRatio}
+              width={width}
+              setWidth={setWidth}
+              height={height}
+              setHeight={setHeight}
+              keepAspectRatio={keepAspectRatio}
+              setKeepAspectRatio={setKeepAspectRatio}
+              performCrop={performCrop}
+              setIsCropping={setIsCropping}
+              cropArea={cropArea}
+              setCropArea={setCropArea}
+              imageRef={imageRef}
+              performFlip={performFlip}
+              performRotate={performRotate}
+            />
+          </BottomSheet>
+        </>
+      )}
     </div>
   );
 }

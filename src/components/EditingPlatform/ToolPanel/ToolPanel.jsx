@@ -1,7 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
-import BottomToolbar from './BottomToolbar';
-import BottomSheet from './BottomSheet';
+import React from 'react';
 import AdjustToolPanel from './panels/AdjustToolPanel';
 import AIToolPanel from './panels/AIToolPanel';
 import EffectsToolPanel from './panels/EffectsToolPanel';
@@ -36,14 +33,14 @@ const ToolPanel = ({
   setActiveBeautyTool,
   applyBeautyFeature,
   beautySettings,
-  // Frames Panel props - ADD THESE
+  // Frames Panel props
   activeFramesTool,
   setActiveFramesTool,
   frameSettings,
   setFrameSettings,
   applyFrame,
   applyFrameEffects,
-   // Text editing props
+  // Text editing props
   textElements,
   textSettings,
   setTextSettings,
@@ -52,7 +49,6 @@ const ToolPanel = ({
   updateTextElement,
   applyTextToImage,
   clearAllText,
-  
   // Text styles props
   styleSettings,
   setStyleSettings,
@@ -70,12 +66,7 @@ const ToolPanel = ({
   setElementSize,
   addElement
 }) => {
-  const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
-  const [activeAITool, setActiveAITool] = useState(null);
-  const [activeEffectsTool, setActiveEffectsTool] = useState(null);
-  const [activeTextTool, setActiveTextTool] = useState(null);
-  const [activeElementTool, setActiveElementTool] = useState(null);
-
+  // Determine which panel to render based on active tool
   const renderActiveToolPanel = () => {
     switch (activeTool) {
       case toolNames.ADJUST:
@@ -91,8 +82,6 @@ const ToolPanel = ({
       case toolNames.AI:
         return (
           <AIToolPanel
-            activeAITool={activeAITool}
-            setActiveAITool={setActiveAITool}
             activeAIFeature={activeAIFeature}
             setActiveAIFeature={setActiveAIFeature}
             applyAIFeature={applyAIFeature}
@@ -101,8 +90,6 @@ const ToolPanel = ({
       case toolNames.EFFECTS:
         return (
           <EffectsToolPanel
-            activeEffectsTool={activeEffectsTool}
-            setActiveEffectsTool={setActiveEffectsTool}
             activeEffect={activeEffect}
             setActiveEffect={setActiveEffect}
             effectIntensity={effectIntensity}
@@ -133,30 +120,28 @@ const ToolPanel = ({
       case toolNames.TEXT:
         return (
           <TextToolPanel
-          activeTextTool={activeTextTool}
-          setActiveTextTool={setActiveTextTool}
-          // Text Editor props
-          textElements={textElements}
-          textSettings={textSettings}
-          setTextSettings={setTextSettings}
-          addTextElement={addTextElement}
-          removeTextElement={removeTextElement}
-          updateTextElement={updateTextElement}
-          applyTextToImage={applyTextToImage}
-          clearAllText={clearAllText}
-          // Text Styles props
-          styleSettings={styleSettings}
-          setStyleSettings={setStyleSettings}
-          applyTextStyle={applyTextStyle}
-          toggleStyle={toggleStyle}
-          updateStyleSetting={updateStyleSetting}
-        />
+            activeTextTool={activeTextTool}
+            setActiveTextTool={setActiveTextTool}
+            // Text Editor props
+            textElements={textElements}
+            textSettings={textSettings}
+            setTextSettings={setTextSettings}
+            addTextElement={addTextElement}
+            removeTextElement={removeTextElement}
+            updateTextElement={updateTextElement}
+            applyTextToImage={applyTextToImage}
+            clearAllText={clearAllText}
+            // Text Styles props
+            styleSettings={styleSettings}
+            setStyleSettings={setStyleSettings}
+            applyTextStyle={applyTextStyle}
+            toggleStyle={toggleStyle}
+            updateStyleSetting={updateStyleSetting}
+          />
         );
       case toolNames.ELEMENTS:
         return (
           <ElementToolPanel
-            activeElementTool={activeElementTool}
-            setActiveElementTool={setActiveElementTool}
             activeElementType={activeElementType}
             setActiveElementType={setActiveElementType}
             selectedElement={selectedElement}
@@ -181,33 +166,13 @@ const ToolPanel = ({
     }
   };
 
+  // Return container with appropriate styling based on mobile/desktop
   return (
-    <>
-      {isMobile ? (
-        <>
-          <div className="fixed bottom-0 left-0 right-0 h-16 bg-gray-900 border-t border-gray-800 z-30">
-            <BottomToolbar 
-              activeTool={activeTool} 
-              setSidebarOpen={setSidebarOpen} 
-              isMobile={isMobile}
-              setIsBottomSheetOpen={setIsBottomSheetOpen} 
-            />
-          </div>
-          <BottomSheet 
-            isOpen={isBottomSheetOpen} 
-            onClose={() => setIsBottomSheetOpen(false)}
-          >
-            {renderActiveToolPanel()}
-          </BottomSheet>
-        </>
-      ) : (
-        <div className="bg-gray-900 h-full overflow-y-auto text-white shadow-lg w-64">
-          <div className="p-3">
-            {renderActiveToolPanel()}
-          </div>
-        </div>
-      )}
-    </>
+    <div className={`bg-gray-900 ${isMobile ? 'h-auto pb-6' : 'h-full w-64'} overflow-y-auto text-white shadow-lg`}>
+      <div className="p-3">
+        {renderActiveToolPanel()}
+      </div>
+    </div>
   );
 };
 

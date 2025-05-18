@@ -298,6 +298,7 @@ export default function EditingPlatform() {
       />
       
       <div className="flex flex-1 overflow-hidden">
+        {/* Show sidebar only on desktop and when it's open */}
         {sidebarOpen && !isMobile && (
           <Sidebar 
             activeTool={activeTool}
@@ -307,7 +308,8 @@ export default function EditingPlatform() {
           />
         )}
         
-        {(!isMobile || (isMobile && activeTool !== toolNames.ADJUST)) && (
+        {/* Only show the tool panel on desktop */}
+        {!isMobile && (
           <ToolPanel 
             activeTool={activeTool}
             activeAdjustTool={activeAdjustTool}
@@ -329,7 +331,6 @@ export default function EditingPlatform() {
             setFrameSettings={setFrameSettings}
             applyFrame={performApplyFrame}
             applyFrameEffects={performApplyFrameEffects}
-            // Text editor props
             textElements={textElements}
             textSettings={textSettings}
             setTextSettings={setTextSettings}
@@ -338,7 +339,6 @@ export default function EditingPlatform() {
             updateTextElement={updateTextElement}
             applyTextToImage={applyTextToImage}
             clearAllText={clearAllText}
-            // Text styles props
             styleSettings={styleSettings}
             setStyleSettings={setStyleSettings}
             applyTextStyle={applyTextStyle}
@@ -347,6 +347,7 @@ export default function EditingPlatform() {
           />
         )}
         
+        {/* Main image canvas - adjust padding for mobile toolbar */}
         <div className={`flex-1 ${isMobile ? 'pb-16' : ''}`}>
           <ImageCanvas 
             imagePreview={imagePreview}
@@ -355,12 +356,12 @@ export default function EditingPlatform() {
             activeTool={activeTool}
             activeAdjustTool={activeAdjustTool}
             setImagePreview={setImagePreview}
-            // Pass text elements to display text overlay
             textElements={textElements}
           />
         </div>
       </div>
       
+      {/* Mobile Bottom Toolbar and Bottom Sheet - always shown on mobile */}
       {isMobile && (
         <>
           <div className="fixed bottom-0 left-0 right-0 h-16 bg-gray-900 border-t border-gray-800 z-30">
@@ -370,9 +371,29 @@ export default function EditingPlatform() {
               setSidebarOpen={setSidebarOpen} 
               isMobile={isMobile}
               setIsBottomSheetOpen={setIsBottomSheetOpen} 
+              performFlip={performFlip}
+              performRotate={performRotate}
+              applyBeautyFeature={handleBeautyFeature}
+              beautySettings={beautySettings}
+              frameSettings={frameSettings}
+              setFrameSettings={setFrameSettings}
+              applyFrame={performApplyFrame}
+              applyFrameEffects={performApplyFrameEffects}
+              textElements={textElements}
+              textSettings={textSettings}
+              setTextSettings={setTextSettings}
+              addTextElement={addTextElement}
+              removeTextElement={removeTextElement}
+              updateTextElement={updateTextElement}
+              styleSettings={styleSettings}
+              setStyleSettings={setStyleSettings}
+              applyTextStyle={applyTextStyle}
+              toggleStyle={toggleStyle}
+              updateStyleSetting={updateStyleSetting}
             />
           </div>
           
+          {/* Bottom Sheet to display tool options */}
           <BottomSheet 
             isOpen={isBottomSheetOpen} 
             onClose={() => setIsBottomSheetOpen(false)}
@@ -398,7 +419,6 @@ export default function EditingPlatform() {
               setFrameSettings={setFrameSettings}
               applyFrame={performApplyFrame}
               applyFrameEffects={performApplyFrameEffects}
-              // Text editor props
               textElements={textElements}
               textSettings={textSettings}
               setTextSettings={setTextSettings}
@@ -407,7 +427,6 @@ export default function EditingPlatform() {
               updateTextElement={updateTextElement}
               applyTextToImage={applyTextToImage}
               clearAllText={clearAllText}
-              // Text styles props
               styleSettings={styleSettings}
               setStyleSettings={setStyleSettings}
               applyTextStyle={applyTextStyle}

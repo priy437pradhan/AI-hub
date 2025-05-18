@@ -9,7 +9,6 @@ const BottomToolbar = ({
   setSidebarOpen, 
   isMobile, 
   setIsBottomSheetOpen,
-  // Pass all required props for MobileOptionsPanel
   performFlip,
   performRotate,
   applyBeautyFeature,
@@ -54,10 +53,10 @@ const BottomToolbar = ({
     // Set the active tool
     setActiveTool(tool);
     
-    // For mobile, show the mobile options panel
+    // For mobile, always open the bottom sheet
     if (isMobile) {
-      setIsBottomSheetOpen(false); // Close any open bottom sheet
-      setShowMobilePanel(true);
+      setIsBottomSheetOpen(true);
+      setShowMobilePanel(false); // We'll use the bottom sheet instead
     } else {
       // For desktop, open the sidebar
       setSidebarOpen(true);
@@ -88,79 +87,50 @@ const BottomToolbar = ({
   };
 
   return (
-    <>
-      <div className="flex justify-around items-center h-full px-2">
-        <ToolbarButton  
-          icon={<Sliders size={20} />} 
-          label="Adjust"  
-          isActive={activeTool === toolNames.ADJUST} 
-          onClick={() => handleToolClick(toolNames.ADJUST)} 
-        />
-        <ToolbarButton 
-          icon={<Wand2 size={20} />}  
-          label="AI" 
-          isActive={activeTool === toolNames.AI} 
-          onClick={() => handleToolClick(toolNames.AI)}
-        />
-        <ToolbarButton  
-          icon={<Paintbrush size={20} />} 
-          label="Effects" 
-          isActive={activeTool === toolNames.EFFECTS} 
-          onClick={() => handleToolClick(toolNames.EFFECTS)} 
-        />
-        <ToolbarButton  
-          icon={<Smile size={20} />} 
-          label="Beauty" 
-          isActive={activeTool === toolNames.BEAUTY} 
-          onClick={() => handleToolClick(toolNames.BEAUTY)} 
-        />
-        <ToolbarButton 
-          icon={<Frame size={20} />} 
-          label="Frames" 
-          isActive={activeTool === toolNames.FRAMES} 
-          onClick={() => handleToolClick(toolNames.FRAMES)} 
-        />
-        <ToolbarButton 
-          icon={<Type size={20} />} 
-          label="Text" 
-          isActive={activeTool === toolNames.TEXT} 
-          onClick={() => handleToolClick(toolNames.TEXT)} 
-        />
-        <ToolbarButton 
-          icon={<Shapes size={20} />} 
-          label="Elements" 
-          isActive={activeTool === toolNames.ELEMENTS} 
-          onClick={() => handleToolClick(toolNames.ELEMENTS)} 
-        />
-      </div>
-      
-      {/* Mobile Options Panel */}
-      {isMobile && showMobilePanel && (
-        <MobileOptionsPanel 
-          activeTool={activeTool} 
-          onClose={handleClosePanel}
-          performFlip={performFlip}
-          performRotate={performRotate}
-          applyBeautyFeature={applyBeautyFeature}
-          beautySettings={beautySettings}
-          frameSettings={frameSettings}
-          setFrameSettings={setFrameSettings}
-          applyFrame={applyFrame}
-          applyFrameEffects={applyFrameEffects}
-          textElements={textElements}
-          textSettings={textSettings}
-          setTextSettings={setTextSettings}
-          addTextElement={addTextElement}
-          removeTextElement={removeTextElement}
-          updateTextElement={updateTextElement}
-          styleSettings={styleSettings}
-          setStyleSettings={setStyleSettings}
-          applyTextStyle={applyTextStyle}
-          toggleStyle={toggleStyle}
-          updateStyleSetting={updateStyleSetting}
-        />
-      )}
-    </>
+    <div className="flex justify-around items-center h-full px-2">
+      <ToolbarButton  
+        icon={<Sliders size={20} />} 
+        label="Adjust"  
+        isActive={activeTool === toolNames.ADJUST} 
+        onClick={() => handleToolClick(toolNames.ADJUST)} 
+      />
+      <ToolbarButton 
+        icon={<Wand2 size={20} />}  
+        label="AI" 
+        isActive={activeTool === toolNames.AI} 
+        onClick={() => handleToolClick(toolNames.AI)}
+      />
+      <ToolbarButton  
+        icon={<Paintbrush size={20} />} 
+        label="Effects" 
+        isActive={activeTool === toolNames.EFFECTS} 
+        onClick={() => handleToolClick(toolNames.EFFECTS)} 
+      />
+      <ToolbarButton  
+        icon={<Smile size={20} />} 
+        label="Beauty" 
+        isActive={activeTool === toolNames.BEAUTY} 
+        onClick={() => handleToolClick(toolNames.BEAUTY)} 
+      />
+      <ToolbarButton 
+        icon={<Frame size={20} />} 
+        label="Frames" 
+        isActive={activeTool === toolNames.FRAMES} 
+        onClick={() => handleToolClick(toolNames.FRAMES)} 
+      />
+      <ToolbarButton 
+        icon={<Type size={20} />} 
+        label="Text" 
+        isActive={activeTool === toolNames.TEXT} 
+        onClick={() => handleToolClick(toolNames.TEXT)} 
+      />
+      <ToolbarButton 
+        icon={<Shapes size={20} />} 
+        label="Elements" 
+        isActive={activeTool === toolNames.ELEMENTS} 
+        onClick={() => handleToolClick(toolNames.ELEMENTS)} 
+      />
+    </div>
   );
 };
 

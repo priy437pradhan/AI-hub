@@ -6,24 +6,10 @@ import ToolPanel from '../components/EditingPlatform/ToolPanel/ToolPanel';
 import BottomToolbar from '../components/EditingPlatform/ToolPanel/BottomToolbar';
 import BottomSheet from '../components/EditingPlatform/ToolPanel/BottomSheet'
 import ImageCanvas from '../components/EditingPlatform/ImageCanvas';
-import { useCropImage } from '../components/EditingPlatform/tools/useCropImage';
 import { useFlipImage } from '../components/EditingPlatform/tools/useFlipImage';
 import { useRotateImage } from '../components/EditingPlatform/tools/useRotateImage';
-
-export const aspectRatios = [
-    { id: 'freeform', label: 'Freeform', icon: '⊞', dimensions: null },
-    { id: '1x1', label: '1 x 1', icon: '□', dimensions: { width: 1, height: 1 } },
-    { id: '3x2', label: '3 x 2', icon: '▭', dimensions: { width: 3, height: 2 } },
-    { id: '2x3', label: '2 x 3', icon: '▯', dimensions: { width: 2, height: 3 } },
-    { id: '4x3', label: '4 x 3', icon: '▭', dimensions: { width: 4, height: 3 } },
-    { id: '3x4', label: '3 x 4', icon: '▯', dimensions: { width: 3, height: 4 } },
-    { id: '16x9', label: '16 x 9', icon: '▭', dimensions: { width: 16, height: 9 } },
-    { id: '9x16', label: '9 x 16', icon: '▯', dimensions: { width: 9, height: 16 } },
-    { id: 'original', label: 'Original Ratio', icon: '▣', dimensions: null },
-    { id: 'circle', label: 'Circle', icon: '○', dimensions: null },
-    { id: 'triangle', label: 'Triangle', icon: '△', dimensions: null },
-    { id: 'heart', label: 'Heart-shape', icon: '♥', dimensions: null },
-];
+import { useBeautyFilters } from '../components/EditingPlatform/tools/useBeautyFilter';
+import { useFrames } from '../components/EditingPlatform/tools/useFrames'; // Add this import
 
 export default function EditingPlatform() {
   // Tool constants
@@ -40,10 +26,8 @@ export default function EditingPlatform() {
   // State for active tool selection
   const [activeTool, setActiveTool] = useState(toolNames.ADJUST);
   const [activeAdjustTool, setActiveAdjustTool] = useState(null);
-  const [aspectRatio, setAspectRatio] = useState('freeform');
-  const [width, setWidth] = useState('475');
-  const [height, setHeight] = useState('475');
-  const [keepAspectRatio, setKeepAspectRatio] = useState(false);
+  const [activeBeautyTool, setActiveBeautyTool] = useState(null);
+  const [activeFramesTool, setActiveFramesTool] = useState(null); // Add this state
   
   // Bottom sheet state for mobile
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
@@ -51,35 +35,9 @@ export default function EditingPlatform() {
   // State for image upload
   const [uploadedImage, setUploadedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [originalImage, setOriginalImage] = useState(null);
   const fileInputRef = useRef(null);
   const imageRef = useRef(null);
-  
-  // Use the crop image hook
-  const {
-    cropArea,
-    setCropArea,
-    isCropping,
-    setIsCropping,
-    croppedImage,
-    setCroppedImage,
-    handleMouseDown,
-    handleMouseMove,
-    handleMouseUp,
-    handleResizeStart,
-    performCrop,
-    getDisplayCropArea
-  } = useCropImage({ 
-    imageRef, 
-    aspectRatio, 
-    aspectRatios, 
-    width, 
-    height, 
-    setWidth, 
-    setHeight, 
-    keepAspectRatio,
-    setKeepAspectRatio,
-    imagePreview 
-  });
   
   // Use the flip image hook
   const {
@@ -94,63 +52,26 @@ export default function EditingPlatform() {
     performRotateBase 
   } = useRotateImage({ imageRef });
   
-  // Setup crop by aspect ratio function
-  const setupCropByAspectRatio = (ratioId) => {
-    if (!imageRef.current) return;
-    
-    const img = imageRef.current;
-    const imgWidth = img.naturalWidth;
-    const imgHeight = img.naturalHeight;
-    
-    // Default to a centered crop at 80% of the image
-    let newWidth = imgWidth * 0.8;
-    let newHeight = imgHeight * 0.8;
-    
-    // Adjust dimensions based on selected aspect ratio
-    if (ratioId !== 'freeform' && ratioId !== 'original') {
-      const selectedRatio = aspectRatios.find(r => r.id === ratioId);
-      if (selectedRatio?.dimensions) {
-        const { width: rWidth, height: rHeight } = selectedRatio.dimensions;
-        const ratio = rWidth / rHeight;
-        
-        // Calculate dimensions while maintaining the aspect ratio
-        if (imgWidth / imgHeight > ratio) {
-          // Image is wider than the target ratio
-          newHeight = imgHeight * 0.8;
-          newWidth = newHeight * ratio;
-        } else {
-          // Image is taller than the target ratio
-          newWidth = imgWidth * 0.8;
-          newHeight = newWidth / ratio;
-        }
-      }
-    } else if (ratioId === 'original') {
-      newWidth = imgWidth;
-      newHeight = imgHeight;
-    }
-    
-    // Center the crop area
-    const newX = (imgWidth - newWidth) / 2;
-    const newY = (imgHeight - newHeight) / 2;
-    
-    // Update crop area
-    setCropArea({
-      x: newX,
-      y: newY,
-      width: newWidth,
-      height: newHeight
-    });
-    
-    // Update width and height inputs
-    setWidth(Math.round(newWidth).toString());
-    setHeight(Math.round(newHeight).toString());
-  };
+  // Use the beauty filters hook
+  const {
+    beautySettings,
+    setBeautySettings,
+    applyBeautyFilter
+  } = useBeautyFilters({ 
+    imageRef, 
+    setImagePreview 
+  });
+  
+  // Use the frames hook - ADD THIS
+  const {
+    frameSettings,
+    setFrameSettings,
+    applyFrame: applyFrameBase,
+    applyFrameEffects: applyFrameEffectsBase
+  } = useFrames({ imageRef, setImagePreview });
   
   // Wrapper functions for the image transformations
   const performRotate = async (direction) => {
-    // Make sure crop mode is off
-    setIsCropping(false);
-    
     const rotatedImageUrl = await performRotateBase(direction);
     if (rotatedImageUrl) {
       setImagePreview(rotatedImageUrl);
@@ -158,12 +79,75 @@ export default function EditingPlatform() {
   };
   
   const performFlip = async (direction) => {
-    // Make sure crop mode is off
-    setIsCropping(false);
-    
     const flippedImageUrl = await performFlipBase(direction);
     if (flippedImageUrl) {
       setImagePreview(flippedImageUrl);
+    }
+  };
+  
+  // Frame wrapper functions - ADD THESE
+  const performApplyFrame = async (frameStyle, frameColor, frameWidth) => {
+    const framedImageUrl = await applyFrameBase(frameStyle, frameColor, frameWidth);
+    if (framedImageUrl) {
+      setImagePreview(framedImageUrl);
+    }
+  };
+
+  const performApplyFrameEffects = async (shadow, spread, shadowColor) => {
+    const effectImageUrl = await applyFrameEffectsBase(shadow, spread, shadowColor);
+    if (effectImageUrl) {
+      setImagePreview(effectImageUrl);
+    }
+  };
+  
+  // Beauty filter handler
+  const handleBeautyFeature = async (feature, settings) => {
+    console.log('Applying beauty feature:', feature, 'with settings:', settings);
+    
+    if (!imageRef.current) {
+      console.error('No image reference available for beauty filters');
+      return;
+    }
+    
+    try {
+      const filteredImageUrl = await applyBeautyFilter(feature, settings);
+      if (filteredImageUrl) {
+        console.log('Beauty filter applied successfully, updating image preview');
+        
+        if (imagePreview && imagePreview.startsWith('blob:')) {
+          URL.revokeObjectURL(imagePreview);
+        }
+        
+        setImagePreview(filteredImageUrl);
+        
+        setBeautySettings(prevSettings => ({
+          ...prevSettings,
+          [feature]: settings
+        }));
+        
+        console.log('Image preview updated with beauty filter');
+      } else {
+        console.error('Failed to apply beauty filter - no URL returned');
+      }
+    } catch (error) {
+      console.error('Error applying beauty filter:', error);
+      alert('Failed to apply beauty filter. Please try again.');
+    }
+  };
+  
+  // Reset image to original
+  const resetToOriginal = () => {
+    if (originalImage) {
+      setImagePreview(originalImage);
+      setBeautySettings({});
+      setFrameSettings({ // Add this to reset frame settings
+        style: 'none',
+        color: '#ffffff',
+        width: 10,
+        shadow: 0,
+        spread: 0,
+        shadowColor: '#000000'
+      });
     }
   };
   
@@ -192,12 +176,21 @@ export default function EditingPlatform() {
       setUploadedImage(file);
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImagePreview(reader.result);
-        setCroppedImage(null);
+        const result = reader.result;
+        setImagePreview(result);
+        setOriginalImage(result);
+        setBeautySettings({});
+        setFrameSettings({ // Reset frame settings on new image
+          style: 'none',
+          color: '#ffffff',
+          width: 10,
+          shadow: 0,
+          spread: 0,
+          shadowColor: '#000000'
+        });
       };
       reader.readAsDataURL(file);
       setActiveTool(toolNames.ADJUST);
-      setIsCropping(true);
     }
   };
   
@@ -206,16 +199,15 @@ export default function EditingPlatform() {
     fileInputRef.current.click();
   };
   
-  // Download the cropped image
+  // Download the image
   const downloadImage = () => {
-    if (!croppedImage && !imagePreview) {
-      alert("Please upload and crop an image first.");
+    if (!imagePreview) {
+      alert("Please upload an image first.");
       return;
     }
-    // Create a download link
     const link = document.createElement('a');
     link.download = 'edited-image.jpg';
-    link.href = croppedImage || imagePreview;
+    link.href = imagePreview;
     link.click();
   };
   
@@ -226,17 +218,24 @@ export default function EditingPlatform() {
   
   // Load demo image
   const loadDemoImage = (index) => {
-    setImagePreview(demoImages[index]);
+    const demoImageUrl = demoImages[index];
+    setImagePreview(demoImageUrl);
+    setOriginalImage(demoImageUrl);
     setUploadedImage("demo-image");
-    setCroppedImage(null);
+    setBeautySettings({});
+    setFrameSettings({ // Reset frame settings
+      style: 'none',
+      color: '#ffffff',
+      width: 10,
+      shadow: 0,
+      spread: 0,
+      shadowColor: '#000000'
+    });
     setActiveTool(toolNames.ADJUST);
-    setIsCropping(true);
-    setAspectRatio('freeform');
   };
   
   return (
     <div className="flex flex-col h-screen bg-gray-100 dark:bg-dark-bg">
-      {/* Hidden file input */}
       <input 
         type="file" 
         ref={fileInputRef} 
@@ -250,11 +249,10 @@ export default function EditingPlatform() {
         setSidebarOpen={setSidebarOpen}
         handleUploadClick={handleUploadClick}
         downloadImage={downloadImage}
+        resetToOriginal={resetToOriginal}
       />
       
-      {/* Main Content */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar Component - Desktop Only */}
         {sidebarOpen && !isMobile && (
           <Sidebar 
             activeTool={activeTool}
@@ -264,59 +262,42 @@ export default function EditingPlatform() {
           />
         )}
         
-        {/* Tool Panel Component */}
         {(!isMobile || (isMobile && activeTool !== toolNames.ADJUST)) && (
           <ToolPanel 
             activeTool={activeTool}
             activeAdjustTool={activeAdjustTool}
             setActiveAdjustTool={setActiveAdjustTool}
+            activeBeautyTool={activeBeautyTool}
+            setActiveBeautyTool={setActiveBeautyTool}
+            activeFramesTool={activeFramesTool} // Add this
+            setActiveFramesTool={setActiveFramesTool} // Add this
             isMobile={isMobile}
             setSidebarOpen={setSidebarOpen}
-            aspectRatio={aspectRatio}
-            setAspectRatio={setAspectRatio}
-            width={width}
-            setWidth={setWidth}
-            height={height}
-            setHeight={setHeight}
-            keepAspectRatio={keepAspectRatio}
-            setKeepAspectRatio={setKeepAspectRatio}
-            performCrop={performCrop}
-            setIsCropping={setIsCropping}
-            cropArea={cropArea}
-            setCropArea={setCropArea}
             imageRef={imageRef}
-            setupCropByAspectRatio={setupCropByAspectRatio}
             performFlip={performFlip}
             performRotate={performRotate}
+            applyBeautyFeature={handleBeautyFeature}
+            beautySettings={beautySettings}
+            frameSettings={frameSettings} // Add this
+            setFrameSettings={setFrameSettings} // Add this
+            applyFrame={performApplyFrame} // Add this
+            applyFrameEffects={performApplyFrameEffects} // Add this
           />
         )}
         
-        {/* Canvas Area - Takes full width on mobile */}
         <div className={`flex-1 ${isMobile ? 'pb-16' : ''}`}>
           <ImageCanvas 
             imagePreview={imagePreview}
             handleUploadClick={handleUploadClick}
             imageRef={imageRef}
-            isCropping={isCropping}
             activeTool={activeTool}
             activeAdjustTool={activeAdjustTool}
-            cropArea={cropArea}
-            setCropArea={setCropArea}
-            handleMouseDown={handleMouseDown}
-            handleMouseMove={handleMouseMove}
-            handleMouseUp={handleMouseUp}
-            handleResizeStart={handleResizeStart}
-            performCrop={performCrop}
-            setIsCropping={setIsCropping}
-            aspectRatio={aspectRatio}
             loadDemoImage={loadDemoImage}
             setImagePreview={setImagePreview}
-            getDisplayCropArea={getDisplayCropArea}
           />
         </div>
       </div>
       
-      {/* Mobile Bottom Toolbar */}
       {isMobile && (
         <>
           <div className="fixed bottom-0 left-0 right-0 h-16 bg-gray-900 border-t border-gray-800 z-30">
@@ -329,7 +310,6 @@ export default function EditingPlatform() {
             />
           </div>
           
-          {/* Bottom Sheet for Mobile Tool Options */}
           <BottomSheet 
             isOpen={isBottomSheetOpen} 
             onClose={() => setIsBottomSheetOpen(false)}
@@ -338,24 +318,21 @@ export default function EditingPlatform() {
               activeTool={activeTool}
               activeAdjustTool={activeAdjustTool}
               setActiveAdjustTool={setActiveAdjustTool}
+              activeBeautyTool={activeBeautyTool}
+              setActiveBeautyTool={setActiveBeautyTool}
+              activeFramesTool={activeFramesTool} // Add this
+              setActiveFramesTool={setActiveFramesTool} // Add this
               isMobile={isMobile}
               setSidebarOpen={setSidebarOpen}
-              aspectRatio={aspectRatio}
-              setAspectRatio={setAspectRatio}
-              width={width}
-              setWidth={setWidth}
-              height={height}
-              setHeight={setHeight}
-              keepAspectRatio={keepAspectRatio}
-              setKeepAspectRatio={setKeepAspectRatio}
-              performCrop={performCrop}
-              setIsCropping={setIsCropping}
-              cropArea={cropArea}
-              setCropArea={setCropArea}
               imageRef={imageRef}
-              setupCropByAspectRatio={setupCropByAspectRatio}
               performFlip={performFlip}
               performRotate={performRotate}
+              applyBeautyFeature={handleBeautyFeature}
+              beautySettings={beautySettings}
+              frameSettings={frameSettings} // Add this
+              setFrameSettings={setFrameSettings} // Add this
+              applyFrame={performApplyFrame} // Add this
+              applyFrameEffects={performApplyFrameEffects} // Add this
             />
           </BottomSheet>
         </>

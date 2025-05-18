@@ -16,22 +16,11 @@ const ToolPanel = ({
   isMobile,
   setSidebarOpen,
   // Adjust panel props
-  aspectRatio,
-  setAspectRatio,
-  width,
-  setWidth,
-  height,
-  setHeight,
-  keepAspectRatio,
-  setKeepAspectRatio,
-  performCrop,
-  setIsCropping,
-  cropArea,
-  setCropArea,
   imageRef,
-  setupCropByAspectRatio,
   performFlip,
   performRotate,
+  activeAdjustTool,
+  setActiveAdjustTool,
   // AI Panel props
   activeAIFeature,
   setActiveAIFeature,
@@ -43,19 +32,17 @@ const ToolPanel = ({
   setEffectIntensity,
   applyEffect,
   // Beauty Panel props
-  activeBeautyFeature,
-  setActiveBeautyFeature,
-  beautyIntensity,
-  setBeautyIntensity,
+  activeBeautyTool,
+  setActiveBeautyTool,
   applyBeautyFeature,
-  // Frames Panel props
-  activeFrame,
-  setActiveFrame,
-  frameColor,
-  setFrameColor,
-  frameWidth,
-  setFrameWidth,
+  beautySettings,
+  // Frames Panel props - ADD THESE
+  activeFramesTool,
+  setActiveFramesTool,
+  frameSettings,
+  setFrameSettings,
   applyFrame,
+  applyFrameEffects,
   // Text Panel props
   activeTextStyle,
   setActiveTextStyle,
@@ -80,11 +67,8 @@ const ToolPanel = ({
   addElement
 }) => {
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
-  const [activeAdjustTool, setActiveAdjustTool] = useState(null);
   const [activeAITool, setActiveAITool] = useState(null);
   const [activeEffectsTool, setActiveEffectsTool] = useState(null);
-  const [activeBeautyTool, setActiveBeautyTool] = useState(null);
-  const [activeFramesTool, setActiveFramesTool] = useState(null);
   const [activeTextTool, setActiveTextTool] = useState(null);
   const [activeElementTool, setActiveElementTool] = useState(null);
 
@@ -95,20 +79,7 @@ const ToolPanel = ({
           <AdjustToolPanel
             activeAdjustTool={activeAdjustTool}
             setActiveAdjustTool={setActiveAdjustTool}
-            aspectRatio={aspectRatio}
-            setAspectRatio={setAspectRatio}
-            width={width}
-            setWidth={setWidth}
-            height={height}
-            setHeight={setHeight}
-            keepAspectRatio={keepAspectRatio}
-            setKeepAspectRatio={setKeepAspectRatio}
-            performCrop={performCrop}
-            setIsCropping={setIsCropping}
-            cropArea={cropArea}
-            setCropArea={setCropArea}
             imageRef={imageRef}
-            setupCropByAspectRatio={setupCropByAspectRatio}
             performFlip={performFlip}
             performRotate={performRotate}
           />
@@ -140,11 +111,8 @@ const ToolPanel = ({
           <BeautyToolPanel
             activeBeautyTool={activeBeautyTool}
             setActiveBeautyTool={setActiveBeautyTool}
-            activeBeautyFeature={activeBeautyFeature}
-            setActiveBeautyFeature={setActiveBeautyFeature}
-            beautyIntensity={beautyIntensity}
-            setBeautyIntensity={setBeautyIntensity}
             applyBeautyFeature={applyBeautyFeature}
+            beautySettings={beautySettings}
           />
         );
       case toolNames.FRAMES:
@@ -152,13 +120,10 @@ const ToolPanel = ({
           <FramesToolPanel
             activeFramesTool={activeFramesTool}
             setActiveFramesTool={setActiveFramesTool}
-            activeFrame={activeFrame}
-            setActiveFrame={setActiveFrame}
-            frameColor={frameColor}
-            setFrameColor={setFrameColor}
-            frameWidth={frameWidth}
-            setFrameWidth={setFrameWidth}
+            frameSettings={frameSettings}
+            setFrameSettings={setFrameSettings}
             applyFrame={applyFrame}
+            applyFrameEffects={applyFrameEffects}
           />
         );
       case toolNames.TEXT:
@@ -200,20 +165,7 @@ const ToolPanel = ({
           <AdjustToolPanel
             activeAdjustTool={activeAdjustTool}
             setActiveAdjustTool={setActiveAdjustTool}
-            aspectRatio={aspectRatio}
-            setAspectRatio={setAspectRatio}
-            width={width}
-            setWidth={setWidth}
-            height={height}
-            setHeight={setHeight}
-            keepAspectRatio={keepAspectRatio}
-            setKeepAspectRatio={setKeepAspectRatio}
-            performCrop={performCrop}
-            setIsCropping={setIsCropping}
-            cropArea={cropArea}
-            setCropArea={setCropArea}
             imageRef={imageRef}
-            setupCropByAspectRatio={setupCropByAspectRatio}
             performFlip={performFlip}
             performRotate={performRotate}
           />

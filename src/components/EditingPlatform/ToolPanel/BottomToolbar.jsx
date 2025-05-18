@@ -1,27 +1,35 @@
 'use client'
 import { useState, useEffect } from 'react';
 import { Sliders, Wand2, Paintbrush, Smile, Frame, Type, Shapes } from 'lucide-react';
-import MobileOptionsPanel from '../../EditingPlatform/ToolPanel/MobileOptionPanel';
+import MobileOptionsPanel from './MobileOptionPanel';
 
-const ToolbarButton = ({ icon, label, isActive, onClick }) => {
-  return (
-    <button
-      onClick={onClick}
-      className={`flex flex-col items-center justify-center ${
-        isActive ? 'text-primary-500' : 'text-gray-300'
-      }`}
-    >
-      <div className={`p-1 rounded-md ${isActive ? 'text-primary-500' : ''}`}>
-        {icon}
-      </div>
-      <span className={`text-xs mt-1 ${isActive ? 'text-primary-500' : ''}`}>
-        {label}
-      </span>
-    </button>
-  );
-};
-
-const BottomToolbar = ({ activeTool, setActiveTool, setSidebarOpen, isMobile }) => {
+const BottomToolbar = ({ 
+  activeTool, 
+  setActiveTool, 
+  setSidebarOpen, 
+  isMobile, 
+  setIsBottomSheetOpen,
+  // Pass all required props for MobileOptionsPanel
+  performFlip,
+  performRotate,
+  applyBeautyFeature,
+  beautySettings,
+  frameSettings,
+  setFrameSettings,
+  applyFrame,
+  applyFrameEffects,
+  textElements,
+  textSettings,
+  setTextSettings,
+  addTextElement,
+  removeTextElement,
+  updateTextElement,
+  styleSettings,
+  setStyleSettings,
+  applyTextStyle,
+  toggleStyle,
+  updateStyleSetting
+}) => {
   const [showMobilePanel, setShowMobilePanel] = useState(false);
   
   // Define tool constants
@@ -46,8 +54,9 @@ const BottomToolbar = ({ activeTool, setActiveTool, setSidebarOpen, isMobile }) 
     // Set the active tool
     setActiveTool(tool);
     
-    // For mobile, show the sliding panel instead of opening the sidebar
+    // For mobile, show the mobile options panel
     if (isMobile) {
+      setIsBottomSheetOpen(false); // Close any open bottom sheet
       setShowMobilePanel(true);
     } else {
       // For desktop, open the sidebar
@@ -58,6 +67,24 @@ const BottomToolbar = ({ activeTool, setActiveTool, setSidebarOpen, isMobile }) 
   // Handle closing the mobile panel
   const handleClosePanel = () => {
     setShowMobilePanel(false);
+  };
+
+  const ToolbarButton = ({ icon, label, isActive, onClick }) => {
+    return (
+      <button
+        onClick={onClick}
+        className={`flex flex-col items-center justify-center ${
+          isActive ? 'text-primary-500' : 'text-gray-300'
+        }`}
+      >
+        <div className={`p-1 rounded-md ${isActive ? 'text-primary-500' : ''}`}>
+          {icon}
+        </div>
+        <span className={`text-xs mt-1 ${isActive ? 'text-primary-500' : ''}`}>
+          {label}
+        </span>
+      </button>
+    );
   };
 
   return (
@@ -107,11 +134,30 @@ const BottomToolbar = ({ activeTool, setActiveTool, setSidebarOpen, isMobile }) 
         />
       </div>
       
-      {/* Mobile Sliding Panel */}
+      {/* Mobile Options Panel */}
       {isMobile && showMobilePanel && (
         <MobileOptionsPanel 
           activeTool={activeTool} 
-          onClose={handleClosePanel} 
+          onClose={handleClosePanel}
+          performFlip={performFlip}
+          performRotate={performRotate}
+          applyBeautyFeature={applyBeautyFeature}
+          beautySettings={beautySettings}
+          frameSettings={frameSettings}
+          setFrameSettings={setFrameSettings}
+          applyFrame={applyFrame}
+          applyFrameEffects={applyFrameEffects}
+          textElements={textElements}
+          textSettings={textSettings}
+          setTextSettings={setTextSettings}
+          addTextElement={addTextElement}
+          removeTextElement={removeTextElement}
+          updateTextElement={updateTextElement}
+          styleSettings={styleSettings}
+          setStyleSettings={setStyleSettings}
+          applyTextStyle={applyTextStyle}
+          toggleStyle={toggleStyle}
+          updateStyleSetting={updateStyleSetting}
         />
       )}
     </>

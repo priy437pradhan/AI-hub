@@ -43,18 +43,22 @@ const ToolPanel = ({
   setFrameSettings,
   applyFrame,
   applyFrameEffects,
-  // Text Panel props
-  activeTextStyle,
-  setActiveTextStyle,
-  textColor,
-  setTextColor,
-  fontSize,
-  setFontSize,
-  fontFamily,
-  setFontFamily,
-  textInput,
-  setTextInput,
+   // Text editing props
+  textElements,
+  textSettings,
+  setTextSettings,
   addTextElement,
+  removeTextElement,
+  updateTextElement,
+  applyTextToImage,
+  clearAllText,
+  
+  // Text styles props
+  styleSettings,
+  setStyleSettings,
+  applyTextStyle,
+  toggleStyle,
+  updateStyleSetting,
   // Element Panel props
   activeElementType,
   setActiveElementType,
@@ -129,20 +133,24 @@ const ToolPanel = ({
       case toolNames.TEXT:
         return (
           <TextToolPanel
-            activeTextTool={activeTextTool}
-            setActiveTextTool={setActiveTextTool}
-            activeTextStyle={activeTextStyle}
-            setActiveTextStyle={setActiveTextStyle}
-            textColor={textColor}
-            setTextColor={setTextColor}
-            fontSize={fontSize}
-            setFontSize={setFontSize}
-            fontFamily={fontFamily}
-            setFontFamily={setFontFamily}
-            textInput={textInput}
-            setTextInput={setTextInput}
-            addTextElement={addTextElement}
-          />
+          activeTextTool={activeTextTool}
+          setActiveTextTool={setActiveTextTool}
+          // Text Editor props
+          textElements={textElements}
+          textSettings={textSettings}
+          setTextSettings={setTextSettings}
+          addTextElement={addTextElement}
+          removeTextElement={removeTextElement}
+          updateTextElement={updateTextElement}
+          applyTextToImage={applyTextToImage}
+          clearAllText={clearAllText}
+          // Text Styles props
+          styleSettings={styleSettings}
+          setStyleSettings={setStyleSettings}
+          applyTextStyle={applyTextStyle}
+          toggleStyle={toggleStyle}
+          updateStyleSetting={updateStyleSetting}
+        />
         );
       case toolNames.ELEMENTS:
         return (

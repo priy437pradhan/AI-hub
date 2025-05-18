@@ -9,7 +9,9 @@ import ImageCanvas from '../components/EditingPlatform/ImageCanvas';
 import { useFlipImage } from '../components/EditingPlatform/tools/useFlipImage';
 import { useRotateImage } from '../components/EditingPlatform/tools/useRotateImage';
 import { useBeautyFilters } from '../components/EditingPlatform/tools/useBeautyFilter';
-import { useFrames } from '../components/EditingPlatform/tools/useFrames'; // Add this import
+import { useFrames } from '../components/EditingPlatform/tools/useFrames'; 
+import { useTextEditor } from '../components/EditingPlatform/tools/useTextEditor';
+import { useTextStyles } from '../components/EditingPlatform/tools/useTextStyle';
 
 export default function EditingPlatform() {
   // Tool constants
@@ -27,7 +29,8 @@ export default function EditingPlatform() {
   const [activeTool, setActiveTool] = useState(toolNames.ADJUST);
   const [activeAdjustTool, setActiveAdjustTool] = useState(null);
   const [activeBeautyTool, setActiveBeautyTool] = useState(null);
-  const [activeFramesTool, setActiveFramesTool] = useState(null); // Add this state
+  const [activeFramesTool, setActiveFramesTool] = useState(null);
+  const [activeTextTool, setActiveTextTool] = useState(null);
   
   // Bottom sheet state for mobile
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
@@ -62,13 +65,34 @@ export default function EditingPlatform() {
     setImagePreview 
   });
   
-  // Use the frames hook - ADD THIS
+  // Use the frames hook
   const {
     frameSettings,
     setFrameSettings,
     applyFrame: applyFrameBase,
     applyFrameEffects: applyFrameEffectsBase
   } = useFrames({ imageRef, setImagePreview });
+  
+  // Use the text editor hook
+  const {
+    textElements,
+    textSettings,
+    setTextSettings,
+    addTextElement,
+    removeTextElement,
+    updateTextElement,
+    applyTextToImage,
+    clearAllText
+  } = useTextEditor({ imageRef, setImagePreview });
+  
+  // Use the text styles hook
+  const {
+    styleSettings,
+    setStyleSettings,
+    applyTextStyle,
+    toggleStyle,
+    updateStyleSetting
+  } = useTextStyles({ imageRef, setImagePreview });
   
   // Wrapper functions for the image transformations
   const performRotate = async (direction) => {
@@ -85,7 +109,7 @@ export default function EditingPlatform() {
     }
   };
   
-  // Frame wrapper functions - ADD THESE
+  // Frame wrapper functions
   const performApplyFrame = async (frameStyle, frameColor, frameWidth) => {
     const framedImageUrl = await applyFrameBase(frameStyle, frameColor, frameWidth);
     if (framedImageUrl) {
@@ -100,7 +124,7 @@ export default function EditingPlatform() {
     }
   };
   
-  // Beauty filter handler
+  // Handle beauty filter application
   const handleBeautyFeature = async (feature, settings) => {
     console.log('Applying beauty feature:', feature, 'with settings:', settings);
     
@@ -135,12 +159,28 @@ export default function EditingPlatform() {
     }
   };
   
+  // Effect to update image with text when text elements change
+  useEffect(() => {
+    if (textElements.length > 0 && imageRef.current) {
+      const applyText = async () => {
+        const updatedImageUrl = await applyTextToImage();
+        if (updatedImageUrl) {
+          setImagePreview(updatedImageUrl);
+        }
+      };
+      // Only apply text when in TEXT tool mode
+      if (activeTool === toolNames.TEXT) {
+        applyText();
+      }
+    }
+  }, [textElements, applyTextToImage, activeTool, toolNames.TEXT]);
+  
   // Reset image to original
   const resetToOriginal = () => {
     if (originalImage) {
       setImagePreview(originalImage);
       setBeautySettings({});
-      setFrameSettings({ // Add this to reset frame settings
+      setFrameSettings({
         style: 'none',
         color: '#ffffff',
         width: 10,
@@ -148,6 +188,8 @@ export default function EditingPlatform() {
         spread: 0,
         shadowColor: '#000000'
       });
+      // Clear text elements
+      clearAllText();
     }
   };
   
@@ -180,7 +222,7 @@ export default function EditingPlatform() {
         setImagePreview(result);
         setOriginalImage(result);
         setBeautySettings({});
-        setFrameSettings({ // Reset frame settings on new image
+        setFrameSettings({
           style: 'none',
           color: '#ffffff',
           width: 10,
@@ -188,6 +230,8 @@ export default function EditingPlatform() {
           spread: 0,
           shadowColor: '#000000'
         });
+        // Clear text elements
+        clearAllText();
       };
       reader.readAsDataURL(file);
       setActiveTool(toolNames.ADJUST);
@@ -223,7 +267,7 @@ export default function EditingPlatform() {
     setOriginalImage(demoImageUrl);
     setUploadedImage("demo-image");
     setBeautySettings({});
-    setFrameSettings({ // Reset frame settings
+    setFrameSettings({
       style: 'none',
       color: '#ffffff',
       width: 10,
@@ -231,6 +275,7 @@ export default function EditingPlatform() {
       spread: 0,
       shadowColor: '#000000'
     });
+    clearAllText();
     setActiveTool(toolNames.ADJUST);
   };
   
@@ -269,8 +314,10 @@ export default function EditingPlatform() {
             setActiveAdjustTool={setActiveAdjustTool}
             activeBeautyTool={activeBeautyTool}
             setActiveBeautyTool={setActiveBeautyTool}
-            activeFramesTool={activeFramesTool} // Add this
-            setActiveFramesTool={setActiveFramesTool} // Add this
+            activeFramesTool={activeFramesTool}
+            setActiveFramesTool={setActiveFramesTool}
+            activeTextTool={activeTextTool}
+            setActiveTextTool={setActiveTextTool}
             isMobile={isMobile}
             setSidebarOpen={setSidebarOpen}
             imageRef={imageRef}
@@ -278,10 +325,25 @@ export default function EditingPlatform() {
             performRotate={performRotate}
             applyBeautyFeature={handleBeautyFeature}
             beautySettings={beautySettings}
-            frameSettings={frameSettings} // Add this
-            setFrameSettings={setFrameSettings} // Add this
-            applyFrame={performApplyFrame} // Add this
-            applyFrameEffects={performApplyFrameEffects} // Add this
+            frameSettings={frameSettings}
+            setFrameSettings={setFrameSettings}
+            applyFrame={performApplyFrame}
+            applyFrameEffects={performApplyFrameEffects}
+            // Text editor props
+            textElements={textElements}
+            textSettings={textSettings}
+            setTextSettings={setTextSettings}
+            addTextElement={addTextElement}
+            removeTextElement={removeTextElement}
+            updateTextElement={updateTextElement}
+            applyTextToImage={applyTextToImage}
+            clearAllText={clearAllText}
+            // Text styles props
+            styleSettings={styleSettings}
+            setStyleSettings={setStyleSettings}
+            applyTextStyle={applyTextStyle}
+            toggleStyle={toggleStyle}
+            updateStyleSetting={updateStyleSetting}
           />
         )}
         
@@ -292,8 +354,9 @@ export default function EditingPlatform() {
             imageRef={imageRef}
             activeTool={activeTool}
             activeAdjustTool={activeAdjustTool}
-            loadDemoImage={loadDemoImage}
             setImagePreview={setImagePreview}
+            // Pass text elements to display text overlay
+            textElements={textElements}
           />
         </div>
       </div>
@@ -320,8 +383,10 @@ export default function EditingPlatform() {
               setActiveAdjustTool={setActiveAdjustTool}
               activeBeautyTool={activeBeautyTool}
               setActiveBeautyTool={setActiveBeautyTool}
-              activeFramesTool={activeFramesTool} // Add this
-              setActiveFramesTool={setActiveFramesTool} // Add this
+              activeFramesTool={activeFramesTool}
+              setActiveFramesTool={setActiveFramesTool}
+              activeTextTool={activeTextTool}
+              setActiveTextTool={setActiveTextTool}
               isMobile={isMobile}
               setSidebarOpen={setSidebarOpen}
               imageRef={imageRef}
@@ -329,10 +394,25 @@ export default function EditingPlatform() {
               performRotate={performRotate}
               applyBeautyFeature={handleBeautyFeature}
               beautySettings={beautySettings}
-              frameSettings={frameSettings} // Add this
-              setFrameSettings={setFrameSettings} // Add this
-              applyFrame={performApplyFrame} // Add this
-              applyFrameEffects={performApplyFrameEffects} // Add this
+              frameSettings={frameSettings}
+              setFrameSettings={setFrameSettings}
+              applyFrame={performApplyFrame}
+              applyFrameEffects={performApplyFrameEffects}
+              // Text editor props
+              textElements={textElements}
+              textSettings={textSettings}
+              setTextSettings={setTextSettings}
+              addTextElement={addTextElement}
+              removeTextElement={removeTextElement}
+              updateTextElement={updateTextElement}
+              applyTextToImage={applyTextToImage}
+              clearAllText={clearAllText}
+              // Text styles props
+              styleSettings={styleSettings}
+              setStyleSettings={setStyleSettings}
+              applyTextStyle={applyTextStyle}
+              toggleStyle={toggleStyle}
+              updateStyleSetting={updateStyleSetting}
             />
           </BottomSheet>
         </>

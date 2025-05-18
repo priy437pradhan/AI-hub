@@ -1,4 +1,5 @@
 'use client';
+import { useEffect, useState } from 'react';
 
 export default function ImageCanvas({
   imagePreview,
@@ -6,8 +7,43 @@ export default function ImageCanvas({
   imageRef,
   activeTool,
   activeAdjustTool,
-  setImagePreview
+  setImagePreview,
+  // Add text-related props
+  textElements
 }) {
+  const [canvasEl, setCanvasEl] = useState(null);
+  
+  // Function to render text elements on the canvas for preview
+  const renderTextOverlay = () => {
+    if (!textElements || textElements.length === 0) return null;
+    
+    return textElements.map((element) => (
+      <div
+        key={element.id}
+        className="absolute pointer-events-none select-none"
+        style={{
+          left: `${element.x}%`,
+          top: `${element.y}%`,
+          transform: 'translate(-50%, -50%)',
+          color: element.color || '#ffffff',
+          fontFamily: element.fontFamily || 'Arial',
+          fontSize: `${element.fontSize || 24}px`,
+          fontWeight: element.bold ? 'bold' : 'normal',
+          fontStyle: element.italic ? 'italic' : 'normal',
+          textDecoration: element.underline ? 'underline' : 'none',
+          textShadow: element.shadow ? 
+            `${element.shadowOffsetX || 1}px ${element.shadowOffsetY || 1}px ${element.shadowBlur || 2}px ${element.shadowColor || '#000000'}` : 
+            'none',
+          WebkitTextStroke: element.outline ? 
+            `${element.outlineWidth || 1}px ${element.outlineColor || '#000000'}` : 
+            'none'
+        }}
+      >
+        {element.content}
+      </div>
+    ));
+  };
+
   return (
     <div 
       className="flex-1 flex items-center justify-center dark:bg-dark-bg mx-20 my-28"
@@ -40,6 +76,14 @@ export default function ImageCanvas({
                 width: 'auto'
               }}
             />
+            
+            {/* Text overlay elements */}
+            {renderTextOverlay()}
+            
+            {/* Show text position indicator when text tool is active */}
+            {activeTool === 'text' && (
+              <div className="absolute left-1/2 top-1/2 w-4 h-4 bg-blue-500 rounded-full transform -translate-x-1/2 -translate-y-1/2 opacity-50"></div>
+            )}
           </div>
         </div>
       )}

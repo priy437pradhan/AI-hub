@@ -8,7 +8,6 @@ import BottomSheet from '../components/EditingPlatform/ToolPanel/BottomSheet'
 import ImageCanvas from '../components/EditingPlatform/ImageCanvas';
 import { useFlipImage } from '../components/EditingPlatform/tools/useFlipImage';
 import { useRotateImage } from '../components/EditingPlatform/tools/useRotateImage';
-import { useBeautyFilters } from '../components/EditingPlatform/tools/useBeautyFilter';
 import { useFrames } from '../components/EditingPlatform/tools/useFrames'; 
 import { useTextEditor } from '../components/EditingPlatform/tools/useTextEditor';
 import { useTextStyles } from '../components/EditingPlatform/tools/useTextStyle';
@@ -32,7 +31,7 @@ export default function EditingPlatform() {
   const [activeFramesTool, setActiveFramesTool] = useState(null);
   const [activeTextTool, setActiveTextTool] = useState(null);
   
-  // Bottom sheet state for mobile
+  // Bottom sheet state for mobile (no longer used with new navigation)
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
   
   // State for image upload
@@ -55,15 +54,15 @@ export default function EditingPlatform() {
     performRotateBase 
   } = useRotateImage({ imageRef });
   
-  // Use the beauty filters hook
-  const {
-    beautySettings,
-    setBeautySettings,
-    applyBeautyFilter
-  } = useBeautyFilters({ 
-    imageRef, 
-    setImagePreview 
-  });
+  // Temporary beauty settings state (since useBeautyFilters is commented out)
+  const [beautySettings, setBeautySettings] = useState({});
+  
+  // Temporary beauty filter function (since useBeautyFilters is commented out)
+  const applyBeautyFilter = async (feature, settings) => {
+    // This is a placeholder - implement actual beauty filter logic
+    console.log('Applying beauty filter:', feature, settings);
+    return null;
+  };
   
   // Use the frames hook
   const {
@@ -347,8 +346,8 @@ export default function EditingPlatform() {
           />
         )}
         
-        {/* Main image canvas - adjust padding for mobile toolbar */}
-        <div className={`flex-1 ${isMobile ? 'pb-16' : ''}`}>
+        {/* Main image canvas - adjust padding for mobile toolbar and tool panel */}
+        <div className={`flex-1 ${isMobile ? 'pb-20' : ''}`}>
           <ImageCanvas 
             imagePreview={imagePreview}
             handleUploadClick={handleUploadClick}
@@ -361,80 +360,59 @@ export default function EditingPlatform() {
         </div>
       </div>
       
-      {/* Mobile Bottom Toolbar and Bottom Sheet - always shown on mobile */}
+      {/* Mobile Layout - Navigation + Tool Panel */}
       {isMobile && (
-        <>
-          <div className="fixed bottom-0 left-0 right-0 h-16 bg-gray-900 border-t border-gray-800 z-30">
-            <BottomToolbar 
-              activeTool={activeTool} 
-              setActiveTool={setActiveTool}
-              setSidebarOpen={setSidebarOpen} 
-              isMobile={isMobile}
-              setIsBottomSheetOpen={setIsBottomSheetOpen} 
-              performFlip={performFlip}
-              performRotate={performRotate}
-              applyBeautyFeature={handleBeautyFeature}
-              beautySettings={beautySettings}
-              frameSettings={frameSettings}
-              setFrameSettings={setFrameSettings}
-              applyFrame={performApplyFrame}
-              applyFrameEffects={performApplyFrameEffects}
-              textElements={textElements}
-              textSettings={textSettings}
-              setTextSettings={setTextSettings}
-              addTextElement={addTextElement}
-              removeTextElement={removeTextElement}
-              updateTextElement={updateTextElement}
-              styleSettings={styleSettings}
-              setStyleSettings={setStyleSettings}
-              applyTextStyle={applyTextStyle}
-              toggleStyle={toggleStyle}
-              updateStyleSetting={updateStyleSetting}
-            />
-          </div>
+        <div className="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-700 z-30">
+          {/* Bottom Navigation Toolbar */}
+          <BottomToolbar 
+            activeTool={activeTool} 
+            setActiveTool={setActiveTool}
+            setSidebarOpen={setSidebarOpen} 
+            isMobile={isMobile}
+            setIsBottomSheetOpen={setIsBottomSheetOpen} 
+          />
           
-          {/* Bottom Sheet to display tool options */}
-          <BottomSheet 
-            isOpen={isBottomSheetOpen} 
-            onClose={() => setIsBottomSheetOpen(false)}
-          >
-            <ToolPanel 
-              activeTool={activeTool}
-              activeAdjustTool={activeAdjustTool}
-              setActiveAdjustTool={setActiveAdjustTool}
-              activeBeautyTool={activeBeautyTool}
-              setActiveBeautyTool={setActiveBeautyTool}
-              activeFramesTool={activeFramesTool}
-              setActiveFramesTool={setActiveFramesTool}
-              activeTextTool={activeTextTool}
-              setActiveTextTool={setActiveTextTool}
-              isMobile={isMobile}
-              setSidebarOpen={setSidebarOpen}
-              imageRef={imageRef}
-              performFlip={performFlip}
-              performRotate={performRotate}
-              applyBeautyFeature={handleBeautyFeature}
-              beautySettings={beautySettings}
-              frameSettings={frameSettings}
-              setFrameSettings={setFrameSettings}
-              applyFrame={performApplyFrame}
-              applyFrameEffects={performApplyFrameEffects}
-              textElements={textElements}
-              textSettings={textSettings}
-              setTextSettings={setTextSettings}
-              addTextElement={addTextElement}
-              removeTextElement={removeTextElement}
-              updateTextElement={updateTextElement}
-              applyTextToImage={applyTextToImage}
-              clearAllText={clearAllText}
-              styleSettings={styleSettings}
-              setStyleSettings={setStyleSettings}
-              applyTextStyle={applyTextStyle}
-              toggleStyle={toggleStyle}
-              updateStyleSetting={updateStyleSetting}
-            />
-          </BottomSheet>
-        </>
+          {/* Inline Tool Panel for Active Tool */}
+          {activeTool && (
+            <div className="max-h-48 overflow-y-auto bg-gray-800 border-t border-gray-700">
+              <ToolPanel 
+                activeTool={activeTool}
+                activeAdjustTool={activeAdjustTool}
+                setActiveAdjustTool={setActiveAdjustTool}
+                activeBeautyTool={activeBeautyTool}
+                setActiveBeautyTool={setActiveBeautyTool}
+                activeFramesTool={activeFramesTool}
+                setActiveFramesTool={setActiveFramesTool}
+                activeTextTool={activeTextTool}
+                setActiveTextTool={setActiveTextTool}
+                isMobile={isMobile}
+                setSidebarOpen={setSidebarOpen}
+                imageRef={imageRef}
+                performFlip={performFlip}
+                performRotate={performRotate}
+                applyBeautyFeature={handleBeautyFeature}
+                beautySettings={beautySettings}
+                frameSettings={frameSettings}
+                setFrameSettings={setFrameSettings}
+                applyFrame={performApplyFrame}
+                applyFrameEffects={performApplyFrameEffects}
+                textElements={textElements}
+                textSettings={textSettings}
+                setTextSettings={setTextSettings}
+                addTextElement={addTextElement}
+                removeTextElement={removeTextElement}
+                updateTextElement={updateTextElement}
+                applyTextToImage={applyTextToImage}
+                clearAllText={clearAllText}
+                styleSettings={styleSettings}
+                setStyleSettings={setStyleSettings}
+                applyTextStyle={applyTextStyle}
+                toggleStyle={toggleStyle}
+                updateStyleSetting={updateStyleSetting}
+              />
+            </div>
+          )}
+        </div>
       )}
     </div>
   );

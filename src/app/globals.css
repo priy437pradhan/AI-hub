@@ -60,3 +60,16 @@ a {
 .from-cyan-100.to-purple-100 {
   @apply from-primary-50 to-primary-100;
 }
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Safari and Chrome */
+}
+
+/* Optional: Smooth scrolling behavior */
+.scrollbar-hide {
+  scroll-behavior: smooth;
+}

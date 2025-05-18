@@ -40,6 +40,9 @@ const ToolPanel = ({
   setFrameSettings,
   applyFrame,
   applyFrameEffects,
+  // Text tool selection props
+  activeTextTool,
+  setActiveTextTool,
   // Text editing props
   textElements,
   textSettings,

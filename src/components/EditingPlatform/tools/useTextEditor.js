@@ -1,126 +1,163 @@
-// This is a very basic implementation of the useTextEditor hook
-// We'll focus on the most important functionality
+'use client';
+import { useState, useCallback } from 'react';
 
-import { useState, useRef } from 'react';
-
+// Improved useTextEditor hook
 export const useTextEditor = ({ imageRef, setImagePreview }) => {
   const [textElements, setTextElements] = useState([]);
   const [textSettings, setTextSettings] = useState({
-    content: 'Sample Text',
+    content: '',
     fontFamily: 'Arial',
     fontSize: 24,
     color: '#ffffff',
-    x: 50, // percentage
-    y: 50, // percentage
+    // Default position in the center
+    x: 50, 
+    y: 50,
     bold: false,
     italic: false,
     underline: false,
     shadow: false,
+    shadowColor: '#000000',
     shadowBlur: 2,
     shadowOffsetX: 1,
     shadowOffsetY: 1,
-    shadowColor: '#000000',
     outline: false,
-    outlineWidth: 1,
     outlineColor: '#000000',
+    outlineWidth: 1
   });
-  
-  // Counter for unique IDs
-  const idCounter = useRef(0);
 
-  // Add text element with current settings
-  const addTextElement = () => {
-    if (!textSettings.content?.trim()) return null;
-    
+  const addTextElement = useCallback(() => {
+    if (!textSettings.content.trim()) return null;
+
     const newElement = {
-      id: `text-${idCounter.current++}`,
-      ...textSettings
+      id: Date.now() + Math.random(),
+      ...textSettings,
+      // Add some offset if multiple texts to avoid perfect overlap
+      x: textSettings.x + (textElements.length * 2 % 30),
+      y: textSettings.y + (textElements.length * 2 % 20),
     };
-    
+
     setTextElements(prev => [...prev, newElement]);
+    
+    // Reset content after adding but keep the style settings
+    setTextSettings(prev => ({ ...prev, content: '' }));
+    
     return newElement;
-  };
+  }, [textSettings, textElements.length]);
 
-  // Remove text element by ID
-  const removeTextElement = (id) => {
-    setTextElements(prev => prev.filter(element => element.id !== id));
-  };
+  const removeTextElement = useCallback((elementId) => {
+    setTextElements(prev => prev.filter(el => el.id !== elementId));
+  }, []);
 
-  // Update a specific text element
-  const updateTextElement = (id, updates) => {
-    setTextElements(prev => 
-      prev.map(element => 
-        element.id === id ? { ...element, ...updates } : element
-      )
-    );
-  };
+  const updateTextElement = useCallback((elementId, updates) => {
+    setTextElements(prev => prev.map(el => 
+      el.id === elementId ? { ...el, ...updates } : el
+    ));
+  }, []);
 
-  // Apply text to image using canvas
-  const applyTextToImage = async () => {
-    if (!imageRef.current || textElements.length === 0) return null;
-    
-    const img = imageRef.current;
-    
-    // Create a canvas
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    
-    // Set canvas dimensions to image dimensions
-    canvas.width = img.naturalWidth;
-    canvas.height = img.naturalHeight;
-    
-    // Draw the image onto the canvas
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    
-    // Apply text elements
-    textElements.forEach(element => {
-      // Calculate positions based on percentages
-      const x = (element.x / 100) * canvas.width;
-      const y = (element.y / 100) * canvas.height;
-      
-      // Apply text styling
-      ctx.font = `${element.italic ? 'italic ' : ''}${element.bold ? 'bold ' : ''}${element.fontSize}px ${element.fontFamily}`;
-      ctx.fillStyle = element.color;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      
-      // Handle shadow
-      if (element.shadow) {
-        ctx.shadowColor = element.shadowColor || '#000000';
-        ctx.shadowBlur = element.shadowBlur || 2;
-        ctx.shadowOffsetX = element.shadowOffsetX || 1;
-        ctx.shadowOffsetY = element.shadowOffsetY || 1;
-      } else {
+  const applyTextToImage = useCallback(async () => {
+    if (!imageRef.current || textElements.length === 0) {
+      return null;
+    }
+
+    try {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = imageRef.current;
+
+      // Wait for image to load if needed
+      await new Promise((resolve) => {
+        if (img.complete) {
+          resolve();
+        } else {
+          img.onload = resolve;
+        }
+      });
+
+      // Set canvas dimensions to match the image
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+
+      // Draw the original image
+      ctx.drawImage(img, 0, 0);
+
+      // Apply each text element
+      textElements.forEach(element => {
+        // Calculate actual pixel positions from percentages
+        const actualX = (element.x / 100) * canvas.width;
+        const actualY = (element.y / 100) * canvas.height;
+        
+        // Set up font style
+        let fontStyle = '';
+        if (element.bold) fontStyle += 'bold ';
+        if (element.italic) fontStyle += 'italic ';
+        
+        ctx.font = `${fontStyle}${element.fontSize}px ${element.fontFamily}`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        // Handle outline first if enabled (drawn behind the text)
+        if (element.outline) {
+          ctx.strokeStyle = element.outlineColor;
+          ctx.lineWidth = element.outlineWidth;
+          ctx.strokeText(element.content, actualX, actualY);
+        }
+
+        // Apply shadow if enabled
+        if (element.shadow) {
+          ctx.shadowColor = element.shadowColor;
+          ctx.shadowBlur = element.shadowBlur;
+          ctx.shadowOffsetX = element.shadowOffsetX;
+          ctx.shadowOffsetY = element.shadowOffsetY;
+        } else {
+          ctx.shadowColor = 'transparent';
+          ctx.shadowBlur = 0;
+          ctx.shadowOffsetX = 0;
+          ctx.shadowOffsetY = 0;
+        }
+
+        // Draw the text
+        ctx.fillStyle = element.color;
+        ctx.fillText(element.content, actualX, actualY);
+
+        // Apply underline if needed
+        if (element.underline) {
+          const textMetrics = ctx.measureText(element.content);
+          const underlineY = actualY + element.fontSize * 0.1;
+          const underlineStart = actualX - textMetrics.width / 2;
+          const underlineEnd = actualX + textMetrics.width / 2;
+          
+          ctx.beginPath();
+          ctx.moveTo(underlineStart, underlineY);
+          ctx.lineTo(underlineEnd, underlineY);
+          ctx.strokeStyle = element.color;
+          ctx.lineWidth = Math.max(1, element.fontSize * 0.05);
+          ctx.stroke();
+        }
+
+        // Reset shadow for next element
         ctx.shadowColor = 'transparent';
         ctx.shadowBlur = 0;
         ctx.shadowOffsetX = 0;
         ctx.shadowOffsetY = 0;
-      }
-      
-      // Handle outline/stroke
-      if (element.outline) {
-        ctx.lineWidth = element.outlineWidth || 1;
-        ctx.strokeStyle = element.outlineColor || '#000000';
-        ctx.strokeText(element.content, x, y);
-      }
-      
-      // Fill the text
-      ctx.fillText(element.content, x, y);
-    });
-    
-    // Convert canvas to image URL
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
-    
-    // Update the image preview
-    setImagePreview(dataUrl);
-    
-    return dataUrl;
-  };
+      });
 
-  // Clear all text elements
-  const clearAllText = () => {
+      // Convert canvas to blob URL
+      return new Promise((resolve) => {
+        canvas.toBlob((blob) => {
+          const url = URL.createObjectURL(blob);
+          resolve(url);
+        }, 'image/jpeg', 0.95); // Higher quality
+      });
+
+    } catch (error) {
+      console.error('Error applying text to image:', error);
+      return null;
+    }
+  }, [textElements, imageRef]);
+
+  const clearAllText = useCallback(() => {
     setTextElements([]);
-  };
+  }, []);
 
   return {
     textElements,

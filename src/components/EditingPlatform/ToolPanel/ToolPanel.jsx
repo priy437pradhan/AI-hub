@@ -72,16 +72,16 @@ const ToolPanel = ({
   // Determine which panel to render based on active tool
   const renderActiveToolPanel = () => {
     switch (activeTool) {
-      case toolNames.ADJUST:
-        return (
-          <AdjustToolPanel
-            activeAdjustTool={activeAdjustTool}
-            setActiveAdjustTool={setActiveAdjustTool}
-            imageRef={imageRef}
-            performFlip={performFlip}
-            performRotate={performRotate}
-          />
-        );
+    case toolNames.ADJUST:
+  return (
+    <AdjustToolPanel
+      activeAdjustTool={activeAdjustTool}
+      setActiveAdjustTool={setActiveAdjustTool}
+      imageRef={imageRef}
+      performFlip={performFlip}
+      performRotate={performRotate}
+    />
+  );
       case toolNames.AI:
         return (
           <AIToolPanel
@@ -171,7 +171,7 @@ const ToolPanel = ({
 
   // Return container with appropriate styling based on mobile/desktop
   return (
-    <div className={`bg-gray-900 ${isMobile ? 'h-auto pb-6' : 'h-full w-64'} overflow-y-auto text-white shadow-lg`}>
+    <div className={`bg-gray-900 ${isMobile ? 'h-auto pb-6' : 'h-full w-80'} overflow-y-auto text-white shadow-lg`}>
       <div className="p-3">
         {renderActiveToolPanel()}
       </div>

@@ -11,6 +11,7 @@ import { useRotateImage } from '../components/EditingPlatform/tools/useRotateIma
 import { useFrames } from '../components/EditingPlatform/tools/useFrames'; 
 import { useTextEditor } from '../components/EditingPlatform/tools/useTextEditor';
 import { useTextStyles } from '../components/EditingPlatform/tools/useTextStyle';
+import { useCrop } from '../components/EditingPlatform/tools/useCrop';
 
 export default function EditingPlatform() {
   // Tool constants
@@ -53,6 +54,19 @@ export default function EditingPlatform() {
     rotationDegrees, 
     performRotateBase 
   } = useRotateImage({ imageRef });
+  
+  // Use the crop hook
+  const {
+    cropSettings,
+    setCropSettings,
+    performCrop: performCropBase,
+    setCropWithAspectRatio,
+    toggleCropMode,
+    cancelCrop,
+    updateCropPosition,
+    updateCropDimensions,
+    resetCrop
+  } = useCrop(imageRef, setImagePreview);
   
   // Temporary beauty settings state (since useBeautyFilters is commented out)
   const [beautySettings, setBeautySettings] = useState({});
@@ -105,6 +119,14 @@ export default function EditingPlatform() {
     const flippedImageUrl = await performFlipBase(direction);
     if (flippedImageUrl) {
       setImagePreview(flippedImageUrl);
+    }
+  };
+  
+  // Crop wrapper function
+  const performCrop = async () => {
+    const croppedImageUrl = await performCropBase(cropSettings, imagePreview);
+    if (croppedImageUrl) {
+      setImagePreview(croppedImageUrl);
     }
   };
   
@@ -189,6 +211,8 @@ export default function EditingPlatform() {
       });
       // Clear text elements
       clearAllText();
+      // Reset crop settings
+      resetCrop();
     }
   };
   
@@ -231,6 +255,8 @@ export default function EditingPlatform() {
         });
         // Clear text elements
         clearAllText();
+        // Reset crop settings
+        resetCrop();
       };
       reader.readAsDataURL(file);
       setActiveTool(toolNames.ADJUST);
@@ -275,6 +301,7 @@ export default function EditingPlatform() {
       shadowColor: '#000000'
     });
     clearAllText();
+    resetCrop();
     setActiveTool(toolNames.ADJUST);
   };
   
@@ -324,6 +351,17 @@ export default function EditingPlatform() {
             imageRef={imageRef}
             performFlip={performFlip}
             performRotate={performRotate}
+            // Crop functionality props
+            performCrop={performCrop}
+            setCropWithAspectRatio={setCropWithAspectRatio}
+            toggleCropMode={toggleCropMode}
+            cancelCrop={cancelCrop}
+            updateCropPosition={updateCropPosition}
+            updateCropDimensions={updateCropDimensions}
+            resetCrop={resetCrop}
+            cropSettings={cropSettings}
+            setCropSettings={setCropSettings}
+            // Other existing props
             applyBeautyFeature={handleBeautyFeature}
             beautySettings={beautySettings}
             frameSettings={frameSettings}
@@ -346,7 +384,6 @@ export default function EditingPlatform() {
           />
         )}
         
-        {/* Main image canvas - adjust padding for mobile toolbar and tool panel */}
         <div className={`flex-1 ${isMobile ? 'pb-20' : ''}`}>
           <ImageCanvas 
             imagePreview={imagePreview}
@@ -356,6 +393,9 @@ export default function EditingPlatform() {
             activeAdjustTool={activeAdjustTool}
             setImagePreview={setImagePreview}
             textElements={textElements}
+            // Add crop settings for ImageCanvas
+            cropSettings={cropSettings}
+            updateTextElement={updateTextElement}
           />
         </div>
       </div>
@@ -390,6 +430,17 @@ export default function EditingPlatform() {
                 imageRef={imageRef}
                 performFlip={performFlip}
                 performRotate={performRotate}
+                // Crop functionality props for mobile
+                performCrop={performCrop}
+                setCropWithAspectRatio={setCropWithAspectRatio}
+                toggleCropMode={toggleCropMode}
+                cancelCrop={cancelCrop}
+                updateCropPosition={updateCropPosition}
+                updateCropDimensions={updateCropDimensions}
+                resetCrop={resetCrop}
+                cropSettings={cropSettings}
+                setCropSettings={setCropSettings}
+                // Other existing props
                 applyBeautyFeature={handleBeautyFeature}
                 beautySettings={beautySettings}
                 frameSettings={frameSettings}

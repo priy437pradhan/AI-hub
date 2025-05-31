@@ -8,8 +8,6 @@ export default function ImageCanvas({
   activeTool,
   activeAdjustTool,
   setImagePreview,
-   cropSettings,
-  setCropSettings,
   // Text-related props
   textElements,
   updateTextElement
@@ -179,25 +177,23 @@ export default function ImageCanvas({
       <div 
         className="relative w-full max-w-full h-full flex items-center justify-center overflow-hidden"
       >  
-         <div 
-    ref={imageContainerRef}
-    className="relative image-wrapper"
-  >
-    <img 
-      ref={imageRef}
-      src={imagePreview}
-      alt="Uploaded preview" 
-      className="max-w-full max-h-full object-contain"
-      style={{
-        maxHeight: '70vh',
-        width: 'auto'
-      }}
-    />
-        {/* Existing text overlay */}
-    {renderTextOverlay()}
-    
-    {/* Add crop overlay */}
-    {renderCropOverlay()}
+        <div 
+          ref={imageContainerRef}
+          className="relative image-wrapper"
+        >
+          <img 
+            ref={imageRef}
+            src={imagePreview}
+            alt="Uploaded preview" 
+            className="max-w-full max-h-full object-contain"
+            style={{
+              maxHeight: '70vh',
+              width: 'auto'
+            }}
+          />
+          
+          {/* Text overlay elements with drag functionality */}
+          {renderTextOverlay()}
         </div>
       </div>
     </div>

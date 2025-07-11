@@ -12,6 +12,22 @@ const ToolPanel = ({
   activeTool,
   isMobile,
   setSidebarOpen,
+  imagePreview,
+  // ✅ Undo/Redo props
+  canUndo,
+  canRedo,
+  performUndo,
+  performRedo,
+  // ✅ Crop props
+  cropSettings,
+  setCropSettings,
+  performCrop,
+  setCropWithAspectRatio,
+  toggleCropMode,
+  cancelCrop,
+  updateCropPosition,
+  updateCropDimensions,
+  resetCrop,
   // Adjust panel props
   imageRef,
   performFlip,
@@ -72,16 +88,26 @@ const ToolPanel = ({
   // Determine which panel to render based on active tool
   const renderActiveToolPanel = () => {
     switch (activeTool) {
-    case toolNames.ADJUST:
-  return (
-    <AdjustToolPanel
-      activeAdjustTool={activeAdjustTool}
-      setActiveAdjustTool={setActiveAdjustTool}
-      imageRef={imageRef}
-      performFlip={performFlip}
-      performRotate={performRotate}
-    />
-  );
+      case toolNames.ADJUST:
+        return (
+          <AdjustToolPanel
+            activeAdjustTool={activeAdjustTool}
+            setActiveAdjustTool={setActiveAdjustTool}
+            imageRef={imageRef}
+            performFlip={performFlip}
+            performRotate={performRotate}
+            cropSettings={cropSettings}
+            setCropSettings={setCropSettings}
+            performCrop={performCrop}
+            setCropWithAspectRatio={setCropWithAspectRatio}
+            toggleCropMode={toggleCropMode}
+            cancelCrop={cancelCrop}
+            updateCropPosition={updateCropPosition}
+            updateCropDimensions={updateCropDimensions}
+            resetCrop={resetCrop}
+            imagePreview={imagePreview}
+          />
+        );
       case toolNames.AI:
         return (
           <AIToolPanel
@@ -164,6 +190,7 @@ const ToolPanel = ({
             imageRef={imageRef}
             performFlip={performFlip}
             performRotate={performRotate}
+            imagePreview={imagePreview}
           />
         );
     }
@@ -172,6 +199,44 @@ const ToolPanel = ({
   // Return container with appropriate styling based on mobile/desktop
   return (
     <div className={`bg-gray-900 ${isMobile ? 'h-auto pb-6' : 'h-full w-80'} overflow-y-auto text-white shadow-lg`}>
+      {/* Undo/Redo Header */}
+      <div className="flex items-center justify-between p-3 border-b border-gray-700">
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={performUndo}
+            disabled={!canUndo}
+            className={`p-2 rounded-lg flex items-center justify-center transition-all ${
+              canUndo 
+                ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+            }`}
+            title="Undo (Ctrl+Z)"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+            </svg>
+          </button>
+          <button
+            onClick={performRedo}
+            disabled={!canRedo}
+            className={`p-2 rounded-lg flex items-center justify-center transition-all ${
+              canRedo 
+                ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+            }`}
+            title="Redo (Ctrl+Y)"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 10h-10a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6" />
+            </svg>
+          </button>
+        </div>
+        <div className="text-sm text-gray-400">
+          {activeTool}
+        </div>
+      </div>
+
+      {/* Tool Panel Content */}
       <div className="p-3">
         {renderActiveToolPanel()}
       </div>

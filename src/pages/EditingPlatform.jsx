@@ -13,6 +13,7 @@ import { useTextEditor } from '../components/EditingPlatform/tools/useTextEditor
 import { useTextStyles } from '../components/EditingPlatform/tools/useTextStyle';
 import { useCrop } from '../components/EditingPlatform/tools/useCrop';
 
+
 export default function EditingPlatform() {
   // Tool constants
   const toolNames = {
@@ -352,15 +353,16 @@ export default function EditingPlatform() {
             performFlip={performFlip}
             performRotate={performRotate}
             // Crop functionality props
-            performCrop={performCrop}
-            setCropWithAspectRatio={setCropWithAspectRatio}
-            toggleCropMode={toggleCropMode}
-            cancelCrop={cancelCrop}
-            updateCropPosition={updateCropPosition}
-            updateCropDimensions={updateCropDimensions}
-            resetCrop={resetCrop}
-            cropSettings={cropSettings}
-            setCropSettings={setCropSettings}
+           cropSettings={cropSettings}
+          imagePreview={imagePreview}
+          setCropSettings={setCropSettings}
+          performCrop={() => performCrop(cropSettings, imagePreview)}
+          setCropWithAspectRatio={setCropWithAspectRatio}
+          toggleCropMode={toggleCropMode}
+          cancelCrop={cancelCrop}
+          updateCropPosition={updateCropPosition}
+          updateCropDimensions={updateCropDimensions}
+          resetCrop={resetCrop}
             // Other existing props
             applyBeautyFeature={handleBeautyFeature}
             beautySettings={beautySettings}
@@ -381,22 +383,26 @@ export default function EditingPlatform() {
             applyTextStyle={applyTextStyle}
             toggleStyle={toggleStyle}
             updateStyleSetting={updateStyleSetting}
+              
           />
         )}
         
         <div className={`flex-1 ${isMobile ? 'pb-20' : ''}`}>
-          <ImageCanvas 
-            imagePreview={imagePreview}
-            handleUploadClick={handleUploadClick}
-            imageRef={imageRef}
-            activeTool={activeTool}
-            activeAdjustTool={activeAdjustTool}
-            setImagePreview={setImagePreview}
-            textElements={textElements}
-            // Add crop settings for ImageCanvas
-            cropSettings={cropSettings}
-            updateTextElement={updateTextElement}
-          />
+          
+       <ImageCanvas 
+  imagePreview={imagePreview}
+  handleUploadClick={handleUploadClick}
+  imageRef={imageRef}
+  activeTool={activeTool}
+  activeAdjustTool={activeAdjustTool}
+  setImagePreview={setImagePreview}
+  textElements={textElements}
+  cropSettings={cropSettings}
+  updateTextElement={updateTextElement}
+  updateCropPosition={updateCropPosition}  
+  updateCropDimensions={updateCropDimensions}
+  performCrop={performCrop} 
+/>
         </div>
       </div>
       
@@ -431,15 +437,15 @@ export default function EditingPlatform() {
                 performFlip={performFlip}
                 performRotate={performRotate}
                 // Crop functionality props for mobile
-                performCrop={performCrop}
+                cropSettings={cropSettings}
+                setCropSettings={setCropSettings}
+                performCrop={() => performCrop(cropSettings, imagePreview)}
                 setCropWithAspectRatio={setCropWithAspectRatio}
                 toggleCropMode={toggleCropMode}
                 cancelCrop={cancelCrop}
                 updateCropPosition={updateCropPosition}
                 updateCropDimensions={updateCropDimensions}
                 resetCrop={resetCrop}
-                cropSettings={cropSettings}
-                setCropSettings={setCropSettings}
                 // Other existing props
                 applyBeautyFeature={handleBeautyFeature}
                 beautySettings={beautySettings}

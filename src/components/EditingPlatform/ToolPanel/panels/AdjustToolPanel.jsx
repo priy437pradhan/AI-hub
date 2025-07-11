@@ -25,7 +25,7 @@ import {
   Upload
 } from 'lucide-react';
 
-// Aspect ratios matching Fotor
+// Mock aspect ratios (you should import this from your constants file)
 const aspectRatios = [
   { id: 'freeform', label: 'Freeform', icon: '⊞', dimensions: null },
   { id: '1x1', label: '1:1', icon: '□', dimensions: { width: 1, height: 1 } },
@@ -41,283 +41,28 @@ const aspectRatios = [
   { id: 'circle', label: 'Circle', icon: '○', dimensions: null },
 ];
 
-const ImageEditor = () => {
-  const [imagePreview, setImagePreview] = useState(null);
-  const [rotation, setRotation] = useState(0);
-  const [flipHorizontal, setFlipHorizontal] = useState(false);
-  const [flipVertical, setFlipVertical] = useState(false);
-  const [activeTool, setActiveTool] = useState('adjust');
-  const [textElements, setTextElements] = useState([]);
-  
-  const imageRef = useRef(null);
-  const fileInputRef = useRef(null);
-
-  // Image upload handler
-  const handleImageUpload = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setImagePreview(e.target.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleUploadClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  // Transform functions
-  const performFlip = (direction) => {
-    if (direction === 'horizontal') {
-      setFlipHorizontal(!flipHorizontal);
-    } else if (direction === 'vertical') {
-      setFlipVertical(!flipVertical);
-    }
-  };
-
-  const performRotate = (direction) => {
-    if (direction === 'left') {
-      setRotation(rotation - 90);
-    } else if (direction === 'right') {
-      setRotation(rotation + 90);
-    }
-  };
-
-  // Text element functions
-  const updateTextElement = (id, updates) => {
-    setTextElements(prev => 
-      prev.map(element => 
-        element.id === id ? { ...element, ...updates } : element
-      )
-    );
-  };
-
-  return (
-    <div className="flex h-screen bg-gray-900">
-      {/* Hidden file input */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        onChange={handleImageUpload}
-        className="hidden"
-      />
-      
-      {/* Main Canvas Area */}
-      <div className="flex-1">
-        <ImageCanvas
-          imagePreview={imagePreview}
-          handleUploadClick={handleUploadClick}
-          imageRef={imageRef}
-          activeTool={activeTool}
-          rotation={rotation}
-          flipHorizontal={flipHorizontal}
-          flipVertical={flipVertical}
-          textElements={textElements}
-          updateTextElement={updateTextElement}
-        />
-      </div>
-      
-      {/* Adjustment Panel */}
-      <div className="w-80 border-l border-gray-700">
-        <AdjustToolPanel
-          imageRef={imageRef}
-          performFlip={performFlip}
-          performRotate={performRotate}
-        />
-      </div>
-    </div>
-  );
-};
-
-const ImageCanvas = ({
-  imagePreview,
-  handleUploadClick,
-  imageRef,
-  activeTool,
-  rotation,
-  flipHorizontal,
-  flipVertical,
-  textElements,
-  updateTextElement
+const AdjustToolPanel = ({ 
+  imageRef, 
+  performFlip, 
+  performRotate,
+  // Crop-related props
+  cropSettings,
+  setCropSettings,
+  performCrop,
+  setCropWithAspectRatio,
+  toggleCropMode,
+  cancelCrop,
+  updateCropPosition,
+  updateCropDimensions,
+  resetCrop,
+  imagePreview
 }) => {
-  const [draggedElement, setDraggedElement] = useState(null);
-  const imageContainerRef = useRef(null);
-  
-  // Handle starting text element drag
-  const handleTextDragStart = (e, element) => {
-    if (activeTool !== 'text') return;
-    e.stopPropagation();
-    e.preventDefault();
-    setDraggedElement(element);
-  };
-  
-  // Handle touch start for mobile devices
-  const handleTextTouchStart = (e, element) => {
-    if (activeTool !== 'text') return;
-    e.stopPropagation();
-    const touch = e.touches[0];
-    if (touch) {
-      setDraggedElement(element);
-    }
-  };
-  
-  // Handle drag movement
-  const handleMouseMove = (e) => {
-    if (!draggedElement || !imageContainerRef.current) return;
-    
-    const rect = imageContainerRef.current.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-    
-    const boundedX = Math.max(0, Math.min(100, x));
-    const boundedY = Math.max(0, Math.min(100, y));
-    
-    updateTextElement(draggedElement.id, {
-      x: boundedX,
-      y: boundedY
-    });
-  };
-  
-  // Handle touch move for mobile devices
-  const handleTouchMove = (e) => {
-    if (!draggedElement || !imageContainerRef.current) return;
-    e.preventDefault();
-    
-    const touch = e.touches[0];
-    if (touch) {
-      const rect = imageContainerRef.current.getBoundingClientRect();
-      const x = ((touch.clientX - rect.left) / rect.width) * 100;
-      const y = ((touch.clientY - rect.top) / rect.height) * 100;
-      
-      const boundedX = Math.max(0, Math.min(100, x));
-      const boundedY = Math.max(0, Math.min(100, y));
-      
-      updateTextElement(draggedElement.id, {
-        x: boundedX,
-        y: boundedY
-      });
-    }
-  };
-  
-  // Handle drag end
-  const handleDragEnd = () => {
-    setDraggedElement(null);
-  };
-  
-  // Setup and cleanup event listeners
-  useEffect(() => {
-    if (draggedElement) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleDragEnd);
-      document.addEventListener('touchmove', handleTouchMove, { passive: false });
-      document.addEventListener('touchend', handleDragEnd);
-      document.addEventListener('touchcancel', handleDragEnd);
-    }
-    
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleDragEnd);
-      document.removeEventListener('touchmove', handleTouchMove);
-      document.removeEventListener('touchend', handleDragEnd);
-      document.removeEventListener('touchcancel', handleDragEnd);
-    };
-  }, [draggedElement]);
-  
-  // Function to render text elements on the canvas for preview
-  const renderTextOverlay = () => {
-    if (!textElements || textElements.length === 0) return null;
-    
-    return textElements.map((element) => (
-      <div
-        key={element.id}
-        className={`absolute ${activeTool === 'text' ? 'cursor-move' : ''} select-none`}
-        style={{
-          left: `${element.x}%`,
-          top: `${element.y}%`,
-          transform: 'translate(-50%, -50%)',
-          color: element.color || '#ffffff',
-          fontFamily: element.fontFamily || 'Arial',
-          fontSize: `${element.fontSize || 24}px`,
-          fontWeight: element.bold ? 'bold' : 'normal',
-          fontStyle: element.italic ? 'italic' : 'normal',
-          textDecoration: element.underline ? 'underline' : 'none',
-          textShadow: element.shadow ? 
-            `${element.shadowOffsetX || 1}px ${element.shadowOffsetY || 1}px ${element.shadowBlur || 2}px ${element.shadowColor || '#000000'}` : 
-            'none',
-          WebkitTextStroke: element.outline ? 
-            `${element.outlineWidth || 1}px ${element.outlineColor || '#000000'}` : 
-            'none',
-          zIndex: draggedElement && draggedElement.id === element.id ? 10 : 1,
-          pointerEvents: activeTool === 'text' ? 'auto' : 'none'
-        }}
-        onMouseDown={(e) => handleTextDragStart(e, element)}
-        onTouchStart={(e) => handleTextTouchStart(e, element)}
-      >
-        {element.content}
-      </div>
-    ));
-  };
-
-  // Empty or upload view
-  if (!imagePreview) {
-    return (
-      <div className="flex-1 flex items-center justify-center mx-28 my-40 bg-gray-800">
-        <div 
-          onClick={handleUploadClick}
-          className="w-full max-w-3xl aspect-auto border-2 border-dashed border-gray-600 rounded-md flex flex-col items-center justify-center p-8 cursor-pointer bg-gray-700 hover:bg-gray-650 transition-colors"
-        >
-          <div className="mb-4">
-            <Upload className="w-12 h-12 text-gray-400" />
-          </div>
-          <p className="text-gray-300 mb-4 text-lg">Drag or upload your own images</p>
-          <button className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-md flex items-center transition-colors">
-            Open Image
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Image view with text overlay
-  return (
-    <div className="flex-1 flex items-center justify-center mx-20 my-28">
-      <div className="relative w-full max-w-full h-full flex items-center justify-center overflow-hidden">  
-        <div 
-          ref={imageContainerRef}
-          className="relative image-wrapper"
-        >
-          <img 
-            ref={imageRef}
-            src={imagePreview}
-            alt="Uploaded preview" 
-            className="max-w-full max-h-full object-contain transition-all duration-300"
-            style={{
-              maxHeight: '70vh',
-              width: 'auto',
-              transform: `rotate(${rotation}deg) scaleX(${flipHorizontal ? -1 : 1}) scaleY(${flipVertical ? -1 : 1})`
-            }}
-          />
-          
-          {/* Text overlay elements with drag functionality */}
-          {renderTextOverlay()}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const AdjustToolPanel = ({ imageRef, performFlip, performRotate }) => {
-  // Crop & Resize states
   const [activeSection, setActiveSection] = useState('basic');
+  
+  // Add missing state for crop functionality
+  const [keepAspectRatio, setKeepAspectRatio] = useState(false);
   const [aspectRatio, setAspectRatio] = useState('freeform');
-  const [cropWidth, setCropWidth] = useState('');
-  const [cropHeight, setCropHeight] = useState('');
-  const [keepAspectRatio, setKeepAspectRatio] = useState(true);
 
-  // Basic Adjust states (now functional with CSS filters)
   const [basicAdjust, setBasicAdjust] = useState({
     brightness: 0,
     contrast: 0,
@@ -333,7 +78,6 @@ const AdjustToolPanel = ({ imageRef, performFlip, performRotate }) => {
     dehaze: 0
   });
 
-  // Color Adjust states
   const [colorAdjust, setColorAdjust] = useState({
     temperature: 0,
     tint: 0,
@@ -341,7 +85,6 @@ const AdjustToolPanel = ({ imageRef, performFlip, performRotate }) => {
     luminance: 0
   });
 
-  // Vignette states
   const [vignette, setVignette] = useState({
     amount: 0,
     midpoint: 50,
@@ -358,7 +101,7 @@ const AdjustToolPanel = ({ imageRef, performFlip, performRotate }) => {
     { id: 'rotate', label: 'Rotate', icon: <RotateCw size={16} /> }
   ];
 
-  // Apply CSS filters to the image based on current adjustments
+  // Apply filters effect
   useEffect(() => {
     if (imageRef.current) {
       const filters = [];
@@ -382,25 +125,39 @@ const AdjustToolPanel = ({ imageRef, performFlip, performRotate }) => {
       
       // Color adjustments
       if (colorAdjust.hue !== 0) {
-        filters.push(`hue-rotate(${colorAdjust.hue * 3.6}deg)`); // Convert to degrees
+        filters.push(`hue-rotate(${colorAdjust.hue * 3.6}deg)`);
       }
       if (colorAdjust.temperature !== 0) {
-        // Simulate temperature with hue-rotate and sepia
         const tempEffect = colorAdjust.temperature > 0 ? 
           `sepia(${Math.abs(colorAdjust.temperature) * 0.3}%) hue-rotate(${colorAdjust.temperature * 0.5}deg)` :
           `sepia(${Math.abs(colorAdjust.temperature) * 0.3}%) hue-rotate(${colorAdjust.temperature * 0.8}deg)`;
         filters.push(tempEffect);
       }
       
-      // Apply blur for sharpness (inverted - negative sharpness = blur)
       if (basicAdjust.sharpness < 0) {
         filters.push(`blur(${Math.abs(basicAdjust.sharpness) * 0.05}px)`);
       }
       
       // Apply the combined filter
       imageRef.current.style.filter = filters.length > 0 ? filters.join(' ') : 'none';
+      
+      // Apply vignette using box-shadow
+      if (vignette.amount !== 0) {
+        const vignetteSize = Math.abs(vignette.amount) * 2;
+        const vignetteBlur = vignette.feather;
+        const vignetteColor = vignette.amount > 0 ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.8)';
+        
+        imageRef.current.style.boxShadow = `inset 0 0 ${vignetteSize}px ${vignetteBlur}px ${vignetteColor}`;
+        
+        if (vignette.roundness > 0) {
+          imageRef.current.style.borderRadius = `${vignette.roundness}%`;
+        }
+      } else {
+        imageRef.current.style.boxShadow = 'none';
+        imageRef.current.style.borderRadius = '0';
+      }
     }
-  }, [basicAdjust, colorAdjust, imageRef]);
+  }, [basicAdjust, colorAdjust, vignette, imageRef]);
 
   const handleBasicAdjustChange = (property, value) => {
     setBasicAdjust(prev => ({ ...prev, [property]: parseInt(value) }));
@@ -449,7 +206,6 @@ const AdjustToolPanel = ({ imageRef, performFlip, performRotate }) => {
     });
   };
 
-  // One-tap enhance function
   const handleOneTagEnhance = () => {
     setBasicAdjust({
       brightness: 10,
@@ -467,7 +223,6 @@ const AdjustToolPanel = ({ imageRef, performFlip, performRotate }) => {
     });
   };
 
-  // Functional handlers for flip and rotate using the passed props
   const handleFlip = (direction) => {
     if (performFlip) {
       performFlip(direction);
@@ -477,6 +232,23 @@ const AdjustToolPanel = ({ imageRef, performFlip, performRotate }) => {
   const handleRotate = (direction) => {
     if (performRotate) {
       performRotate(direction);
+    }
+  };
+
+  // Handle aspect ratio selection
+  const handleAspectRatioChange = (ratioId) => {
+    setAspectRatio(ratioId);
+    if (setCropWithAspectRatio) {
+      setCropWithAspectRatio(ratioId, aspectRatios, (newSettings) => {
+        console.log('Crop settings updated:', newSettings);
+      });
+    }
+  };
+
+  // Handle crop apply
+  const handleCropApply = () => {
+    if (performCrop && cropSettings && imagePreview) {
+      performCrop(cropSettings, imagePreview);
     }
   };
 
@@ -524,7 +296,7 @@ const AdjustToolPanel = ({ imageRef, performFlip, performRotate }) => {
       {aspectRatios.map((ratio) => (
         <button
           key={ratio.id}
-          onClick={() => setAspectRatio(ratio.id)}
+          onClick={() => handleAspectRatioChange(ratio.id)}
           className={`flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 
             ${aspectRatio === ratio.id 
               ? 'bg-blue-500 bg-opacity-20 border border-blue-500 text-blue-400' 
@@ -572,9 +344,20 @@ const AdjustToolPanel = ({ imageRef, performFlip, performRotate }) => {
         </label>
       </div>
 
-      <button className="w-full py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium text-white transition-colors">
-        Apply Crop
-      </button>
+      <div className="flex space-x-2">
+        <button 
+          onClick={handleCropApply}
+          className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium text-white transition-colors"
+        >
+          Apply Crop
+        </button>
+        <button 
+          onClick={cancelCrop}
+          className="px-4 py-3 bg-gray-600 hover:bg-gray-700 rounded-lg font-medium text-white transition-colors"
+        >
+          Cancel
+        </button>
+      </div>
     </div>
   );
 
@@ -839,59 +622,6 @@ const AdjustToolPanel = ({ imageRef, performFlip, performRotate }) => {
           ))}
         </div>
       </div>
-
-      {/* Custom slider styles */}
-      <style jsx>{`
-        .slider-blue::-webkit-slider-thumb {
-          appearance: none;
-          height: 16px;
-          width: 16px;
-          border-radius: 50%;
-          background: #3b82f6;
-          cursor: pointer;
-          border: 2px solid #1e40af;
-        }
-        
-        .slider-orange::-webkit-slider-thumb {
-          appearance: none;
-          height: 16px;
-          width: 16px;
-          border-radius: 50%;
-          background: #f97316;
-          cursor: pointer;
-          border: 2px solid #ea580c;
-        }
-        
-        .slider-pink::-webkit-slider-thumb {
-          appearance: none;
-          height: 16px;
-          width: 16px;
-          border-radius: 50%;
-          background: #ec4899;
-          cursor: pointer;
-          border: 2px solid #db2777;
-        }
-        
-        .slider-purple::-webkit-slider-thumb {
-          appearance: none;
-          height: 16px;
-          width: 16px;
-          border-radius: 50%;
-          background: #8b5cf6;
-          cursor: pointer;
-          border: 2px solid #7c3aed;
-        }
-        
-        .slider-yellow::-webkit-slider-thumb {
-          appearance: none;
-          height: 16px;
-          width: 16px;
-          border-radius: 50%;
-          background: #eab308;
-          cursor: pointer;
-          border: 2px solid #ca8a04;
-        }
-      `}</style>
     </div>
   );
 };

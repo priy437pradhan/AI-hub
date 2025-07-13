@@ -7,6 +7,7 @@ import BottomToolbar from '../components/EditingPlatform/ToolPanel/BottomToolbar
 import BottomSheet from '../components/EditingPlatform/ToolPanel/BottomSheet'
 import ImageCanvas from '../components/EditingPlatform/ImageCanvas';
 import { useFlipImage } from '../components/EditingPlatform/tools/useFlipImage';
+import { useResizeImage } from '../components/EditingPlatform/tools/useResizeImage';
 import { useRotateImage } from '../components/EditingPlatform/tools/useRotateImage';
 import { useFrames } from '../components/EditingPlatform/tools/useFrames'; 
 import { useTextEditor } from '../components/EditingPlatform/tools/useTextEditor';
@@ -43,20 +44,22 @@ export default function EditingPlatform() {
   const fileInputRef = useRef(null);
   const imageRef = useRef(null);
   
-  // Use the flip image hook
   const {
     isFlippedHorizontally,
     isFlippedVertically,
     performFlipBase
   } = useFlipImage({ imageRef });
   
-  // Use the rotate image hook
   const { 
     rotationDegrees, 
     performRotateBase 
   } = useRotateImage({ imageRef });
-  
-  // Use the crop hook
+
+ const { 
+  performResizeBase,
+   scale 
+  } = useResizeImage({ imageRef });
+
   const {
     cropSettings,
     setCropSettings,
@@ -108,7 +111,18 @@ export default function EditingPlatform() {
     updateStyleSetting
   } = useTextStyles({ imageRef, setImagePreview });
   
-  // Wrapper functions for the image transformations
+ const performResize = async (direction) => {
+  const resizedImageUrl = await performResizeBase(direction);
+  if (resizedImageUrl) {
+    setImagePreview(resizedImageUrl);
+
+    if (imageRef.current) {
+      imageRef.current.src = resizedImageUrl; 
+    }
+  }
+};
+
+
   const performRotate = async (direction) => {
     const rotatedImageUrl = await performRotateBase(direction);
     if (rotatedImageUrl) {
@@ -352,6 +366,7 @@ export default function EditingPlatform() {
             imageRef={imageRef}
             performFlip={performFlip}
             performRotate={performRotate}
+            performResize={performResize}
             // Crop functionality props
            cropSettings={cropSettings}
           imagePreview={imagePreview}
@@ -436,6 +451,7 @@ export default function EditingPlatform() {
                 imageRef={imageRef}
                 performFlip={performFlip}
                 performRotate={performRotate}
+                performResize={performResize}
                 // Crop functionality props for mobile
                 cropSettings={cropSettings}
                 setCropSettings={setCropSettings}

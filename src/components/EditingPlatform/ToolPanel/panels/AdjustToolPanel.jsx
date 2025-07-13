@@ -1,6 +1,9 @@
 'use client'
 import React, { useState, useRef, useEffect } from 'react';
 import { 
+  Plus,
+  Minus,
+ Expand,
   ArrowRight, 
   RotateCcw, 
   RotateCw, 
@@ -44,6 +47,7 @@ const aspectRatios = [
 const AdjustToolPanel = ({ 
   imageRef, 
   performFlip, 
+  performResize,
   performRotate,
   // Crop-related props
   cropSettings,
@@ -98,7 +102,8 @@ const AdjustToolPanel = ({
     { id: 'color', label: 'Color Adjust', icon: <Palette size={16} /> },
     { id: 'vignette', label: 'Vignette', icon: <Circle size={16} /> },
     { id: 'flip', label: 'Flip', icon: <FlipHorizontal size={16} /> },
-    { id: 'rotate', label: 'Rotate', icon: <RotateCw size={16} /> }
+    { id: 'rotate', label: 'Rotate', icon: <RotateCw size={16} /> },
+   { id: 'resize', label: 'Resize', icon: <Expand size={16} /> }
   ];
 
   // Apply filters effect
@@ -234,6 +239,12 @@ const AdjustToolPanel = ({
       performRotate(direction);
     }
   };
+  const handleResize = (direction) => {
+    if (performResize) {
+      performResize(direction);
+    }
+  };
+
 
   // Handle aspect ratio selection
   const handleAspectRatioChange = (ratioId) => {
@@ -580,6 +591,26 @@ const AdjustToolPanel = ({
     </div>
   );
 
+  const renderResizeSection = () => (
+  <div className="grid grid-cols-2 gap-3">
+    <button 
+      onClick={() => performResize('shrink')}
+      className="flex flex-col items-center justify-center p-4 rounded-lg border border-gray-600 hover:border-blue-500 hover:bg-gray-700 transition-all"
+    >
+      <Minus size={24} className="text-gray-200 mb-2" />
+      <span className="text-sm text-gray-300 font-medium">Shrink</span>
+    </button>
+    <button 
+      onClick={() => performResize('expand')}
+      className="flex flex-col items-center justify-center p-4 rounded-lg border border-gray-600 hover:border-blue-500 hover:bg-gray-700 transition-all"
+    >
+      <Plus size={24} className="text-gray-200 mb-2" />
+      <span className="text-sm text-gray-300 font-medium">Expand</span>
+    </button>
+  </div>
+);
+
+
   const renderSectionContent = () => {
     switch (activeSection) {
       case 'crop':
@@ -594,6 +625,8 @@ const AdjustToolPanel = ({
         return renderFlipSection();
       case 'rotate':
         return renderRotateSection();
+      case 'resize':
+        return renderResizeSection();
       default:
         return renderBasicAdjustSection();
     }

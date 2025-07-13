@@ -32,6 +32,7 @@ const ToolPanel = ({
   imageRef,
   performFlip,
   performRotate,
+  performResize,
   activeAdjustTool,
   setActiveAdjustTool,
   // AI Panel props
@@ -96,6 +97,7 @@ const ToolPanel = ({
             imageRef={imageRef}
             performFlip={performFlip}
             performRotate={performRotate}
+            performResize={performResize}
             cropSettings={cropSettings}
             setCropSettings={setCropSettings}
             performCrop={performCrop}
@@ -185,11 +187,21 @@ const ToolPanel = ({
       default:
         return (
           <AdjustToolPanel
-            activeAdjustTool={activeAdjustTool}
+             activeAdjustTool={activeAdjustTool}
             setActiveAdjustTool={setActiveAdjustTool}
             imageRef={imageRef}
             performFlip={performFlip}
             performRotate={performRotate}
+            performResize={performResize}
+            cropSettings={cropSettings}
+            setCropSettings={setCropSettings}
+            performCrop={performCrop}
+            setCropWithAspectRatio={setCropWithAspectRatio}
+            toggleCropMode={toggleCropMode}
+            cancelCrop={cancelCrop}
+            updateCropPosition={updateCropPosition}
+            updateCropDimensions={updateCropDimensions}
+            resetCrop={resetCrop}
             imagePreview={imagePreview}
           />
         );

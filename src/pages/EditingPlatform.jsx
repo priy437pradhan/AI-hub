@@ -352,6 +352,7 @@ export default function EditingPlatform() {
         {/* Only show the tool panel on desktop */}
         {!isMobile && (
           <ToolPanel 
+          
             activeTool={activeTool}
             activeAdjustTool={activeAdjustTool}
             setActiveAdjustTool={setActiveAdjustTool}
@@ -404,7 +405,7 @@ export default function EditingPlatform() {
         
         <div className={`flex-1 ${isMobile ? 'pb-20' : ''}`}>
           
-       <ImageCanvas 
+  <ImageCanvas  showSideAd={true} showBottomAd={true} 
   imagePreview={imagePreview}
   handleUploadClick={handleUploadClick}
   imageRef={imageRef}
@@ -417,6 +418,7 @@ export default function EditingPlatform() {
   updateCropPosition={updateCropPosition}  
   updateCropDimensions={updateCropDimensions}
   performCrop={performCrop} 
+
 />
         </div>
       </div>

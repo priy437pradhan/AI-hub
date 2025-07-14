@@ -1,36 +1,17 @@
 'use client'
 import React, { useState, useRef, useEffect } from 'react';
-import { 
-  Plus,
-  Minus,
- Expand,
-  ArrowRight, 
-  RotateCcw, 
-  RotateCw, 
-  FlipHorizontal, 
-  FlipVertical,
-  Zap,
-  Sun,
-  Circle,
-  Contrast,
-  Droplets,
-  Focus,
-  Eye,
-  Palette,
-  Thermometer,
-  Lightbulb,
-  Camera,
-  Square,
-  ChevronDown,
-  ChevronUp,
-  Move,
-  Crop,
-  Upload
+import { Plus,Minus,Expand, ArrowRight,  RotateCcw,  RotateCw,  FlipHorizontal,  FlipVertical, Zap, Sun, Circle,
+ Contrast, Droplets, Focus, Eye, Palette, Thermometer, Lightbulb, Camera, Square, ChevronDown, ChevronUp, Move,
+  Crop, Upload ,MessageCircle ,Facebook,Image,FileText,Youtube, Scissors, Wand2, Target, Layers
 } from 'lucide-react';
 
 // Mock aspect ratios (you should import this from your constants file)
 const aspectRatios = [
   { id: 'freeform', label: 'Freeform', icon: '⊞', dimensions: null },
+  { id: 'original', label: 'Original', icon: '▣', dimensions: null },
+  { id: 'circle', label: 'Circle', icon: '○', dimensions: null },
+
+  // Standard Aspect Ratios
   { id: '1x1', label: '1:1', icon: '□', dimensions: { width: 1, height: 1 } },
   { id: '4x5', label: '4:5', icon: '▯', dimensions: { width: 4, height: 5 } },
   { id: '5x4', label: '5:4', icon: '▭', dimensions: { width: 5, height: 4 } },
@@ -40,15 +21,23 @@ const aspectRatios = [
   { id: '3x2', label: '3:2', icon: '▭', dimensions: { width: 3, height: 2 } },
   { id: '9x16', label: '9:16', icon: '▯', dimensions: { width: 9, height: 16 } },
   { id: '16x9', label: '16:9', icon: '▭', dimensions: { width: 16, height: 9 } },
-  { id: 'original', label: 'Original', icon: '▣', dimensions: null },
-  { id: 'circle', label: 'Circle', icon: '○', dimensions: null },
+
+  // Social Media Specific
+  { id: 'whatsapp-dp', label: 'WhatsApp DP', title:"social", icon: <MessageCircle size={16} />, dimensions: { width: 1, height: 1 } },
+  { id: 'fb-dp', label: 'Facebook DP', title:"social", icon: <Facebook size={16} />, dimensions: { width: 1, height: 1 } },
+  { id: 'fb-cover', label: 'FB Cover', title:"social", icon: <Facebook size={16} />, dimensions: { width: 820, height: 312 } },
+  { id: 'fb-post', label: 'FB Post', title:"social", icon: <Image size={16} />, dimensions: { width: 4, height: 5 } },
+  { id: 'yt-thumbnail', label: 'YouTube Thumbnail', title:"social", icon:<Youtube size={16} />, dimensions: { width: 16, height: 9 } },
 ];
+
 
 const AdjustToolPanel = ({ 
   imageRef, 
   performFlip, 
   performResize,
   performRotate,
+  performBackgroundRemoval,
+   
   // Crop-related props
   cropSettings,
   setCropSettings,
@@ -66,6 +55,16 @@ const AdjustToolPanel = ({
   // Add missing state for crop functionality
   const [keepAspectRatio, setKeepAspectRatio] = useState(false);
   const [aspectRatio, setAspectRatio] = useState('freeform');
+  
+  // Background removal state
+  const [bgRemovalSettings, setBgRemovalSettings] = useState({
+    method: 'auto', // auto, manual, smart
+    sensitivity: 50,
+    feather: 5,
+    isProcessing: false
+  });
+
+ 
 
   const [basicAdjust, setBasicAdjust] = useState({
     brightness: 0,
@@ -97,16 +96,27 @@ const AdjustToolPanel = ({
   });
 
   const sections = [
-    { id: 'crop', label: 'Crop & Resize', icon: <Crop size={16} /> },
-    { id: 'basic', label: 'Basic Adjust', icon: <Sun size={16} /> },
-    { id: 'color', label: 'Color Adjust', icon: <Palette size={16} /> },
-    { id: 'vignette', label: 'Vignette', icon: <Circle size={16} /> },
-    { id: 'flip', label: 'Flip', icon: <FlipHorizontal size={16} /> },
-    { id: 'rotate', label: 'Rotate', icon: <RotateCw size={16} /> },
-   { id: 'resize', label: 'Resize', icon: <Expand size={16} /> }
+    { id: 'crop', label: 'Crop', category:"size", icon: <Crop size={16} /> },
+    { id: 'background', label: 'Background Remover',category:"tool", icon: <Scissors size={16} /> },
+    { id: 'basic', label: 'Basic Adjust',category:"color", icon: <Sun size={16} /> },
+    { id: 'color', label: 'Color Adjust',category:"color", icon: <Palette size={16} /> },
+    { id: 'vignette', label: 'Vignette',category:"color", icon: <Circle size={16} /> },
+    { id: 'flip', label: 'Flip', category:"size", icon: <FlipHorizontal size={16} /> },
+    { id: 'rotate', label: 'Rotate', category:"size", icon: <RotateCw size={16} /> },
+    { id: 'resize', label: 'Resize', category:"size", icon: <Expand size={16} /> }
   ];
-
-  // Apply filters effect
+const sectionCategories = {
+  size: sections.filter(section => section.category === 'size'),
+  color: sections.filter(section => section.category === 'color'),
+  tool: sections.filter(section => section.category === 'tool')
+};
+const categoryOrder = ['size', 'color', 'tool'];
+const categoryLabels = {
+  size: 'Size',
+  color: 'Color',
+  tool: 'Tool'
+};
+ 
   useEffect(() => {
     if (imageRef.current) {
       const filters = [];
@@ -176,6 +186,10 @@ const AdjustToolPanel = ({
     setVignette(prev => ({ ...prev, [property]: parseInt(value) }));
   };
 
+  const handleBgRemovalChange = (property, value) => {
+    setBgRemovalSettings(prev => ({ ...prev, [property]: value }));
+  };
+
   const resetBasicAdjust = () => {
     setBasicAdjust({
       brightness: 0,
@@ -239,14 +253,28 @@ const AdjustToolPanel = ({
       performRotate(direction);
     }
   };
+
   const handleResize = (direction) => {
     if (performResize) {
       performResize(direction);
     }
   };
 
+  const handleBackgroundRemoval = async (method) => {
+    if (!performBackgroundRemoval) return;
+    
+    setBgRemovalSettings(prev => ({ ...prev, isProcessing: true }));
+    
+    try {
+      await performBackgroundRemoval(method, bgRemovalSettings);
+    } catch (error) {
+      console.error('Background removal failed:', error);
+    } finally {
+      setBgRemovalSettings(prev => ({ ...prev, isProcessing: false }));
+    }
+  };
 
-  // Handle aspect ratio selection
+
   const handleAspectRatioChange = (ratioId) => {
     setAspectRatio(ratioId);
     if (setCropWithAspectRatio) {
@@ -256,11 +284,13 @@ const AdjustToolPanel = ({
     }
   };
 
-  // Handle crop apply
   const handleCropApply = () => {
-    if (performCrop && cropSettings && imagePreview) {
-      performCrop(cropSettings, imagePreview);
-    }
+  console.log('Apply crop clicked', { performCrop, cropSettings, imagePreview });
+  if (performCrop && cropSettings && imagePreview) {
+    performCrop(cropSettings, imagePreview);
+  } else {
+    console.log('Missing required props for crop');
+  }
   };
 
   const SliderControl = ({ 
@@ -270,7 +300,7 @@ const AdjustToolPanel = ({
     min = -100, 
     max = 100, 
     icon,
-    color = "blue"
+    color = "red"
   }) => (
     <div className="mb-4">
       <div className="flex items-center justify-between mb-2">
@@ -302,24 +332,35 @@ const AdjustToolPanel = ({
     </div>
   );
 
-  const AspectRatioGrid = () => (
-    <div className="grid grid-cols-4 gap-2 mb-4">
-      {aspectRatios.map((ratio) => (
-        <button
-          key={ratio.id}
-          onClick={() => handleAspectRatioChange(ratio.id)}
-          className={`flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 
-            ${aspectRatio === ratio.id 
-              ? 'bg-blue-500 bg-opacity-20 border border-blue-500 text-blue-400' 
-              : 'border border-gray-600 hover:border-gray-500 hover:bg-gray-700 text-gray-300'
-            }`}
-        >
-          <span className="text-lg mb-1">{ratio.icon}</span>
-          <span className="text-xs font-medium">{ratio.label}</span>
-        </button>
-      ))}
-    </div>
-  );
+  const AspectRatioGrid = () => {
+    // Filter aspect ratios to check if any have "social" title
+    const hasSocialItems = aspectRatios.some(ratio => ratio.title === "social");
+    
+    // Determine grid columns based on whether we have social items
+    const gridCols = hasSocialItems ? "grid-cols-2" : "grid-cols-2";
+    const gapSize = hasSocialItems ? "gap-2" : "gap-3";
+    
+    return (
+      <div className={`grid ${gridCols} ${gapSize} mb-4`}>
+        {aspectRatios.map((ratio) => (
+          <button
+            key={ratio.id}
+            onClick={() => handleAspectRatioChange(ratio.id)}
+            className={`flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 
+              ${aspectRatio === ratio.id 
+                ? 'bg-blue-500 bg-opacity-20 border border-blue-500 text-blue-400' 
+                : 'border border-gray-600 hover:border-gray-500 hover:bg-gray-700 text-gray-300'
+              }
+              ${ratio.title === "social" ? "col-span-2" : "col-span-1"}
+            `}
+          >
+            <span className="text-lg mb-1">{ratio.icon}</span>
+            <span className="text-xs font-medium">{ratio.label}</span>
+          </button>
+        ))}
+      </div>
+    );
+  };
 
   const SectionHeader = ({ section, onClick, isActive }) => (
     <button
@@ -336,6 +377,94 @@ const AdjustToolPanel = ({
       </div>
       {isActive ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
     </button>
+  );
+
+  const renderBackgroundRemovalSection = () => (
+    <div className="space-y-4">
+      <div className="mb-4">
+        <h3 className="text-sm font-medium text-gray-300 mb-3">Removal Method</h3>
+        <div className="grid grid-cols-1 gap-2">
+          <button
+            onClick={() => handleBackgroundRemoval('auto')}
+            disabled={bgRemovalSettings.isProcessing}
+            className={`flex items-center justify-center p-3 rounded-lg transition-all duration-200 
+              ${bgRemovalSettings.isProcessing 
+                ? 'bg-gray-700 text-gray-400 cursor-not-allowed' 
+                : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white'
+              }`}
+          >
+            <Wand2 size={16} className="mr-2" />
+            {bgRemovalSettings.isProcessing ? 'Processing...' : 'Auto Remove'}
+          </button>
+          
+          <button
+            onClick={() => handleBackgroundRemoval('smart')}
+            disabled={bgRemovalSettings.isProcessing}
+            className={`flex items-center justify-center p-3 rounded-lg transition-all duration-200 
+              ${bgRemovalSettings.isProcessing 
+                ? 'bg-gray-700 text-gray-400 cursor-not-allowed' 
+                : 'bg-gray-700 hover:bg-gray-600 text-gray-300 border border-gray-600'
+              }`}
+          >
+            <Target size={16} className="mr-2" />
+            Smart Selection
+          </button>
+          
+          <button
+            onClick={() => handleBackgroundRemoval('manual')}
+            disabled={bgRemovalSettings.isProcessing}
+            className={`flex items-center justify-center p-3 rounded-lg transition-all duration-200 
+              ${bgRemovalSettings.isProcessing 
+                ? 'bg-gray-700 text-gray-400 cursor-not-allowed' 
+                : 'bg-gray-700 hover:bg-gray-600 text-gray-300 border border-gray-600'
+              }`}
+          >
+            <Scissors size={16} className="mr-2" />
+            Manual Cut
+          </button>
+        </div>
+      </div>
+
+      <div className="space-y-1">
+        <SliderControl
+          label="Sensitivity"
+          value={bgRemovalSettings.sensitivity}
+          onChange={(value) => handleBgRemovalChange('sensitivity', value)}
+          min={1}
+          max={100}
+          icon={<Eye size={14} />}
+          color="purple"
+        />
+        
+        <SliderControl
+          label="Edge Feather"
+          value={bgRemovalSettings.feather}
+          onChange={(value) => handleBgRemovalChange('feather', value)}
+          min={0}
+          max={20}
+          icon={<Droplets size={14} />}
+          color="blue"
+        />
+      </div>
+
+      <div className="mt-4 p-3 bg-gray-800 rounded-lg">
+        <div className="flex items-center space-x-2 mb-2">
+          <Layers size={14} className="text-gray-400" />
+          <span className="text-sm text-gray-300 font-medium">Background Options</span>
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          <button className="p-2 bg-gray-700 hover:bg-gray-600 rounded text-xs text-gray-300 transition-colors">
+            Transparent
+          </button>
+          <button className="p-2 bg-gray-700 hover:bg-gray-600 rounded text-xs text-gray-300 transition-colors">
+            White
+          </button>
+          <button className="p-2 bg-gray-700 hover:bg-gray-600 rounded text-xs text-gray-300 transition-colors">
+            Black
+          </button>
+        </div>
+      </div>
+    </div>
   );
 
   const renderCropSection = () => (
@@ -356,12 +485,13 @@ const AdjustToolPanel = ({
       </div>
 
       <div className="flex space-x-2">
-        <button 
-          onClick={handleCropApply}
-          className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium text-white transition-colors"
-        >
-          Apply Crop
-        </button>
+    <button 
+  onClick={handleCropApply}
+  onTouchStart={handleCropApply} // Add touch support
+  className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-lg font-medium text-white transition-colors touch-manipulation"
+>
+  Apply Crop
+</button>
         <button 
           onClick={cancelCrop}
           className="px-4 py-3 bg-gray-600 hover:bg-gray-700 rounded-lg font-medium text-white transition-colors"
@@ -627,6 +757,8 @@ const AdjustToolPanel = ({
         return renderRotateSection();
       case 'resize':
         return renderResizeSection();
+        case 'background':
+        return renderBackgroundRemovalSection();
       default:
         return renderBasicAdjustSection();
     }
@@ -638,21 +770,26 @@ const AdjustToolPanel = ({
         <h2 className="text-xl font-semibold mb-6 text-gray-100">Adjust</h2>
         
         <div className="space-y-2">
-          {sections.map((section) => (
-            <div key={section.id}>
-              <SectionHeader
-                section={section}
-                onClick={() => setActiveSection(activeSection === section.id ? '' : section.id)}
-                isActive={activeSection === section.id}
-              />
-              
-              {activeSection === section.id && (
-                <div className="mb-4 p-4 bg-gray-800 rounded-lg">
-                  {renderSectionContent()}
-                </div>
-              )}
+         {categoryOrder.map((categoryKey) => (
+        <div key={categoryKey} className="space-y-2">
+      <h3 className="text-lg font-semibold text-white">{categoryLabels[categoryKey]}</h3>
+      {sectionCategories[categoryKey].map((section) => (
+        <div key={section.id}>
+          <SectionHeader
+            section={section}
+            onClick={() => setActiveSection(activeSection === section.id ? '' : section.id)}
+            isActive={activeSection === section.id}
+          />
+          
+          {activeSection === section.id && (
+            <div className="mb-4 p-4 bg-gray-800 rounded-lg">
+              {renderSectionContent()}
             </div>
-          ))}
+          )}
+        </div>
+      ))}
+    </div>
+  ))}
         </div>
       </div>
     </div>

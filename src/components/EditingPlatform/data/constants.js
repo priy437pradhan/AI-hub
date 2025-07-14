@@ -10,20 +10,7 @@ import {
     SquareCode, Circle, BadgePlus, Shapes, Repeat, RotateCcw, RotateCw, ListFilter
   };
   
-  export   const aspectRatios = [
-  { id: 'freeform', label: 'Freeform', icon: '⊞', dimensions: null },
-  { id: '1x1', label: '1:1', icon: '□', dimensions: { width: 1, height: 1 } },
-  { id: '4x5', label: '4:5', icon: '▯', dimensions: { width: 4, height: 5 } },
-  { id: '5x4', label: '5:4', icon: '▭', dimensions: { width: 5, height: 4 } },
-  { id: '3x4', label: '3:4', icon: '▯', dimensions: { width: 3, height: 4 } },
-  { id: '4x3', label: '4:3', icon: '▭', dimensions: { width: 4, height: 3 } },
-  { id: '2x3', label: '2:3', icon: '▯', dimensions: { width: 2, height: 3 } },
-  { id: '3x2', label: '3:2', icon: '▭', dimensions: { width: 3, height: 2 } },
-  { id: '9x16', label: '9:16', icon: '▯', dimensions: { width: 9, height: 16 } },
-  { id: '16x9', label: '16:9', icon: '▭', dimensions: { width: 16, height: 9 } },
-  { id: 'original', label: 'Original', icon: '▣', dimensions: null },
-  { id: 'circle', label: 'Circle', icon: '○', dimensions: null },
-];
+
 
   
   export const filterEffects = [
@@ -88,35 +75,7 @@ import {
   };
   
   export const subToolNames = {
-    // Adjust tool
-    CROP: 'crop',
-    FLIP: 'flip',
-    ROTATE: 'rotate',
     
-    // AI tool
-    AI_FEATURES: 'ai-features',
-    AI_HISTORY: 'ai-history',
-    
-    // Effects tool
-    FILTERS: 'filters',
-    ADJUSTMENTS: 'adjustments',
-    
-    // Beauty tool
-    BEAUTY_FEATURES: 'beauty-features',
-    QUICK_FIX: 'quick-fix',
-    
-    // Frames tool
-      FRAME_STYLES: 'frame-styles',
-  FRAME_EFFECTS: 'frame-effects',
-  ADVANCED_FRAMES: 'advanced-frames',
-    
-    // Text tool
-    TEXT_EDITOR: 'text-editor',
-    TEXT_STYLES: 'text-styles',
-    
-    // Element tool
-    ELEMENT_TYPES: 'element-types',
-    ELEMENT_OPTIONS: 'element-options'
   };
   export const frameColorPresets = {
   basic: [

@@ -1,11 +1,12 @@
 'use client'
 import React, { useState, useEffect } from 'react';
-import { Plus,Minus,Expand, ArrowRight,  RotateCcw,  RotateCw,  FlipHorizontal,  FlipVertical, Zap, Sun, Circle,
+import { Plus,Minus,Expand, ArrowRight, ArrowLeft, RotateCcw,  RotateCw,  FlipHorizontal,  FlipVertical, Zap, Sun, Circle,
  Contrast, Droplets, Focus, Eye, Palette, Thermometer, Lightbulb, Camera, Square, ChevronDown, ChevronUp, Move,
-  Crop, Upload ,MessageCircle ,Facebook,Image,FileText,Youtube, Scissors, Wand2, Target, Layers
+  Crop, Upload ,MessageCircle ,Facebook,Image,FileText,Youtube, Scissors, Wand2, Target, Layers, Check, X
 } from 'lucide-react';
 
 import { useSliderDrag } from '../hooks/slider'
+
 const SliderControl = ({
   label,
   value,
@@ -88,7 +89,7 @@ const SliderControl = ({
   );
 };
 
-// Mock aspect ratios (you should import this from your constants file)
+// Mock aspect ratios
 const aspectRatios = [
   { id: 'freeform', label: 'Freeform', icon: '⊞', dimensions: null },
   { id: 'original', label: 'Original', icon: '▣', dimensions: null },
@@ -127,9 +128,11 @@ const AdjustToolPanel = ({
   updateCropPosition,
   updateCropDimensions,
   resetCrop,
-  imagePreview
+  imagePreview,
+  onBack
 }) => {
-  const [activeSection, setActiveSection] = useState(' ');
+  const [activeSection, setActiveSection] = useState('');
+  const [isMobile, setIsMobile] = useState(false);
   
   // Add missing state for crop functionality
   const [keepAspectRatio, setKeepAspectRatio] = useState(false);
@@ -164,13 +167,78 @@ const AdjustToolPanel = ({
     feather: 50
   });
 
+  // Check if mobile on mount and resize
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   const sections = [
-    { id: 'crop', label: 'Crop', category:"size", icon: <Crop size={16} /> },
-    { id: 'basic', label: 'Basic Adjust',category:"color", icon: <Sun size={16} /> },
-    { id: 'color', label: 'Color Adjust',category:"color", icon: <Palette size={16} /> },
-    { id: 'vignette', label: 'Vignette',category:"color", icon: <Circle size={16} /> },
-    { id: 'flip', label: 'Flip', category:"size", icon: <FlipHorizontal size={16} /> },
-    { id: 'rotate', label: 'Rotate', category:"size", icon: <RotateCw size={16} /> },
+    { 
+      id: 'crop', 
+      label: 'Crop', 
+      mobileLabel: 'Crop',
+      category: "size", 
+      icon: <Crop size={16} />,
+      mobileIcon: <Crop size={18} />,
+      color: 'blue',
+      gradient: 'from-blue-500 to-cyan-500'
+    },
+    { 
+      id: 'basic', 
+      label: 'Basic Adjust',
+      mobileLabel: 'Basic',
+      category: "color", 
+      icon: <Sun size={16} />,
+      mobileIcon: <Sun size={18} />,
+      color: 'yellow',
+      gradient: 'from-yellow-500 to-orange-500'
+    },
+    { 
+      id: 'color', 
+      label: 'Color Adjust',
+      mobileLabel: 'Color',
+      category: "color", 
+      icon: <Palette size={16} />,
+      mobileIcon: <Palette size={18} />,
+      color: 'purple',
+      gradient: 'from-purple-500 to-pink-500'
+    },
+    { 
+      id: 'vignette', 
+      label: 'Vignette',
+      mobileLabel: 'Vignette',
+      category: "color", 
+      icon: <Circle size={16} />,
+      mobileIcon: <Circle size={18} />,
+      color: 'indigo',
+      gradient: 'from-indigo-500 to-purple-500'
+    },
+    { 
+      id: 'flip', 
+      label: 'Flip', 
+      mobileLabel: 'Flip',
+      category: "size", 
+      icon: <FlipHorizontal size={16} />,
+      mobileIcon: <FlipHorizontal size={18} />,
+      color: 'green',
+      gradient: 'from-green-500 to-teal-500'
+    },
+    { 
+      id: 'rotate', 
+      label: 'Rotate', 
+      mobileLabel: 'Rotate',
+      category: "size", 
+      icon: <RotateCw size={16} />,
+      mobileIcon: <RotateCw size={18} />,
+      color: 'red',
+      gradient: 'from-red-500 to-pink-500'
+    },
   ];
 
   const sectionCategories = {
@@ -337,6 +405,21 @@ const AdjustToolPanel = ({
     }
   };
 
+  const handleSectionClick = (sectionId) => {
+  if (isMobile) {
+    setActiveSection(sectionId);
+  } else {
+    setActiveSection(activeSection === sectionId ? '' : sectionId);
+  }
+};
+const handleBack = () => {
+  if (activeSection) {
+    setActiveSection('');
+  } else {
+    onBack?.();
+  }
+};
+
   const AspectRatioGrid = () => {
     // Filter aspect ratios to check if any have "social" title
     const hasSocialItems = aspectRatios.some(ratio => ratio.title === "social");
@@ -456,70 +539,70 @@ const AdjustToolPanel = ({
         value={basicAdjust.saturation}
         onChange={(value) => handleBasicAdjustChange('saturation', value)}
         icon={<Droplets size={14} />}
-          color="blue"
+        color="blue"
       />
       <SliderControl
         label="Sharpness"
         value={basicAdjust.sharpness}
         onChange={(value) => handleBasicAdjustChange('sharpness', value)}
         icon={<Focus size={14} />}
-             color="blue"
+        color="blue"
       />
       <SliderControl
         label="Exposure"
         value={basicAdjust.exposure}
         onChange={(value) => handleBasicAdjustChange('exposure', value)}
         icon={<Camera size={14} />}
-             color="blue"
+        color="blue"
       />
       <SliderControl
         label="Highlights"
         value={basicAdjust.highlights}
         onChange={(value) => handleBasicAdjustChange('highlights', value)}
         icon={<Lightbulb size={14} />}
-              color="blue"
+        color="blue"
       />
       <SliderControl
         label="Shadows"
         value={basicAdjust.shadows}
         onChange={(value) => handleBasicAdjustChange('shadows', value)}
         icon={<Square size={14} />}
-          color="blue"
+        color="blue"
       />
       <SliderControl
         label="Whites"
         value={basicAdjust.whites}
         onChange={(value) => handleBasicAdjustChange('whites', value)}
         icon={<Circle size={14} />}
-              color="blue"
+        color="blue"
       />
       <SliderControl
         label="Blacks"
         value={basicAdjust.blacks}
         onChange={(value) => handleBasicAdjustChange('blacks', value)}
         icon={<Square size={14} />}
-            color="blue"
+        color="blue"
       />
       <SliderControl
         label="Vibrance"
         value={basicAdjust.vibrance}
         onChange={(value) => handleBasicAdjustChange('vibrance', value)}
         icon={<Eye size={14} />}
-            color="blue"
+        color="blue"
       />
       <SliderControl
         label="Clarity"
         value={basicAdjust.clarity}
         onChange={(value) => handleBasicAdjustChange('clarity', value)}
         icon={<Focus size={14} />}
-             color="blue"
+        color="blue"
       />
       <SliderControl
         label="Dehaze"
         value={basicAdjust.dehaze}
         onChange={(value) => handleBasicAdjustChange('dehaze', value)}
         icon={<Eye size={14} />}
-          color="blue"
+        color="blue"
       />
     </div>
   );
@@ -540,28 +623,28 @@ const AdjustToolPanel = ({
         value={colorAdjust.temperature}
         onChange={(value) => handleColorAdjustChange('temperature', value)}
         icon={<Thermometer size={14} />}
-             color="blue"
+        color="blue"
       />
       <SliderControl
         label="Tint"
         value={colorAdjust.tint}
         onChange={(value) => handleColorAdjustChange('tint', value)}
         icon={<Palette size={14} />}
-             color="blue"
+        color="blue"
       />
       <SliderControl
         label="Hue"
         value={colorAdjust.hue}
         onChange={(value) => handleColorAdjustChange('hue', value)}
         icon={<Circle size={14} />}
-             color="blue"
+        color="blue"
       />
       <SliderControl
         label="Luminance"
         value={colorAdjust.luminance}
         onChange={(value) => handleColorAdjustChange('luminance', value)}
         icon={<Sun size={14} />}
-              color="blue"
+        color="blue"
       />
     </div>
   );
@@ -654,8 +737,6 @@ const AdjustToolPanel = ({
     </div>
   );
 
-
-
   const renderSectionContent = () => {
     switch (activeSection) {
       case 'crop':
@@ -670,40 +751,126 @@ const AdjustToolPanel = ({
         return renderFlipSection();
       case 'rotate':
         return renderRotateSection();
-      
-      
       default:
         return renderBasicAdjustSection();
     }
   };
 
+  const currentSection = sections.find(s => s.id === activeSection);
+
+  // Mobile Layout
+ if (isMobile) {
   return (
-    <div className="bg-gray-900 text-white h-full overflow-y-auto">
-      <div className="p-4">
-        <h2 className="text-xl font-semibold mb-6 text-gray-100">Adjust</h2>
-        
-        <div className="space-y-2">
-         {categoryOrder.map((categoryKey) => (
-        <div key={categoryKey} className="space-y-2">
-      <h3 className="text-lg font-semibold text-white">{categoryLabels[categoryKey]}</h3>
-      {sectionCategories[categoryKey].map((section) => (
-        <div key={section.id}>
-          <SectionHeader
-            section={section}
-            onClick={() => setActiveSection(activeSection === section.id ? '' : section.id)}
-            isActive={activeSection === section.id}
-          />
-          
-          {activeSection === section.id && (
-            <div className="mb-4 p-4 bg-gray-800 rounded-lg">
-              {renderSectionContent()}
+    <div className="fixed bottom-0 left-0 right-0 bg-black border-t border-gray-800 z-20">
+      <div className="flex items-center justify-between px-4 py-2" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+        {/* Back Button */}
+        <button 
+          onClick={handleBack}
+          className="flex items-center space-x-2 px-3 py-2 hover:bg-gray-800 rounded-lg transition-all duration-200"
+        >
+          <ArrowLeft size={18} className="text-white" />
+          <span className="text-sm text-white">Back</span>
+        </button>
+
+        {/* Main Content */}
+        <div className="flex items-center space-x-2 overflow-x-auto flex-1 mx-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          {!activeSection ? (
+            // Main sections view
+            sections.map((section) => (
+              <button
+                key={section.id}
+                onClick={() => handleSectionClick(section.id)}
+                className="flex flex-col items-center space-y-1 px-4 py-2 rounded-lg transition-all duration-200 whitespace-nowrap hover:bg-gray-800 text-gray-300"
+              >
+                {section.mobileIcon}
+                <span className="text-xs">{section.mobileLabel}</span>
+              </button>
+            ))
+          ) : (
+            // Section content view
+            <div className="w-full max-h-80 overflow-y-auto">
+              {/* Section indicator */}
+              <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg bg-gradient-to-b ${currentSection.gradient} text-white mb-3 sticky top-0 z-10`}>
+                {currentSection.mobileIcon}
+                <span className="text-xs font-medium">{currentSection.mobileLabel}</span>
+              </div>
+
+              {/* Section content */}
+              <div className="px-2 pb-4">
+                {renderSectionContent()}
+              </div>
             </div>
           )}
         </div>
-      ))}
+      </div>
+
+      <style jsx>{`
+        div::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
     </div>
-  ))}
+  );
+}
+
+// Add this mobile-optimized SliderControl for mobile view (add this right after the existing SliderControl component):
+const MobileSliderControl = ({ label, value, onChange, min = -100, max = 100, icon, color = "red" }) => (
+  <div className="mb-3">
+    <div className="flex items-center justify-between mb-2">
+      <div className="flex items-center space-x-2">
+        {icon && <div className="text-gray-400">{icon}</div>}
+        <span className="text-xs text-gray-300 font-medium">{label}</span>
+      </div>
+      <span className={`text-xs font-medium ${value !== 0 ? `text-${color}-400` : 'text-gray-400'}`}>
+        {value > 0 ? `+${value}` : value}
+      </span>
+    </div>
+    
+    <div className="relative w-full h-2 bg-gray-700 rounded-lg">
+      <div 
+        className={`absolute h-full bg-${color}-500 rounded-lg transition-all duration-75`}
+        style={{ width: `${((value - min) / (max - min)) * 100}%` }}
+      />
+      <input
+        type="range"
+        min={min}
+        max={max}
+        value={value}
+        onChange={(e) => onChange(parseInt(e.target.value))}
+        className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
+      />
+    </div>
+  </div>
+);
+
+
+  // Desktop Layout
+  return (
+    <div className="bg-gray-900 text-white h-full overflow-y-auto">
+      <div className="p-4">
+        <h2 className="text-xl font-semibold mb-6 text-gray-100">Adjust Tools</h2>
+        
+        <div className="space-y-2">
+          {sections.map((section) => (
+            <div key={section.id}>
+              <SectionHeader
+                section={section}
+                onClick={() => setActiveSection(activeSection === section.id ? '' : section.id)}
+                isActive={activeSection === section.id}
+              />
+              
+              {activeSection === section.id && (
+                <div className="mb-4 p-4 bg-gray-800 rounded-lg">
+                  {renderSectionContent()}
+                </div>
+              )}
+            </div>
+          ))}
         </div>
+
+        
+
+       
       </div>
     </div>
   );

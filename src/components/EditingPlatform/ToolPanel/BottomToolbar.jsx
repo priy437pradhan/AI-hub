@@ -56,7 +56,8 @@ const BottomToolbar = ({
   };
 
   return (
-    <div className="bg-gray-900 border-t border-gray-700 shadow-lg">
+    <div className="bg-gray-900 border-t border-gray-700 shadow-lg" style={{ height: '82px' }}>
+
       {/* Horizontal scrollable navigation */}
       <div className="flex overflow-x-auto scrollbar-hide">
         <div className="flex min-w-full">

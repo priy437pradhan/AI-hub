@@ -184,8 +184,8 @@ export const useCrop = (imageRef, setImagePreview) => {
   setCropWithAspectRatio,
   toggleCropMode,
   cancelCrop,
-  updateCropPosition,      // ✅ Ensure this is here
-  updateCropDimensions,    // ✅ And this one too
+  updateCropPosition,    
+  updateCropDimensions,   
   resetCrop,
   handleCropApply,
   calculateAspectRatioDimensions

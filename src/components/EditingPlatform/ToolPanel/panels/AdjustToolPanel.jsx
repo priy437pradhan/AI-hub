@@ -88,9 +88,13 @@ const SliderControl = ({
     </div>
   );
 };
-
-// Mock aspect ratios
-const aspectRatios = [
+const categoryOrder = ['size', 'color', 'tool'];
+  const categoryLabels = {
+    size: 'Size',
+    color: 'Color',
+    tool: 'Tool'
+  };
+  const aspectRatios = [
   { id: 'freeform', label: 'Freeform', icon: '⊞', dimensions: null },
   { id: 'original', label: 'Original', icon: '▣', dimensions: null },
   { id: 'circle', label: 'Circle', icon: '○', dimensions: null },
@@ -113,6 +117,7 @@ const aspectRatios = [
   { id: 'fb-post', label: 'FB Post', title:"social", icon: <Image size={16} />, dimensions: { width: 4, height: 5 } },
   { id: 'yt-thumbnail', label: 'YouTube Thumbnail', title:"social", icon:<Youtube size={16} />, dimensions: { width: 16, height: 9 } },
 ];
+
 
 const AdjustToolPanel = ({ 
   imageRef, 
@@ -848,29 +853,30 @@ const MobileSliderControl = ({ label, value, onChange, min = -100, max = 100, ic
   return (
     <div className="bg-gray-900 text-white h-full overflow-y-auto">
       <div className="p-4">
-        <h2 className="text-xl font-semibold mb-6 text-gray-100">Adjust Tools</h2>
+        <h2 className="text-xl font-semibold mb-6 text-gray-100">Adjust</h2>
         
         <div className="space-y-2">
-          {sections.map((section) => (
-            <div key={section.id}>
-              <SectionHeader
-                section={section}
-                onClick={() => setActiveSection(activeSection === section.id ? '' : section.id)}
-                isActive={activeSection === section.id}
-              />
-              
-              {activeSection === section.id && (
-                <div className="mb-4 p-4 bg-gray-800 rounded-lg">
-                  {renderSectionContent()}
-                </div>
-              )}
+         {categoryOrder.map((categoryKey) => (
+        <div key={categoryKey} className="space-y-2">
+      <h3 className="text-lg font-semibold text-white">{categoryLabels[categoryKey]}</h3>
+      {sectionCategories[categoryKey].map((section) => (
+        <div key={section.id}>
+          <SectionHeader
+            section={section}
+            onClick={() => setActiveSection(activeSection === section.id ? '' : section.id)}
+            isActive={activeSection === section.id}
+          />
+          
+          {activeSection === section.id && (
+            <div className="mb-4 p-4 bg-gray-800 rounded-lg">
+              {renderSectionContent()}
             </div>
-          ))}
+          )}
         </div>
-
-        
-
-       
+      ))}
+    </div>
+  ))}
+        </div>
       </div>
     </div>
   );

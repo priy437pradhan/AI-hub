@@ -223,7 +223,7 @@ export default function ImageCanvas({
   );
 
   return (
-  <div className="w-full min-h-screen bg-gray-50 flex flex-col">
+  <div className="w-full min-h-screen bg-gray-50 flex flex-col pb-24">
     {/* Main Content Container */}
     <div className="flex flex-col lg:flex-row flex-1">
       {/* Main Image Area */}

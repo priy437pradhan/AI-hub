@@ -1,9 +1,92 @@
 'use client'
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus,Minus,Expand, ArrowRight,  RotateCcw,  RotateCw,  FlipHorizontal,  FlipVertical, Zap, Sun, Circle,
  Contrast, Droplets, Focus, Eye, Palette, Thermometer, Lightbulb, Camera, Square, ChevronDown, ChevronUp, Move,
   Crop, Upload ,MessageCircle ,Facebook,Image,FileText,Youtube, Scissors, Wand2, Target, Layers
 } from 'lucide-react';
+
+import { useSliderDrag } from '../hooks/slider'
+const SliderControl = ({
+  label,
+  value,
+  onChange,
+  min = -100,
+  max = 100,
+  step = 1,
+  icon,
+  color = "red",
+  disabled = false,
+  onDragStart,
+  onDragEnd,
+  className = "",
+  ...props
+}) => {
+  const { sliderRef, isDragging, percentage, handlers } = useSliderDrag({
+    value,
+    onChange,
+    min,
+    max,
+    step,
+    disabled,
+    onDragStart,
+    onDragEnd
+  });
+
+  return (
+    <div className={`mb-4 ${className}`} {...props}>
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center space-x-2">
+          {icon && <div className="text-gray-400">{icon}</div>}
+          <span className="text-sm text-gray-300 font-medium">{label}</span>
+        </div>
+        <span className={`text-sm font-medium ${value !== 0 ? `text-${color}-400` : 'text-gray-400'}`}>
+          {value > 0 ? `+${value}` : value}
+        </span>
+      </div>
+      
+      <div 
+        ref={sliderRef}
+        className={`relative w-full h-2 bg-gray-700 rounded-lg cursor-pointer ${isDragging ? 'cursor-grabbing' : 'cursor-grab'} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+        {...handlers}
+      >
+        {/* Track fill */}
+        <div 
+          className={`absolute h-full bg-${color}-500 rounded-lg transition-all duration-75`}
+          style={{
+            width: `${percentage}%`
+          }}
+        />
+        
+        {/* Thumb */}
+        <div 
+          className={`
+            absolute top-1/2 w-5 h-5 bg-${color}-500 border-2 border-${color}-400 
+            rounded-full transform -translate-y-1/2 -translate-x-1/2 cursor-grab
+            transition-all duration-75 hover:scale-110
+            ${isDragging ? 'scale-125 cursor-grabbing' : ''}
+            ${disabled ? 'opacity-50' : ''}
+          `}
+          style={{
+            left: `${percentage}%`
+          }}
+        />
+      </div>
+      
+      {/* Hidden input for accessibility */}
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={e => onChange(parseInt(e.target.value))}
+        disabled={disabled}
+        className="sr-only"
+        aria-label={label}
+      />
+    </div>
+  );
+};
 
 // Mock aspect ratios (you should import this from your constants file)
 const aspectRatios = [
@@ -30,14 +113,10 @@ const aspectRatios = [
   { id: 'yt-thumbnail', label: 'YouTube Thumbnail', title:"social", icon:<Youtube size={16} />, dimensions: { width: 16, height: 9 } },
 ];
 
-
 const AdjustToolPanel = ({ 
   imageRef, 
   performFlip, 
-  performResize,
   performRotate,
-  performBackgroundRemoval,
-   
   // Crop-related props
   cropSettings,
   setCropSettings,
@@ -50,22 +129,12 @@ const AdjustToolPanel = ({
   resetCrop,
   imagePreview
 }) => {
-  const [activeSection, setActiveSection] = useState('basic');
+  const [activeSection, setActiveSection] = useState(' ');
   
   // Add missing state for crop functionality
   const [keepAspectRatio, setKeepAspectRatio] = useState(false);
   const [aspectRatio, setAspectRatio] = useState('freeform');
   
-  // Background removal state
-  const [bgRemovalSettings, setBgRemovalSettings] = useState({
-    method: 'auto', // auto, manual, smart
-    sensitivity: 50,
-    feather: 5,
-    isProcessing: false
-  });
-
- 
-
   const [basicAdjust, setBasicAdjust] = useState({
     brightness: 0,
     contrast: 0,
@@ -97,25 +166,25 @@ const AdjustToolPanel = ({
 
   const sections = [
     { id: 'crop', label: 'Crop', category:"size", icon: <Crop size={16} /> },
-    { id: 'background', label: 'Background Remover',category:"tool", icon: <Scissors size={16} /> },
     { id: 'basic', label: 'Basic Adjust',category:"color", icon: <Sun size={16} /> },
     { id: 'color', label: 'Color Adjust',category:"color", icon: <Palette size={16} /> },
     { id: 'vignette', label: 'Vignette',category:"color", icon: <Circle size={16} /> },
     { id: 'flip', label: 'Flip', category:"size", icon: <FlipHorizontal size={16} /> },
     { id: 'rotate', label: 'Rotate', category:"size", icon: <RotateCw size={16} /> },
-    { id: 'resize', label: 'Resize', category:"size", icon: <Expand size={16} /> }
   ];
-const sectionCategories = {
-  size: sections.filter(section => section.category === 'size'),
-  color: sections.filter(section => section.category === 'color'),
-  tool: sections.filter(section => section.category === 'tool')
-};
-const categoryOrder = ['size', 'color', 'tool'];
-const categoryLabels = {
-  size: 'Size',
-  color: 'Color',
-  tool: 'Tool'
-};
+
+  const sectionCategories = {
+    size: sections.filter(section => section.category === 'size'),
+    color: sections.filter(section => section.category === 'color'),
+    tool: sections.filter(section => section.category === 'tool')
+  };
+
+  const categoryOrder = ['size', 'color', 'tool'];
+  const categoryLabels = {
+    size: 'Size',
+    color: 'Color',
+    tool: 'Tool'
+  };
  
   useEffect(() => {
     if (imageRef.current) {
@@ -186,10 +255,6 @@ const categoryLabels = {
     setVignette(prev => ({ ...prev, [property]: parseInt(value) }));
   };
 
-  const handleBgRemovalChange = (property, value) => {
-    setBgRemovalSettings(prev => ({ ...prev, [property]: value }));
-  };
-
   const resetBasicAdjust = () => {
     setBasicAdjust({
       brightness: 0,
@@ -254,27 +319,6 @@ const categoryLabels = {
     }
   };
 
-  const handleResize = (direction) => {
-    if (performResize) {
-      performResize(direction);
-    }
-  };
-
-  const handleBackgroundRemoval = async (method) => {
-    if (!performBackgroundRemoval) return;
-    
-    setBgRemovalSettings(prev => ({ ...prev, isProcessing: true }));
-    
-    try {
-      await performBackgroundRemoval(method, bgRemovalSettings);
-    } catch (error) {
-      console.error('Background removal failed:', error);
-    } finally {
-      setBgRemovalSettings(prev => ({ ...prev, isProcessing: false }));
-    }
-  };
-
-
   const handleAspectRatioChange = (ratioId) => {
     setAspectRatio(ratioId);
     if (setCropWithAspectRatio) {
@@ -285,52 +329,13 @@ const categoryLabels = {
   };
 
   const handleCropApply = () => {
-  console.log('Apply crop clicked', { performCrop, cropSettings, imagePreview });
-  if (performCrop && cropSettings && imagePreview) {
-    performCrop(cropSettings, imagePreview);
-  } else {
-    console.log('Missing required props for crop');
-  }
+    console.log('Apply crop clicked', { performCrop, cropSettings, imagePreview });
+    if (performCrop && cropSettings && imagePreview) {
+      performCrop(cropSettings, imagePreview);
+    } else {
+      console.log('Missing required props for crop');
+    }
   };
-
-  const SliderControl = ({ 
-    label, 
-    value, 
-    onChange, 
-    min = -100, 
-    max = 100, 
-    icon,
-    color = "red"
-  }) => (
-    <div className="mb-4">
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center space-x-2">
-          {icon && <div className="text-gray-400">{icon}</div>}
-          <span className="text-sm text-gray-300 font-medium">{label}</span>
-        </div>
-        <span className={`text-sm font-medium ${value !== 0 ? `text-${color}-400` : 'text-gray-400'}`}>
-          {value > 0 ? `+${value}` : value}
-        </span>
-      </div>
-      <div className="relative">
-        <input
-          type="range"
-          min={min}
-          max={max}
-          value={value}
-          onChange={(e) => onChange(parseInt(e.target.value))}
-          className={`w-full h-2 rounded-lg appearance-none cursor-pointer bg-gray-700`}
-        />
-        <div 
-          className={`absolute top-1/2 w-4 h-4 rounded-full border-2 transform -translate-y-1/2 cursor-pointer transition-all
-            ${value !== 0 ? `bg-${color}-500 border-${color}-400` : 'bg-white border-gray-400'}`}
-          style={{ 
-            left: `calc(${((value - min) / (max - min)) * 100}% - 8px)` 
-          }}
-        />
-      </div>
-    </div>
-  );
 
   const AspectRatioGrid = () => {
     // Filter aspect ratios to check if any have "social" title
@@ -379,94 +384,6 @@ const categoryLabels = {
     </button>
   );
 
-  const renderBackgroundRemovalSection = () => (
-    <div className="space-y-4">
-      <div className="mb-4">
-        <h3 className="text-sm font-medium text-gray-300 mb-3">Removal Method</h3>
-        <div className="grid grid-cols-1 gap-2">
-          <button
-            onClick={() => handleBackgroundRemoval('auto')}
-            disabled={bgRemovalSettings.isProcessing}
-            className={`flex items-center justify-center p-3 rounded-lg transition-all duration-200 
-              ${bgRemovalSettings.isProcessing 
-                ? 'bg-gray-700 text-gray-400 cursor-not-allowed' 
-                : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white'
-              }`}
-          >
-            <Wand2 size={16} className="mr-2" />
-            {bgRemovalSettings.isProcessing ? 'Processing...' : 'Auto Remove'}
-          </button>
-          
-          <button
-            onClick={() => handleBackgroundRemoval('smart')}
-            disabled={bgRemovalSettings.isProcessing}
-            className={`flex items-center justify-center p-3 rounded-lg transition-all duration-200 
-              ${bgRemovalSettings.isProcessing 
-                ? 'bg-gray-700 text-gray-400 cursor-not-allowed' 
-                : 'bg-gray-700 hover:bg-gray-600 text-gray-300 border border-gray-600'
-              }`}
-          >
-            <Target size={16} className="mr-2" />
-            Smart Selection
-          </button>
-          
-          <button
-            onClick={() => handleBackgroundRemoval('manual')}
-            disabled={bgRemovalSettings.isProcessing}
-            className={`flex items-center justify-center p-3 rounded-lg transition-all duration-200 
-              ${bgRemovalSettings.isProcessing 
-                ? 'bg-gray-700 text-gray-400 cursor-not-allowed' 
-                : 'bg-gray-700 hover:bg-gray-600 text-gray-300 border border-gray-600'
-              }`}
-          >
-            <Scissors size={16} className="mr-2" />
-            Manual Cut
-          </button>
-        </div>
-      </div>
-
-      <div className="space-y-1">
-        <SliderControl
-          label="Sensitivity"
-          value={bgRemovalSettings.sensitivity}
-          onChange={(value) => handleBgRemovalChange('sensitivity', value)}
-          min={1}
-          max={100}
-          icon={<Eye size={14} />}
-          color="purple"
-        />
-        
-        <SliderControl
-          label="Edge Feather"
-          value={bgRemovalSettings.feather}
-          onChange={(value) => handleBgRemovalChange('feather', value)}
-          min={0}
-          max={20}
-          icon={<Droplets size={14} />}
-          color="blue"
-        />
-      </div>
-
-      <div className="mt-4 p-3 bg-gray-800 rounded-lg">
-        <div className="flex items-center space-x-2 mb-2">
-          <Layers size={14} className="text-gray-400" />
-          <span className="text-sm text-gray-300 font-medium">Background Options</span>
-        </div>
-        <div className="grid grid-cols-3 gap-2">
-          <button className="p-2 bg-gray-700 hover:bg-gray-600 rounded text-xs text-gray-300 transition-colors">
-            Transparent
-          </button>
-          <button className="p-2 bg-gray-700 hover:bg-gray-600 rounded text-xs text-gray-300 transition-colors">
-            White
-          </button>
-          <button className="p-2 bg-gray-700 hover:bg-gray-600 rounded text-xs text-gray-300 transition-colors">
-            Black
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-
   const renderCropSection = () => (
     <div className="space-y-4">
       <AspectRatioGrid />
@@ -485,13 +402,13 @@ const categoryLabels = {
       </div>
 
       <div className="flex space-x-2">
-    <button 
-  onClick={handleCropApply}
-  onTouchStart={handleCropApply} // Add touch support
-  className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-lg font-medium text-white transition-colors touch-manipulation"
->
-  Apply Crop
-</button>
+        <button 
+          onClick={handleCropApply}
+          onTouchStart={handleCropApply}
+          className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-lg font-medium text-white transition-colors touch-manipulation"
+        >
+          Apply Crop
+        </button>
         <button 
           onClick={cancelCrop}
           className="px-4 py-3 bg-gray-600 hover:bg-gray-700 rounded-lg font-medium text-white transition-colors"
@@ -525,72 +442,84 @@ const categoryLabels = {
         value={basicAdjust.brightness}
         onChange={(value) => handleBasicAdjustChange('brightness', value)}
         icon={<Sun size={14} />}
+        color="blue"
       />
       <SliderControl
         label="Contrast"
         value={basicAdjust.contrast}
         onChange={(value) => handleBasicAdjustChange('contrast', value)}
         icon={<Contrast size={14} />}
+        color="blue"
       />
       <SliderControl
         label="Saturation"
         value={basicAdjust.saturation}
         onChange={(value) => handleBasicAdjustChange('saturation', value)}
         icon={<Droplets size={14} />}
+          color="blue"
       />
       <SliderControl
         label="Sharpness"
         value={basicAdjust.sharpness}
         onChange={(value) => handleBasicAdjustChange('sharpness', value)}
         icon={<Focus size={14} />}
+             color="blue"
       />
       <SliderControl
         label="Exposure"
         value={basicAdjust.exposure}
         onChange={(value) => handleBasicAdjustChange('exposure', value)}
         icon={<Camera size={14} />}
+             color="blue"
       />
       <SliderControl
         label="Highlights"
         value={basicAdjust.highlights}
         onChange={(value) => handleBasicAdjustChange('highlights', value)}
         icon={<Lightbulb size={14} />}
+              color="blue"
       />
       <SliderControl
         label="Shadows"
         value={basicAdjust.shadows}
         onChange={(value) => handleBasicAdjustChange('shadows', value)}
         icon={<Square size={14} />}
+          color="blue"
       />
       <SliderControl
         label="Whites"
         value={basicAdjust.whites}
         onChange={(value) => handleBasicAdjustChange('whites', value)}
         icon={<Circle size={14} />}
+              color="blue"
       />
       <SliderControl
         label="Blacks"
         value={basicAdjust.blacks}
         onChange={(value) => handleBasicAdjustChange('blacks', value)}
         icon={<Square size={14} />}
+            color="blue"
       />
       <SliderControl
         label="Vibrance"
         value={basicAdjust.vibrance}
         onChange={(value) => handleBasicAdjustChange('vibrance', value)}
         icon={<Eye size={14} />}
+            color="blue"
       />
       <SliderControl
         label="Clarity"
         value={basicAdjust.clarity}
         onChange={(value) => handleBasicAdjustChange('clarity', value)}
         icon={<Focus size={14} />}
+             color="blue"
       />
       <SliderControl
         label="Dehaze"
         value={basicAdjust.dehaze}
         onChange={(value) => handleBasicAdjustChange('dehaze', value)}
         icon={<Eye size={14} />}
+          color="blue"
       />
     </div>
   );
@@ -611,28 +540,28 @@ const categoryLabels = {
         value={colorAdjust.temperature}
         onChange={(value) => handleColorAdjustChange('temperature', value)}
         icon={<Thermometer size={14} />}
-        color="orange"
+             color="blue"
       />
       <SliderControl
         label="Tint"
         value={colorAdjust.tint}
         onChange={(value) => handleColorAdjustChange('tint', value)}
         icon={<Palette size={14} />}
-        color="pink"
+             color="blue"
       />
       <SliderControl
         label="Hue"
         value={colorAdjust.hue}
         onChange={(value) => handleColorAdjustChange('hue', value)}
         icon={<Circle size={14} />}
-        color="purple"
+             color="blue"
       />
       <SliderControl
         label="Luminance"
         value={colorAdjust.luminance}
         onChange={(value) => handleColorAdjustChange('luminance', value)}
         icon={<Sun size={14} />}
-        color="yellow"
+              color="blue"
       />
     </div>
   );
@@ -655,6 +584,7 @@ const categoryLabels = {
         icon={<Circle size={14} />}
         min={-100}
         max={100}
+        color="red"
       />
       <SliderControl
         label="Midpoint"
@@ -663,6 +593,7 @@ const categoryLabels = {
         icon={<Move size={14} />}
         min={0}
         max={100}
+        color="blue"
       />
       <SliderControl
         label="Roundness"
@@ -671,6 +602,7 @@ const categoryLabels = {
         icon={<Circle size={14} />}
         min={-100}
         max={100}
+        color="green"
       />
       <SliderControl
         label="Feather"
@@ -679,6 +611,7 @@ const categoryLabels = {
         icon={<Droplets size={14} />}
         min={0}
         max={100}
+        color="purple"
       />
     </div>
   );
@@ -721,24 +654,6 @@ const categoryLabels = {
     </div>
   );
 
-  const renderResizeSection = () => (
-  <div className="grid grid-cols-2 gap-3">
-    <button 
-      onClick={() => performResize('shrink')}
-      className="flex flex-col items-center justify-center p-4 rounded-lg border border-gray-600 hover:border-blue-500 hover:bg-gray-700 transition-all"
-    >
-      <Minus size={24} className="text-gray-200 mb-2" />
-      <span className="text-sm text-gray-300 font-medium">Shrink</span>
-    </button>
-    <button 
-      onClick={() => performResize('expand')}
-      className="flex flex-col items-center justify-center p-4 rounded-lg border border-gray-600 hover:border-blue-500 hover:bg-gray-700 transition-all"
-    >
-      <Plus size={24} className="text-gray-200 mb-2" />
-      <span className="text-sm text-gray-300 font-medium">Expand</span>
-    </button>
-  </div>
-);
 
 
   const renderSectionContent = () => {
@@ -755,10 +670,8 @@ const categoryLabels = {
         return renderFlipSection();
       case 'rotate':
         return renderRotateSection();
-      case 'resize':
-        return renderResizeSection();
-        case 'background':
-        return renderBackgroundRemovalSection();
+      
+      
       default:
         return renderBasicAdjustSection();
     }

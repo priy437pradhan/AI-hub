@@ -39,6 +39,7 @@ const MobileOptionsPanel = ({
       </div>
     </div>
   );
+  
 };
 
 export default MobileOptionsPanel;

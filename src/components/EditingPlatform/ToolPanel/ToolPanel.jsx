@@ -7,14 +7,22 @@ import BeautyToolPanel from './panels/BeautyToolPanel';
 import FramesToolPanel from './panels/FramesToolPanel';
 import TextToolPanel from './panels/TextToolPanel';
 import ElementToolPanel from './panels/ElementToolPanel';
-import { toolNames } from '../data/constants';
+  export const toolNames = {
+     ADJUST: 'adjust', 
+    AI: 'ai',
+    EFFECTS: 'effects',
+    BEAUTY: 'beauty',
+    FRAMES: 'frames',
+    TEXT: 'text',
+    ELEMENTS: 'elements'
+  };
 
 const ToolPanel = ({
   activeTool,
   isMobile,
   setSidebarOpen,
   imagePreview,
-  // ✅ Undo/Redo props
+  // ✅ Undo/Redo props (hidden for now)
   canUndo,
   canRedo,
   performUndo,
@@ -219,12 +227,11 @@ const ToolPanel = ({
     }
   };
 
-  // Return container with appropriate styling based on mobile/desktop and expanded state
   return (
     <div className="relative flex">
       <div className={`bg-gray-900 ${isExpanded ? (isMobile ? 'w-full' : 'w-80') : 'w-12'} ${isMobile ? 'h-auto pb-6' : 'h-full'} overflow-y-auto text-white shadow-lg transition-all duration-300 ease-in-out`}>
-        {/* Undo/Redo Header - Only show when expanded */}
-        {isExpanded && (
+        {/* Undo/Redo Header - HIDDEN FOR NOW */}
+        {/* {isExpanded && (
           <div className="flex items-center justify-between p-3 border-b border-gray-700">
             <div className="flex items-center space-x-2">
               <button
@@ -260,7 +267,7 @@ const ToolPanel = ({
               {activeTool}
             </div>
           </div>
-        )}
+        )} */}
 
         {/* Tool Panel Content - Only show when expanded */}
         {isExpanded && (

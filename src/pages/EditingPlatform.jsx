@@ -4,15 +4,15 @@ import Header from '../components/EditingPlatform/Header'
 import Sidebar from '../components/EditingPlatform/Sidebar';
 import ToolPanel from '../components/EditingPlatform/ToolPanel/ToolPanel';
 import BottomToolbar from '../components/EditingPlatform/ToolPanel/BottomToolbar';
-import BottomSheet from '../components/EditingPlatform/ToolPanel/BottomSheet'
+// import BottomSheet from '../components/EditingPlatform/ToolPanel/BottomSheet'
 import ImageCanvas from '../components/EditingPlatform/ImageCanvas';
-import { useFlipImage } from '../components/EditingPlatform/tools/useFlipImage';
-import { useResizeImage } from '../components/EditingPlatform/tools/useResizeImage';
-import { useRotateImage } from '../components/EditingPlatform/tools/useRotateImage';
-import { useFrames } from '../components/EditingPlatform/tools/useFrames'; 
-import { useTextEditor } from '../components/EditingPlatform/tools/useTextEditor';
-import { useTextStyles } from '../components/EditingPlatform/tools/useTextStyle';
-import { useCrop } from '../components/EditingPlatform/tools/useCrop';
+import { useFlipImage } from '../components/EditingPlatform/customHooks/useFlipImage';
+import { useResizeImage } from '../components/EditingPlatform/customHooks/useResizeImage';
+import { useRotateImage } from '../components/EditingPlatform/customHooks/useRotateImage';
+import { useFrames } from '../components/EditingPlatform/customHooks/useFrames'; 
+import { useTextEditor } from '../components/EditingPlatform/customHooks/useTextEditor';
+import { useTextStyles } from '../components/EditingPlatform/customHooks/useTextStyle';
+import { useCrop } from '../components/EditingPlatform/customHooks/useCrop';
 
 
 export default function EditingPlatform() {

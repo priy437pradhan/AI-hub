@@ -14,49 +14,49 @@ export default function Sidebar({ activeTool, setActiveTool, isMobile, setSideba
       icon: <Wand2 size={20} />, 
       label: 'AI Tools',
       description: 'AI-powered enhancements',
-      gradient: 'from-purple-500 to-pink-500'
+      gradient: 'from-blue-500 to-blue-500'
     },
     { 
       id: 'adjust', 
       icon: <Sliders size={20} />, 
       label: 'Adjust',
       description: 'Basic adjustments',
-      gradient: 'from-blue-500 to-cyan-500'
+      gradient: 'from-blue-500 to-blue-500'
     },
     { 
       id: 'effects', 
       icon: <Zap size={20} />, 
       label: 'Effects',
       description: 'Creative effects',
-      gradient: 'from-orange-500 to-red-500'
+      gradient: 'from-blue-500 to-blue-500'
     },
     { 
       id: 'beauty', 
       icon: <Smile size={20} />, 
       label: 'Beauty',
       description: 'Portrait retouching',
-      gradient: 'from-pink-500 to-rose-500'
+      gradient: 'from-blue-500 to-blue-500'
     },
     { 
       id: 'frames', 
       icon: <Layers size={20} />, 
       label: 'Frames',
       description: 'Borders & frames',
-      gradient: 'from-green-500 to-emerald-500'
+      gradient: 'from-blue-500 to-blue-500'
     },
     { 
       id: 'text', 
       icon: <Type size={20} />, 
       label: 'Text',
       description: 'Add text & typography',
-      gradient: 'from-indigo-500 to-purple-500'
+      gradient: 'from-blue-500 to-blue-500'
     },
     { 
       id: 'elements', 
       icon: <Square size={20} />, 
       label: 'Elements',
       description: 'Shapes & graphics',
-      gradient: 'from-teal-500 to-cyan-500'
+      gradient: 'from-blue-500 to-blue-500'
     },
   ];
 

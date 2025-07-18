@@ -1,11 +1,18 @@
-import React from 'react';
-import PanelSection from '../common/PanelSection';
-import ButtonGrid from '../common/ButtonGrid';
-import ActionButton from '../common/ActionButton';
-import Slider from '../common/Slider';
+
+import React, { useState } from 'react';
+import { 
+  ChevronDown, ChevronUp, Shapes, Settings, Plus, X, Palette, 
+  Move, RotateCw, Layers, Target, Zap, ImageIcon ,  Sticker, Image as IconImage 
+} from 'lucide-react';
 import ColorPicker from '../common/ColorPicker';
-import { elementTypes, subToolNames } from '../../data/constants';
-import { BadgePlus } from 'lucide-react';
+import * as Icons from 'lucide-react';
+
+export const elementTypes = [
+  { id: 'stickers', label: 'Stickers', icon: <Icons.Sticker size={16} /> },
+  { id: 'shapes', label: 'Shapes', icon: <Icons.Shapes size={16} /> },
+  { id: 'icons', label: 'Icons', icon: <Icons.Image size={16} /> },
+  { id: 'overlays', label: 'Overlays', icon: <Icons.Layers size={16} /> },
+];
 
 const ElementToolPanel = ({
   activeElementTool,
@@ -18,8 +25,18 @@ const ElementToolPanel = ({
   setElementColor,
   elementSize,
   setElementSize,
-  addElement
+  elementOpacity,
+  setElementOpacity,
+  elementRotation,
+  setElementRotation,
+  addElement,
+  elements,
+  removeElement,
+  clearAllElements
 }) => {
+  const [activeSection, setActiveSection] = useState('element-types');
+  const [isProcessing, setIsProcessing] = useState(false);
+
   const handleToolToggle = (tool) => {
     if (activeElementTool === tool) {
       setActiveElementTool(null);
@@ -28,65 +45,336 @@ const ElementToolPanel = ({
     }
   };
 
-  return (
-    <div>
-      <h2 className="text-gray-200 font-medium mb-2 text-sm">Elements & Shapes</h2>
-      <div className="bg-gray-800 rounded-lg p-2 mb-3">
-        <PanelSection 
-          title="Element Types" 
-          isExpanded={activeElementTool === subToolNames.ELEMENT_TYPES} 
-          onToggle={() => handleToolToggle(subToolNames.ELEMENT_TYPES)}
+  const handleAddElement = async () => {
+    if (!selectedElement || !activeElementType) return;
+    
+    setIsProcessing(true);
+    
+    // Simulate processing
+    setTimeout(async () => {
+      if (addElement) {
+        const result = await addElement(
+          selectedElement, 
+          elementColor || '#ffffff', 
+          elementSize || 50,
+          elementOpacity || 100,
+          elementRotation || 0
+        );
+        if (result) {
+          console.log('Element added successfully');
+        }
+      }
+      setIsProcessing(false);
+    }, 1000);
+  };
+
+  const SliderControl = ({ 
+    label, 
+    value, 
+    onChange, 
+    min = 0, 
+    max = 100, 
+    icon,
+    color = "blue",
+    unit = "%"
+  }) => (
+    <div className="mb-4">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center space-x-2">
+          {icon && <div className="text-gray-400">{icon}</div>}
+          <span className="text-sm text-gray-300 font-medium">{label}</span>
+        </div>
+        <span className={`text-sm font-medium ${value !== (label === 'Rotation' ? 0 : 50) ? `text-${color}-400` : 'text-gray-400'}`}>
+          {value}{unit}
+        </span>
+      </div>
+      <div className="relative">
+        <input
+          type="range"
+          min={min}
+          max={max}
+          value={value}
+          onChange={(e) => onChange(parseInt(e.target.value))}
+          className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gray-700"
+        />
+        <div 
+          className={`absolute top-1/2 w-4 h-4 rounded-full border-2 transform -translate-y-1/2 cursor-pointer transition-all
+            ${value !== (label === 'Rotation' ? 0 : 50) ? `bg-${color}-500 border-${color}-400` : 'bg-white border-gray-400'}`}
+          style={{ 
+            left: `calc(${((value - min) / (max - min)) * 100}% - 8px)` 
+          }}
+        />
+      </div>
+    </div>
+  );
+
+  const ButtonGrid = ({ items, activeId, onSelect, cols = 2 }) => (
+    <div className={`grid grid-cols-${cols} gap-2 mb-4`}>
+      {items.map((item) => (
+        <button
+          key={item.id}
+          onClick={() => onSelect(item.id)}
+          className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all duration-200 
+            ${activeId === item.id 
+              ? 'bg-blue-500 bg-opacity-20 border border-blue-500 text-blue-400' 
+              : 'border border-gray-600 hover:border-gray-500 hover:bg-gray-700 text-gray-300'
+            }`}
         >
-          <ButtonGrid 
-            items={elementTypes} 
-            activeId={activeElementType} 
-            onSelect={setActiveElementType} 
-            cols={2}
-          />
-          {activeElementType && (
-            <div className="bg-gray-700 rounded p-1 mt-2 h-36 overflow-y-auto grid grid-cols-3 gap-1">
+          <div className="mb-1">{item.icon}</div>
+          <span className="text-xs text-center leading-tight font-medium">{item.label}</span>
+        </button>
+      ))}
+    </div>
+  );
+
+  const SectionHeader = ({ title, isActive, onClick, icon }) => (
+    <button
+      onClick={onClick}
+      className={`flex items-center justify-between w-full p-3 rounded-lg transition-all duration-200 mb-2
+        ${isActive 
+          ? 'bg-gray-700 text-white' 
+          : 'bg-gray-800 hover:bg-gray-750 text-gray-300 hover:text-white'
+        }`}
+    >
+      <div className="flex items-center space-x-3">
+        {icon}
+        <span className="font-medium">{title}</span>
+      </div>
+      {isActive ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+    </button>
+  );
+
+  const sections = [
+    {
+      id: 'element-types',
+      title: 'Element Types',
+      icon: <Shapes size={16} />
+    },
+    {
+      id: 'element-options',
+      title: 'Element Options',
+      icon: <Settings size={16} />
+    },
+    {
+      id: 'element-list',
+      title: 'Active Elements',
+      icon: <Layers size={16} />
+    }
+  ];
+
+  const commonColors = [
+    '#ffffff', '#000000', '#ff0000', '#00ff00', '#0000ff', '#ffff00',
+    '#ff00ff', '#00ffff', '#808080', '#ffa500', '#800080', '#008000'
+  ];
+
+  const renderElementTypes = () => (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-gray-400 text-sm mb-3">Choose Element Type</label>
+        <ButtonGrid 
+          items={elementTypes} 
+          activeId={activeElementType} 
+          onSelect={setActiveElementType} 
+          cols={2}
+        />
+      </div>
+      
+      {activeElementType && (
+        <div>
+          <label className="block text-gray-400 text-sm mb-2">Select Element</label>
+          <div className="bg-gray-700 rounded-lg p-3 h-36 overflow-y-auto">
+            <div className="grid grid-cols-3 gap-2">
               {Array.from({ length: 9 }).map((_, i) => (
-                <div 
+                <button
                   key={i}
-                  className="aspect-square bg-gray-600 rounded flex items-center justify-center hover:bg-gray-500 cursor-pointer"
-                  onClick={() => setSelectedElement && setSelectedElement(`element-${i}`)}
+                  onClick={() => setSelectedElement && setSelectedElement(`${activeElementType}-${i}`)}
+                  className={`aspect-square rounded-lg flex items-center justify-center transition-all duration-200 
+                    ${selectedElement === `${activeElementType}-${i}` 
+                      ? 'bg-blue-500 bg-opacity-20 border border-blue-500 text-blue-400' 
+                      : 'bg-gray-600 hover:bg-gray-500 text-gray-300'
+                    }`}
                 >
-                  <BadgePlus size={16} className="text-gray-300" />
-                </div>
+                  <div className="text-center">
+                    <div className="mb-1">{elementTypes.find(t => t.id === activeElementType)?.icon}</div>
+                    <span className="text-xs">{i + 1}</span>
+                  </div>
+                </button>
               ))}
             </div>
-          )}
-        </PanelSection>
-        
-        {selectedElement && (
-          <PanelSection 
-            title="Element Options" 
-            isExpanded={activeElementTool === subToolNames.ELEMENT_OPTIONS} 
-            onToggle={() => handleToolToggle(subToolNames.ELEMENT_OPTIONS)}
-          >
-            <div className="mb-2">
-              <label className="block text-gray-400 text-xs mb-1">Element Color</label>
-              <ColorPicker 
-                colors={['#ffffff', '#000000', '#ff0000', '#00ff00', '#0000ff', '#ffff00']} 
-                activeColor={elementColor || '#ffffff'} 
-                onChange={setElementColor} 
-              />
-            </div>
-            <Slider 
-              label="Size" 
-              value={elementSize || 50} 
-              min={10} 
-              max={100} 
-              onChange={setElementSize} 
+          </div>
+        </div>
+      )}
+      
+      <div className="text-gray-400 text-sm text-center flex items-center justify-center space-x-2">
+        <Target size={14} />
+        <span>Select type and element to continue</span>
+      </div>
+    </div>
+  );
+
+  const renderElementOptions = () => (
+    <div className="space-y-4">
+      {selectedElement ? (
+        <>
+          <div>
+            <label className="block text-gray-400 text-sm mb-2">Element Color</label>
+            <ColorPicker 
+              colors={commonColors} 
+              activeColor={elementColor || '#ffffff'} 
+              onChange={setElementColor} 
             />
-            <ActionButton 
-              onClick={() => addElement && addElement(selectedElement, elementColor, elementSize)} 
-              disabled={!selectedElement}
+          </div>
+          
+          <SliderControl 
+            label="Element Size" 
+            value={elementSize || 50} 
+            min={10} 
+            max={100} 
+            onChange={setElementSize}
+            icon={<Move size={14} />}
+            color="blue"
+          />
+          
+          <SliderControl 
+            label="Opacity" 
+            value={elementOpacity || 100} 
+            min={0} 
+            max={100} 
+            onChange={setElementOpacity}
+            icon={<Palette size={14} />}
+            color="purple"
+          />
+          
+          <SliderControl 
+            label="Rotation" 
+            value={elementRotation || 0} 
+            min={0} 
+            max={360} 
+            onChange={setElementRotation}
+            icon={<RotateCw size={14} />}
+            color="green"
+            unit="°"
+          />
+          
+          <button
+            onClick={handleAddElement}
+            disabled={!selectedElement || !activeElementType || isProcessing}
+            className={`w-full py-3 rounded-lg font-medium transition-all duration-200 
+              ${(!selectedElement || !activeElementType || isProcessing) 
+                ? 'bg-gray-700 text-gray-400 cursor-not-allowed' 
+                : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white'
+              }`}
+          >
+            <div className="flex items-center justify-center space-x-2">
+              <Plus size={16} />
+              <span>{isProcessing ? 'Adding Element...' : 'Add Element to Image'}</span>
+            </div>
+          </button>
+          
+          <div className="text-gray-400 text-sm text-center flex items-center justify-center space-x-2">
+            <ImageIcon size={14} />
+            <span>Drag element to position after adding</span>
+          </div>
+        </>
+      ) : (
+        <div className="text-center py-8">
+          <Shapes size={32} className="text-gray-500 mx-auto mb-2" />
+          <p className="text-gray-400 text-sm">No element selected</p>
+          <p className="text-gray-500 text-xs mt-1">Choose an element type and select an element first</p>
+        </div>
+      )}
+    </div>
+  );
+
+  const renderElementList = () => (
+    <div className="space-y-4">
+      {elements && elements.length > 0 ? (
+        <>
+          <div className="flex items-center justify-between">
+            <span className="text-gray-300 text-sm font-medium">
+              Active Elements ({elements.length})
+            </span>
+            <button
+              onClick={clearAllElements}
+              className="text-red-400 hover:text-red-300 text-sm font-medium transition-colors"
             >
-              Add Element
-            </ActionButton>
-          </PanelSection>
-        )}
+              Clear All
+            </button>
+          </div>
+          
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {elements.map((element, index) => (
+              <div key={element.id} className="bg-gray-700 rounded-lg p-3 border border-gray-600">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-gray-300 text-sm font-medium">
+                      {element.type} Element
+                    </p>
+                    <p className="text-gray-400 text-xs mt-1">
+                      Size: {element.size}px • Opacity: {element.opacity}%
+                    </p>
+                    <div className="flex items-center space-x-2 mt-2">
+                      <div 
+                        className="w-4 h-4 rounded border border-gray-500" 
+                        style={{ backgroundColor: element.color }}
+                      />
+                      <span className="text-gray-400 text-xs">
+                        {element.color.toUpperCase()}
+                      </span>
+                      {element.rotation !== 0 && (
+                        <span className="text-gray-400 text-xs">
+                          • {element.rotation}°
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => removeElement && removeElement(element.id)}
+                    className="text-red-400 hover:text-red-300 p-1 transition-colors"
+                    title="Remove element"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      ) : (
+        <div className="text-center py-8">
+          <Layers size={32} className="text-gray-500 mx-auto mb-2" />
+          <p className="text-gray-400 text-sm">No elements added yet</p>
+          <p className="text-gray-500 text-xs mt-1">Add elements from the options above</p>
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="bg-gray-900 text-white h-full overflow-y-auto">
+      <div className="p-4">
+        <h2 className="text-xl font-semibold mb-6 text-gray-100">Elements & Shapes</h2>
+        
+        <div className="space-y-2">
+          {sections.map((section) => (
+            <div key={section.id}>
+              <SectionHeader
+                title={section.title}
+                icon={section.icon}
+                onClick={() => setActiveSection(activeSection === section.id ? '' : section.id)}
+                isActive={activeSection === section.id}
+              />
+              
+              {activeSection === section.id && (
+                <div className="mb-4 p-4 bg-gray-800 rounded-lg">
+                  {section.id === 'element-types' && renderElementTypes()}
+                  {section.id === 'element-options' && renderElementOptions()}
+                  {section.id === 'element-list' && renderElementList()}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

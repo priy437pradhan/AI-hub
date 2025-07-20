@@ -10,6 +10,39 @@ export const useCrop = (imageRef, setImagePreview) => {
     isActive: false
   });
 
+  // Draw triangle path
+  const drawTriangle = useCallback((ctx, width, height) => {
+    ctx.beginPath();
+    ctx.moveTo(width / 2, 0);           // Top point
+    ctx.lineTo(0, height);              // Bottom left
+    ctx.lineTo(width, height);          // Bottom right
+    ctx.closePath();
+  }, []);
+
+  // Draw star path
+  const drawStar = useCallback((ctx, width, height) => {
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const outerRadius = Math.min(width, height) / 2;
+    const innerRadius = outerRadius * 0.4;
+    const spikes = 5;
+
+    ctx.beginPath();
+    for (let i = 0; i < spikes * 2; i++) {
+      const angle = (i * Math.PI) / spikes;
+      const radius = i % 2 === 0 ? outerRadius : innerRadius;
+      const x = centerX + Math.cos(angle - Math.PI / 2) * radius;
+      const y = centerY + Math.sin(angle - Math.PI / 2) * radius;
+      
+      if (i === 0) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
+    }
+    ctx.closePath();
+  }, []);
+
   // Calculate aspect ratio dimensions in percentage
   const calculateAspectRatioDimensions = useCallback((aspectRatio, containerWidth, containerHeight) => {
     if (!aspectRatio?.dimensions) {
@@ -70,17 +103,38 @@ export const useCrop = (imageRef, setImagePreview) => {
       }));
     } else if (aspectRatioId === 'original') {
       resetCrop();
-    } else if (aspectRatioId === 'circle') {
-      const size = Math.min(100, 100);
-      setCropSettings(prev => ({
-        ...prev,
+    } else if (['circle', 'triangle', 'star'].includes(aspectRatioId)) {
+      // Handle special shapes (circle, triangle, star) - FIXED
+      if (!imageRef.current) return;
+      
+      const imgRect = imageRef.current.getBoundingClientRect();
+      const containerAspectRatio = imgRect.width / imgRect.height;
+      
+      // For shapes, we want a square crop that fits within the image
+      let size;
+      if (containerAspectRatio > 1) {
+        // Image is wider than tall - constrain by height
+        size = Math.min(80, (80 * imgRect.height) / imgRect.width);
+      } else {
+        // Image is taller than wide - constrain by width  
+        size = Math.min(80, (80 * imgRect.width) / imgRect.height);
+      }
+      
+      const newSettings = {
+        ...cropSettings,
         width: size,
         height: size,
         aspectRatio: selectedRatio,
         isActive: true,
         x: (100 - size) / 2,
         y: (100 - size) / 2
-      }));
+      };
+      
+      setCropSettings(newSettings);
+      
+      if (typeof callback === 'function') {
+        setTimeout(() => callback(newSettings), 0);
+      }
     }
   }, [calculateAspectRatioDimensions, cropSettings, imageRef]);
 
@@ -101,7 +155,7 @@ export const useCrop = (imageRef, setImagePreview) => {
       canvas.width = actualWidth;
       canvas.height = actualHeight;
 
-      // Handle circle crop
+      // Handle different shapes
       if (settings.aspectRatio?.id === 'circle') {
         const centerX = actualWidth / 2;
         const centerY = actualHeight / 2;
@@ -109,6 +163,12 @@ export const useCrop = (imageRef, setImagePreview) => {
 
         ctx.beginPath();
         ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+        ctx.clip();
+      } else if (settings.aspectRatio?.id === 'triangle') {
+        drawTriangle(ctx, actualWidth, actualHeight);
+        ctx.clip();
+      } else if (settings.aspectRatio?.id === 'star') {
+        drawStar(ctx, actualWidth, actualHeight);
         ctx.clip();
       }
 
@@ -125,7 +185,7 @@ export const useCrop = (imageRef, setImagePreview) => {
     };
 
     img.src = imagePreview;
-  }, [imageRef, setImagePreview]);
+  }, [imageRef, setImagePreview, drawTriangle, drawStar]);
 
   // 🔥 Apply crop on Enter key
   const handleCropApply = useCallback(() => {
@@ -178,16 +238,16 @@ export const useCrop = (imageRef, setImagePreview) => {
   }, []);
 
   return {
-      cropSettings,
-  setCropSettings,
-  performCrop,
-  setCropWithAspectRatio,
-  toggleCropMode,
-  cancelCrop,
-  updateCropPosition,    
-  updateCropDimensions,   
-  resetCrop,
-  handleCropApply,
-  calculateAspectRatioDimensions
+    cropSettings,
+    setCropSettings,
+    performCrop,
+    setCropWithAspectRatio,
+    toggleCropMode,
+    cancelCrop,
+    updateCropPosition,    
+    updateCropDimensions,   
+    resetCrop,
+    handleCropApply,
+    calculateAspectRatioDimensions
   };
 };

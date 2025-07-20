@@ -405,7 +405,7 @@ export default function EditingPlatform() {
         
         <div className={`flex-1 ${isMobile ? 'pb-20' : ''}`}>
           
-  <ImageCanvas  showSideAd={true} showBottomAd={true} 
+  <ImageCanvas  showSideAd={false} showBottomAd={false} 
   imagePreview={imagePreview}
   handleUploadClick={handleUploadClick}
   imageRef={imageRef}

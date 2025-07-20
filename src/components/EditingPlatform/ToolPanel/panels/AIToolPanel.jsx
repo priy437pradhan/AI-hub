@@ -321,7 +321,7 @@ const AIToolPanel = ({
                 </button>
               ))
             ) : (
-              // Features view for selected section
+             
               <>
                 {/* Section indicator */}
                 <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg bg-gradient-to-b ${currentSection.gradient} text-white mr-2`}>

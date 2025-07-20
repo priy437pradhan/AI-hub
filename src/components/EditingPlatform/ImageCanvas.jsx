@@ -17,8 +17,8 @@ export default function ImageCanvas({
     console.log("updateCropDimensions not implemented:", width, height),
   performCrop = (settings, src) =>
     console.log("performCrop not implemented:", settings, src),
-  showSideAd = false, // New prop to control side ad visibility
-  showBottomAd = false, // New prop to control bottom ad visibility
+  showSideAd = false,
+  showBottomAd = false,
 }) {
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
@@ -52,6 +52,189 @@ export default function ImageCanvas({
       return { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY };
     }
     return { clientX: e.clientX, clientY: e.clientY };
+  };
+
+  // Generate SVG path for star shape
+  const getStarPath = (width, height) => {
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const outerRadius = Math.min(width, height) / 2;
+    const innerRadius = outerRadius * 0.4;
+    const spikes = 5;
+    
+    let path = '';
+    for (let i = 0; i < spikes * 2; i++) {
+      const angle = (i * Math.PI) / spikes;
+      const radius = i % 2 === 0 ? outerRadius : innerRadius;
+      const x = centerX + Math.cos(angle - Math.PI / 2) * radius;
+      const y = centerY + Math.sin(angle - Math.PI / 2) * radius;
+      
+      if (i === 0) {
+        path += `M ${x} ${y}`;
+      } else {
+        path += ` L ${x} ${y}`;
+      }
+    }
+    path += ' Z';
+    return path;
+  };
+
+  // Generate SVG path for triangle shape
+  const getTrianglePath = (width, height) => {
+    return `M ${width / 2} 0 L 0 ${height} L ${width} ${height} Z`;
+  };
+
+  // Render the crop overlay based on shape
+  const renderCropOverlay = () => {
+    const shapeId = cropSettings.aspectRatio?.id;
+    const isSpecialShape = ['circle', 'triangle', 'star'].includes(shapeId);
+
+    if (isSpecialShape) {
+      return (
+        <div
+          className={`absolute ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+          style={getCropStyle()}
+          onMouseDown={handlePointerDown}
+          onTouchStart={handlePointerDown}
+        >
+          {/* SVG overlay for shapes */}
+          <svg 
+            className="absolute inset-0 w-full h-full pointer-events-none"
+            viewBox={`0 0 100 100`}
+            preserveAspectRatio="none"
+          >
+            <defs>
+              <mask id="cropMask">
+                <rect width="100" height="100" fill="black" />
+                {shapeId === 'circle' && (
+                  <circle cx="50" cy="50" r="50" fill="white" />
+                )}
+                {shapeId === 'triangle' && (
+                  <path d="M 50 0 L 0 100 L 100 100 Z" fill="white" />
+                )}
+                {shapeId === 'star' && (
+                  <path d={getStarPath(100, 100)} fill="white" />
+                )}
+              </mask>
+            </defs>
+            
+            {/* Background with shape cut out */}
+            <rect 
+              width="100" 
+              height="100" 
+              fill="rgba(59, 130, 246, 0.1)" 
+              mask="url(#cropMask)" 
+            />
+            
+            {/* Shape outline */}
+            {shapeId === 'circle' && (
+              <circle 
+                cx="50" 
+                cy="50" 
+                r="49" 
+                fill="none" 
+                stroke="#3B82F6" 
+                strokeWidth="2"
+                vectorEffect="non-scaling-stroke"
+              />
+            )}
+            {shapeId === 'triangle' && (
+              <path 
+                d="M 50 1 L 1 99 L 99 99 Z" 
+                fill="none" 
+                stroke="#3B82F6" 
+                strokeWidth="2"
+                vectorEffect="non-scaling-stroke"
+              />
+            )}
+            {shapeId === 'star' && (
+              <path 
+                d={getStarPath(100, 100)} 
+                fill="none" 
+                stroke="#3B82F6" 
+                strokeWidth="2"
+                vectorEffect="non-scaling-stroke"
+              />
+            )}
+          </svg>
+
+          {/* Resize handles */}
+          <div
+            className="resize-handle absolute -top-2 -left-2 w-4 h-4 bg-blue-500 border-2 border-white rounded-full cursor-nwse-resize"
+            onMouseDown={(e) => handleResize(e, 'top-left')}
+            onTouchStart={(e) => handleResize(e, 'top-left')}
+          />
+          <div
+            className="resize-handle absolute -top-2 -right-2 w-4 h-4 bg-blue-500 border-2 border-white rounded-full cursor-nesw-resize"
+            onMouseDown={(e) => handleResize(e, 'top-right')}
+            onTouchStart={(e) => handleResize(e, 'top-right')}
+          />
+          <div
+            className="resize-handle absolute -bottom-2 -left-2 w-4 h-4 bg-blue-500 border-2 border-white rounded-full cursor-nesw-resize"
+            onMouseDown={(e) => handleResize(e, 'bottom-left')}
+            onTouchStart={(e) => handleResize(e, 'bottom-left')}
+          />
+          <div
+            className="resize-handle absolute -bottom-2 -right-2 w-4 h-4 bg-blue-500 border-2 border-white rounded-full cursor-nwse-resize"
+            onMouseDown={(e) => handleResize(e, 'bottom-right')}
+            onTouchStart={(e) => handleResize(e, 'bottom-right')}
+          />
+
+          {/* Crop info */}
+          <div className="absolute -top-10 left-0 bg-gray-800 text-white text-xs px-2 py-1 rounded">
+            {Math.round(cropSettings.width)}% × {Math.round(cropSettings.height)}% ({shapeId})
+          </div>
+        </div>
+      );
+    }
+
+    // Regular rectangular crop
+    return (
+      <div
+        className={`absolute border-2 border-blue-500 bg-blue-500/10 ${
+          isDragging ? 'cursor-grabbing' : 'cursor-grab'
+        }`}
+        style={getCropStyle()}
+        onMouseDown={handlePointerDown}
+        onTouchStart={handlePointerDown}
+      >
+        {/* Crop grid */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="grid grid-cols-3 grid-rows-3 w-full h-full">
+            {[...Array(9)].map((_, i) => (
+              <div key={i} className="border border-blue-400/30" />
+            ))}
+          </div>
+        </div>
+
+        {/* Resize handles */}
+        <div
+          className="resize-handle absolute -top-2 -left-2 w-4 h-4 bg-blue-500 border-2 border-white rounded-full cursor-nwse-resize"
+          onMouseDown={(e) => handleResize(e, 'top-left')}
+          onTouchStart={(e) => handleResize(e, 'top-left')}
+        />
+        <div
+          className="resize-handle absolute -top-2 -right-2 w-4 h-4 bg-blue-500 border-2 border-white rounded-full cursor-nesw-resize"
+          onMouseDown={(e) => handleResize(e, 'top-right')}
+          onTouchStart={(e) => handleResize(e, 'top-right')}
+        />
+        <div
+          className="resize-handle absolute -bottom-2 -left-2 w-4 h-4 bg-blue-500 border-2 border-white rounded-full cursor-nesw-resize"
+          onMouseDown={(e) => handleResize(e, 'bottom-left')}
+          onTouchStart={(e) => handleResize(e, 'bottom-left')}
+        />
+        <div
+          className="resize-handle absolute -bottom-2 -right-2 w-4 h-4 bg-blue-500 border-2 border-white rounded-full cursor-nwse-resize"
+          onMouseDown={(e) => handleResize(e, 'bottom-right')}
+          onTouchStart={(e) => handleResize(e, 'bottom-right')}
+        />
+
+        {/* Crop info */}
+        <div className="absolute -top-10 left-0 bg-gray-800 text-white text-xs px-2 py-1 rounded">
+          {Math.round(cropSettings.width)}% × {Math.round(cropSettings.height)}%
+        </div>
+      </div>
+    );
   };
 
   // Unified handler for both mouse and touch start
@@ -251,52 +434,7 @@ export default function ImageCanvas({
                   draggable={false}
                 />
 
-                {cropSettings?.isActive && (
-                  <div
-                    className={`absolute border-2 border-blue-500 bg-blue-500/10 ${
-                      isDragging ? 'cursor-grabbing' : 'cursor-grab'
-                    }`}
-                    style={getCropStyle()}
-                    onMouseDown={handlePointerDown}
-                    onTouchStart={handlePointerDown}
-                  >
-                    {/* Crop grid */}
-                    <div className="absolute inset-0 pointer-events-none">
-                      <div className="grid grid-cols-3 grid-rows-3 w-full h-full">
-                        {[...Array(9)].map((_, i) => (
-                          <div key={i} className="border border-blue-400/30" />
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Resize handles */}
-                    <div
-                      className="resize-handle absolute -top-2 -left-2 w-4 h-4 bg-blue-500 border-2 border-white rounded-full cursor-nwse-resize"
-                      onMouseDown={(e) => handleResize(e, 'top-left')}
-                      onTouchStart={(e) => handleResize(e, 'top-left')}
-                    />
-                    <div
-                      className="resize-handle absolute -top-2 -right-2 w-4 h-4 bg-blue-500 border-2 border-white rounded-full cursor-nesw-resize"
-                      onMouseDown={(e) => handleResize(e, 'top-right')}
-                      onTouchStart={(e) => handleResize(e, 'top-right')}
-                    />
-                    <div
-                      className="resize-handle absolute -bottom-2 -left-2 w-4 h-4 bg-blue-500 border-2 border-white rounded-full cursor-nesw-resize"
-                      onMouseDown={(e) => handleResize(e, 'bottom-left')}
-                      onTouchStart={(e) => handleResize(e, 'bottom-left')}
-                    />
-                    <div
-                      className="resize-handle absolute -bottom-2 -right-2 w-4 h-4 bg-blue-500 border-2 border-white rounded-full cursor-nwse-resize"
-                      onMouseDown={(e) => handleResize(e, 'bottom-right')}
-                      onTouchStart={(e) => handleResize(e, 'bottom-right')}
-                    />
-
-                    {/* Crop info */}
-                    <div className="absolute -top-10 left-0 bg-gray-800 text-white text-xs px-2 py-1 rounded">
-                      {Math.round(cropSettings.width)}% × {Math.round(cropSettings.height)}%
-                    </div>
-                  </div>
-                )}
+                {cropSettings?.isActive && renderCropOverlay()}
               </div>
             </div>
           ) : (

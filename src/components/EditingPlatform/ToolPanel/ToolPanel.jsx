@@ -127,6 +127,7 @@ const ToolPanel = ({
             imagePreview={imagePreview}
             performBackgroundRemoval={performBackgroundRemoval}
             
+            
           />
         );
       case toolNames.AI:

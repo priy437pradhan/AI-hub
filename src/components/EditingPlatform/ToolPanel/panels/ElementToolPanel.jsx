@@ -4,7 +4,7 @@ import {
   Move, RotateCw, Layers, Target, Zap, ImageIcon, Sticker, Image as IconImage,
   ArrowLeft, Check
 } from 'lucide-react';
-import ColorPicker from '../common/ColorPicker';
+import ColorPicker from '../components/common/ColorPicker';
 import * as Icons from 'lucide-react';
 
 export const elementTypes = [

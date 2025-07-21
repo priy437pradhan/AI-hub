@@ -1,271 +1,18 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import {
-  Plus,Minus,Expand,ArrowRight,ArrowLeft,RotateCcw,RotateCw,FlipHorizontal,FlipVertical,Zap,Sun,Circle,Contrast,
-  Droplets,Focus,Eye,Palette,Thermometer,Lightbulb,Camera,Square,ChevronDown,ChevronUp,Move,Crop,Upload,MessageCircle,Facebook,Image,FileText,Youtube,Scissors,Wand2,Target,Layers,Check,X,} from "lucide-react";
-import { useSliderDrag } from "../hooks/slider";
-import { useMobileSliders } from "../hooks/mobileSlider";
-import { useDesktopSliders } from "../hooks/useDesktopSliders";
+  ArrowLeft,  RotateCw, FlipHorizontal,  Sun, Circle, Palette, ChevronDown, ChevronUp, Crop,
+} from "lucide-react";
 
-// =============================================================================
-// CONFIGURATION DATA
-// =============================================================================
+// Import the new component-based sections
+import CropComponent from "../components/AdjustTools/CropComponent";
+import FlipComponent from "../components/AdjustTools/FlipComponent";
+import RotateComponent from "../components/AdjustTools/RotateComponent";
+import BasicAdjustComponent from "../components/AdjustTools/BasicAdjustComponent";
+import ColorAdjustComponent from "../components/AdjustTools/ColorAdjustComponent";
+import VignetteComponent from "../components/AdjustTools/VignetteComponent";
 
-const categoryOrder = ["size", "color", "tool"];
-
-const categoryLabels = {
-  size: "Size",
-  color: "Color",
-  tool: "Tool",
-};
-
-const aspectRatios = [
-  { id: "freeform", label: "Freeform", icon: "⊞", dimensions: null },
-  { id: "original", label: "Original", icon: "▣", dimensions: null },
-  { id: "circle", label: "Circle", icon: "○", dimensions: null },
-  { id: "triangle", label: "Triangle", icon: "△", dimensions: null },
-  { id: "star", label: "Star", icon: "★", dimensions: null },
-  // Standard Aspect Ratios
-  { id: "1x1", label: "1:1", icon: "□", dimensions: { width: 1, height: 1 } },
-  { id: "4x5", label: "4:5", icon: "▯", dimensions: { width: 4, height: 5 } },
-  { id: "5x4", label: "5:4", icon: "▭", dimensions: { width: 5, height: 4 } },
-  { id: "3x4", label: "3:4", icon: "▯", dimensions: { width: 3, height: 4 } },
-  { id: "4x3", label: "4:3", icon: "▭", dimensions: { width: 4, height: 3 } },
-  { id: "2x3", label: "2:3", icon: "▯", dimensions: { width: 2, height: 3 } },
-  { id: "3x2", label: "3:2", icon: "▭", dimensions: { width: 3, height: 2 } },
-  {id: "9x16",label: "9:16",icon: "▯",dimensions: { width: 9, height: 16 },},
-  { id: "16x9", label: "16:9", icon: "▭", dimensions: { width: 16, height: 9 },},
-  // Social Media Specific
-  {id: "whatsapp-dp",label: "WhatsApp DP",title: "social",icon: <MessageCircle size={16} />,dimensions: { width: 1, height: 1 },},
-  {id: "fb-dp",label: "Facebook DP",title: "social",icon: <Facebook size={16} />,dimensions: { width: 1, height: 1 },},
-  {id: "fb-cover",label: "FB Cover",title: "social",icon: <Facebook size={16} />,dimensions: { width: 820, height: 312 },},
-  { id: "fb-post", label: "FB Post", title: "social", icon: <Image size={16} />,
-  dimensions: { width: 4, height: 5 },},
-  {id: "yt-thumbnail",label: "YouTube Thumbnail",title: "social",icon: <Youtube size={16} />,dimensions: { width: 16, height: 9 },},
-];
-
-// =============================================================================
-// UTILITY COMPONENTS
-// =============================================================================
-
-// Slider Styles Component
-const SliderStyles = () => (
-  <style jsx>
-    {`
-      div::-webkit-scrollbar {
-        display: none;
-      }
-
-      .slider::-webkit-slider-thumb,
-      .slider::-moz-range-thumb {
-        appearance: none;
-        height: 12px;
-        width: 12px;
-        border-radius: 50%;
-        background: #3b82f6; /* Tailwind blue-500 */
-        cursor: pointer;
-        border: none;
-      }
-    `}
-  </style>
-);
-
-// Desktop Slider Control Component
-const SliderControl = ({
-  label,
-  value,
-  onChange,
-  min = -100,
-  max = 100,
-  step = 1,
-  icon,
-  color = "red",
-  disabled = false,
-  onDragStart,
-  onDragEnd,
-  className = "",
-  ...props
-}) => {
-  const { sliderRef, isDragging, percentage, handlers } = useSliderDrag({
-    value,
-    onChange,
-    min,
-    max,
-    step,
-    disabled,
-    onDragStart,
-    onDragEnd,
-  });
-
-  return (
-    <div className={`mb-4 ${className}`} {...props}>
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center space-x-2">
-          {icon && <div className="text-gray-400">{icon}</div>}
-          <span className="text-sm text-gray-300 font-medium">{label}</span>
-        </div>
-        <span
-          className={`text-sm font-medium ${
-            value !== 0 ? `text-${color}-400` : "text-gray-400"
-          }`}
-        >
-          {value > 0 ? `+${value}` : value}
-        </span>
-      </div>
-      <div
-        ref={sliderRef}
-        className={`relative w-full h-2 bg-gray-700 rounded-lg cursor-pointer ${
-          isDragging ? "cursor-grabbing" : "cursor-grab"
-        } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
-        {...handlers}
-      >
-        {/* Track fill */}
-        <div
-          className={`absolute h-full bg-${color}-500 rounded-lg transition-all duration-75`}
-          style={{ width: `${percentage}%` }}
-        />
-        {/* Thumb */}
-        <div
-          className={`
-            absolute top-1/2 w-5 h-5 bg-${color}-500 border-2 border-${color}-400 
-            rounded-full transform -translate-y-1/2 -translate-x-1/2 cursor-grab
-            transition-all duration-75 hover:scale-110
-            ${isDragging ? "scale-125 cursor-grabbing" : ""}
-            ${disabled ? "opacity-50" : ""}
-          `}
-          style={{ left: `${percentage}%` }}
-        />
-      </div>
-      {/* Hidden input for accessibility */}
-      <input
-        type="range"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        onChange={(e) => onChange(parseInt(e.target.value))}
-        disabled={disabled}
-        className="sr-only"
-        aria-label={label}
-      />
-    </div>
-  );
-};
-
-// Mobile Slider Component
-const MobileSlider = ({
-  sliderKey,
-  label,
-  icon: Icon,
-  value,
-  onChange,
-  color = "blue",
-  min = -100,
-  max = 100,
-  minWidth = "50px",
-}) => (
-  <div className="flex items-center space-x-2 flex-shrink-0">
-    <Icon size={14} className={`text-${color}-400`} />
-    <span
-      className="text-xs text-gray-300 whitespace-nowrap"
-      style={{ minWidth }}
-    >
-      {label}
-    </span>
-    <input
-      type="range"
-      min={min}
-      max={max}
-      value={value}
-      onChange={(e) => onChange(sliderKey, parseInt(e.target.value))}
-      className={`w-16 h-1 bg-gray-700 rounded-full appearance-none cursor-pointer slider-${color}`}
-    />
-    <span className="text-xs text-white font-medium min-w-[25px]">{value}</span>
-  </div>
-);
-
-// =============================================================================
-// CONTAINER COMPONENTS
-// =============================================================================
-
-// Desktop Slider Container
-const DesktopSliderContainer = ({
-  sliders,
-  values,
-  handleChange,
-  resetFunction,
-  enhanceButton = null,
-}) => {
-  return (
-    <div className="space-y-1">
-      <div className="flex items-center justify-between mb-4">
-        {enhanceButton}
-        <button
-          onClick={resetFunction}
-          className="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm text-gray-300 transition-colors"
-        >
-          Reset
-        </button>
-      </div>
-
-      {sliders.map(({ key, label, icon, color, min = -100, max = 100 }) => (
-        <SliderControl
-          key={key}
-          label={label}
-          value={values[key]}
-          onChange={(value) => handleChange(key, value)}
-          icon={icon}
-          color={color}
-          min={min}
-          max={max}
-        />
-      ))}
-    </div>
-  );
-};
-
-// Mobile Slider Container
-const MobileSliderContainer = ({
-  sliders,
-  values,
-  handleChange,
-  resetFunction,
-  enhanceButton = null,
-  children,
-}) => (
-  <div
-    className="flex items-center space-x-3 overflow-x-auto"
-    style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-  >
-    {enhanceButton}
-    {children}
-    {sliders.map((slider) => (
-      <MobileSlider
-        key={slider.key}
-        sliderKey={slider.key}
-        label={slider.label}
-        icon={slider.icon}
-        value={values[slider.key]}
-        onChange={handleChange}
-        color={slider.color}
-        min={slider.min}
-        max={slider.max}
-        minWidth={slider.minWidth}
-      />
-    ))}
-    <button
-      onClick={resetFunction}
-      className="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-xs text-gray-300 transition-colors whitespace-nowrap flex-shrink-0"
-    >
-      Reset
-    </button>
-    <SliderStyles />
-  </div>
-);
-
-// =============================================================================
-// MAIN COMPONENT
-// =============================================================================
+import { categoryOrder, categoryLabels } from "../constants/AdjustTools/aspectRatios";
 
 const AdjustToolPanel = ({
   imageRef,
@@ -284,16 +31,12 @@ const AdjustToolPanel = ({
   imagePreview,
   onBack,
 }) => {
-  // =============================================================================
-  // STATE MANAGEMENT
-  // =============================================================================
-  
   const [activeSection, setActiveSection] = useState("");
   const [isMobile, setIsMobile] = useState(false);
-  const [keepAspectRatio, setKeepAspectRatio] = useState(false);
   const [aspectRatio, setAspectRatio] = useState("freeform");
+  const [expandedSliders, setExpandedSliders] = useState(new Set());
 
-  // Adjustment States
+  // State for adjustments
   const [basicAdjust, setBasicAdjust] = useState({
     brightness: 0,
     contrast: 0,
@@ -323,10 +66,6 @@ const AdjustToolPanel = ({
     feather: 50,
   });
 
-  // =============================================================================
-  // SECTIONS CONFIGURATION
-  // =============================================================================
-  
   const sections = [
     {
       id: "crop",
@@ -396,11 +135,6 @@ const AdjustToolPanel = ({
     tool: sections.filter((section) => section.category === "tool"),
   };
 
-  // =============================================================================
-  // EFFECTS
-  // =============================================================================
-  
-  // Check if mobile on mount and resize
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
@@ -472,132 +206,17 @@ const AdjustToolPanel = ({
     }
   }, [basicAdjust, colorAdjust, vignette, imageRef]);
 
-  // =============================================================================
-  // EVENT HANDLERS
-  // =============================================================================
-  
-  const handleBasicAdjustChange = (property, value) => {
-    setBasicAdjust((prev) => ({ ...prev, [property]: parseInt(value) }));
-  };
-
-  const handleColorAdjustChange = (property, value) => {
-    setColorAdjust((prev) => ({ ...prev, [property]: parseInt(value) }));
-  };
-
-  const handleVignetteChange = (property, value) => {
-    setVignette((prev) => ({ ...prev, [property]: parseInt(value) }));
-  };
-
-  const resetBasicAdjust = () => {
-    setBasicAdjust({
-      brightness: 0,
-      contrast: 0,
-      saturation: 0,
-      sharpness: 0,
-      exposure: 0,
-      highlights: 0,
-      shadows: 0,
-      whites: 0,
-      blacks: 0,
-      vibrance: 0,
-      clarity: 0,
-      dehaze: 0,
+  const toggleSliderExpansion = (sliderKey) => {
+    setExpandedSliders(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(sliderKey)) {
+        newSet.delete(sliderKey);
+      } else {
+        newSet.add(sliderKey);
+      }
+      return newSet;
     });
   };
-
-  const resetColorAdjust = () => {
-    setColorAdjust({
-      temperature: 0,
-      tint: 0,
-      hue: 0,
-      luminance: 0,
-    });
-  };
-
-  const resetVignette = () => {
-    setVignette({
-      amount: 0,
-      midpoint: 50,
-      roundness: 0,
-      feather: 50,
-    });
-  };
-
-  const handleOneTagEnhance = () => {
-    setBasicAdjust({
-      brightness: 10,
-      contrast: 15,
-      saturation: 20,
-      sharpness: 10,
-      exposure: 5,
-      highlights: -10,
-      shadows: 15,
-      whites: 5,
-      blacks: -5,
-      vibrance: 25,
-      clarity: 15,
-      dehaze: 10,
-    });
-  };
-
-  const handleFlip = (direction) => {
-    if (performFlip) {
-      performFlip(direction);
-    }
-  };
-
-  const handleRotate = (direction) => {
-    if (performRotate) {
-      performRotate(direction);
-    }
-  };
-
-  const handleAspectRatioChange = (ratioId) => {
-    setAspectRatio(ratioId);
-    if (setCropWithAspectRatio) {
-      setCropWithAspectRatio(ratioId, aspectRatios, (newSettings) => {
-        console.log("Crop settings updated:", newSettings);
-      });
-    }
-  };
-
-const handleCropApply = () => {
-  console.log("Apply crop clicked", {
-    performCrop,
-    cropSettings,
-    imagePreview,
-    imageRef: imageRef?.current
-  });
-  
-  if (!performCrop) {
-    console.error("performCrop function is not available");
-    alert("Crop function not available");
-    return;
-  }
-  
-  if (!cropSettings) {
-    console.error("cropSettings is not available");
-    alert("No crop area selected");
-    return;
-  }
-  
-  // If imagePreview is not available, try to use imageRef instead
-  const imageSource = imagePreview || imageRef?.current;
-  
-  if (!imageSource) {
-    console.error("Neither imagePreview nor imageRef is available");
-    alert("No image available for cropping");
-    return;
-  }
-  
-  try {
-    // Try calling performCrop with available image source
-    performCrop(cropSettings, imageSource);
-  } catch (error) {
-    console.error("Error applying crop:", error);
-    alert("Failed to apply crop");
-  }
-};
 
   const handleSectionClick = (sectionId) => {
     if (isMobile) {
@@ -613,73 +232,6 @@ const handleCropApply = () => {
     } else {
       onBack?.();
     }
-  };
-
-  // =============================================================================
-  // RENDER FUNCTIONS
-  // =============================================================================
-  
-  const AspectRatioGrid = () => {
-    const hasSocialItems = aspectRatios.some(
-      (ratio) => ratio.title === "social"
-    );
-    const gridCols = hasSocialItems ? "grid-cols-2" : "grid-cols-2";
-    const gapSize = hasSocialItems ? "gap-2" : "gap-3";
-
-    if (isMobile) {
-      return (
-        <div
-          className="flex space-x-2 overflow-x-auto mb-4 flex-shrink-0"
-          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-        >
-          {aspectRatios.map((ratio) => (
-            <button
-              key={ratio.id}
-              onClick={() => handleAspectRatioChange(ratio.id)}
-              className={`flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 whitespace-nowrap flex-shrink-0 min-w-[60px]
-                ${
-                  aspectRatio === ratio.id
-                    ? "bg-blue-500 bg-opacity-20 border border-blue-500 text-blue-400"
-                    : "border border-gray-600 hover:border-gray-500 hover:bg-gray-700 text-gray-300"
-                }
-              `}
-            >
-              <span className="text-sm mb-1">{ratio.icon}</span>
-              <span className="text-xs font-medium">{ratio.label}</span>
-            </button>
-          ))}
-          <style jsx>
-            {`
-              div::-webkit-scrollbar {
-                display: none;
-              }
-            `}
-          </style>
-        </div>
-      );
-    }
-
-    return (
-      <div className={`grid ${gridCols} ${gapSize} mb-4`}>
-        {aspectRatios.map((ratio) => (
-          <button
-            key={ratio.id}
-            onClick={() => handleAspectRatioChange(ratio.id)}
-            className={`flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 
-              ${
-                aspectRatio === ratio.id
-                  ? "bg-blue-500 bg-opacity-20 border border-blue-500 text-blue-400"
-                  : "border border-gray-600 hover:border-gray-500 hover:bg-gray-700 text-gray-300"
-              }
-              ${ratio.title === "social" ? "col-span-2" : "col-span-1"}
-            `}
-          >
-            <span className="text-lg mb-1">{ratio.icon}</span>
-            <span className="text-xs font-medium">{ratio.label}</span>
-          </button>
-        ))}
-      </div>
-    );
   };
 
   const SectionHeader = ({ section, onClick, isActive }) => (
@@ -700,181 +252,69 @@ const handleCropApply = () => {
     </button>
   );
 
-  // Section Render Functions
-  const renderCropSection = () => (
-    <div className="space-y-4">
-      <AspectRatioGrid />
-      <div className="flex items-center space-x-2 mb-4">
-        <input
-          type="checkbox"
-          id="keepAspect"
-          checked={keepAspectRatio}
-          onChange={() => setKeepAspectRatio(!keepAspectRatio)}
-          className="w-4 h-4 rounded border-gray-600 text-blue-600 focus:ring-blue-500"
-        />
-        <label htmlFor="keepAspect" className="text-sm text-gray-300">
-          Lock aspect ratio
-        </label>
-      </div>
-      <div className="flex space-x-2">
-      <button
-  onClick={handleCropApply}
-  className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-lg font-medium text-white transition-colors touch-manipulation"
-  style={{ WebkitTapHighlightColor: 'transparent' }}
->
-  Apply Crop
-</button>
-        <button
-          onClick={cancelCrop}
-          className="px-4 py-3 bg-gray-600 hover:bg-gray-700 rounded-lg font-medium text-white transition-colors"
-        >
-          Cancel
-        </button>
-      </div>
-    </div>
-  );
-
-  const renderFlipSection = () => (
-    <div className="grid grid-cols-2 gap-3">
-      <button
-        onClick={() => handleFlip("horizontal")}
-        className="flex flex-col items-center justify-center p-4 rounded-lg border border-gray-600 hover:border-blue-500 hover:bg-gray-700 transition-all"
-      >
-        <FlipHorizontal size={24} className="text-gray-200 mb-2" />
-        <span className="text-sm text-gray-300 font-medium">Horizontal</span>
-      </button>
-      <button
-        onClick={() => handleFlip("vertical")}
-        className="flex flex-col items-center justify-center p-4 rounded-lg border border-gray-600 hover:border-blue-500 hover:bg-gray-700 transition-all"
-      >
-        <FlipVertical size={24} className="text-gray-200 mb-2" />
-        <span className="text-sm text-gray-300 font-medium">Vertical</span>
-      </button>
-    </div>
-  );
-
-  const renderRotateSection = () => (
-    <div className="grid grid-cols-2 gap-3">
-      <button
-        onClick={() => handleRotate("left")}
-        className="flex flex-col items-center justify-center p-4 rounded-lg border border-gray-600 hover:border-blue-500 hover:bg-gray-700 transition-all"
-      >
-        <RotateCcw size={24} className="text-gray-200 mb-2" />
-        <span className="text-sm text-gray-300 font-medium">Rotate Left</span>
-      </button>
-      <button
-        onClick={() => handleRotate("right")}
-        className="flex flex-col items-center justify-center p-4 rounded-lg border border-gray-600 hover:border-blue-500 hover:bg-gray-700 transition-all"
-      >
-        <RotateCw size={24} className="text-gray-200 mb-2" />
-        <span className="text-sm text-gray-300 font-medium">Rotate Right</span>
-      </button>
-    </div>
-  );
-
- const renderBasicAdjustSection = () => {
-  const { basicAdjustSliders } = useDesktopSliders();
-  const { basicAdjustSliders: mobileBasicSliders } = useMobileSliders();
-  
-  const enhanceButton = (
-    <button
-      onClick={handleOneTagEnhance}
-      className={`flex items-center space-x-2 px-${isMobile ? '3' : '4'} py-2 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-white font-medium hover:from-purple-700 hover:to-pink-700 transition-all ${isMobile ? 'whitespace-nowrap flex-shrink-0' : ''}`}
-    >
-      <Zap size={isMobile ? 14 : 16} />
-      <span className={isMobile ? 'text-xs' : ''}>{isMobile ? '1-Tap' : '1-Tap Enhance'}</span>
-    </button>
-  );
-
-  if (isMobile) {
-    return (
-      <MobileSliderContainer
-        sliders={mobileBasicSliders}
-        values={basicAdjust}
-        handleChange={handleBasicAdjustChange}
-        resetFunction={resetBasicAdjust}
-        enhanceButton={enhanceButton}
-      />
-    );
-  }
-
-  return (
-    <DesktopSliderContainer
-      sliders={basicAdjustSliders}
-      values={basicAdjust}
-      handleChange={handleBasicAdjustChange}
-      resetFunction={resetBasicAdjust}
-      enhanceButton={enhanceButton}
-    />
-  );
-};
-const renderColorAdjustSection = () => {
-  const { colorAdjustSliders } = useDesktopSliders();
-  const { colorAdjustSliders: mobileColorSliders } = useMobileSliders();
-
-  if (isMobile) {
-    return (
-      <MobileSliderContainer
-        sliders={mobileColorSliders}
-        values={colorAdjust}
-        handleChange={handleColorAdjustChange}
-        resetFunction={resetColorAdjust}
-      />
-    );
-  }
-
-  return (
-    <DesktopSliderContainer
-      sliders={colorAdjustSliders}
-      values={colorAdjust}
-      handleChange={handleColorAdjustChange}
-      resetFunction={resetColorAdjust}
-    />
-  );
-};
-const renderVignetteSection = () => {
-  const { vignetteSliders } = useDesktopSliders();
-  const { vignetteSliders: mobileVignetteSliders } = useMobileSliders();
-
-  if (isMobile) {
-    return (
-      <MobileSliderContainer
-        sliders={mobileVignetteSliders}
-        values={vignette}
-        handleChange={handleVignetteChange}
-        resetFunction={resetVignette}
-      />
-    );
-  }
-
-  return (
-    <DesktopSliderContainer
-      sliders={vignetteSliders}
-      values={vignette}
-      handleChange={handleVignetteChange}
-      resetFunction={resetVignette}
-    />
-  );
-};
-
   const renderSectionContent = () => {
     switch (activeSection) {
       case "crop":
-        return renderCropSection();
+        return (
+          <CropComponent
+            aspectRatio={aspectRatio}
+            setAspectRatio={setAspectRatio}
+            setCropWithAspectRatio={setCropWithAspectRatio}
+            performCrop={performCrop}
+            cancelCrop={cancelCrop}
+            cropSettings={cropSettings}
+            imagePreview={imagePreview}
+            imageRef={imageRef}
+            isMobile={isMobile}
+          />
+        );
       case "basic":
-        return renderBasicAdjustSection();
+        return (
+          <BasicAdjustComponent
+            basicAdjust={basicAdjust}
+            setBasicAdjust={setBasicAdjust}
+            isMobile={isMobile}
+            expandedSliders={expandedSliders}
+            onToggleSlider={toggleSliderExpansion}
+          />
+        );
       case "color":
-        return renderColorAdjustSection();
+        return (
+          <ColorAdjustComponent
+            colorAdjust={colorAdjust}
+            setColorAdjust={setColorAdjust}
+            isMobile={isMobile}
+            expandedSliders={expandedSliders}
+            onToggleSlider={toggleSliderExpansion}
+          />
+        );
       case "vignette":
-        return renderVignetteSection();
+        return (
+          <VignetteComponent
+            vignette={vignette}
+            setVignette={setVignette}
+            isMobile={isMobile}
+            expandedSliders={expandedSliders}
+            onToggleSlider={toggleSliderExpansion}
+          />
+        );
       case "flip":
-        return renderFlipSection();
+        return <FlipComponent performFlip={performFlip} />;
       case "rotate":
-        return renderRotateSection();
+        return <RotateComponent performRotate={performRotate} />;
       default:
-        return renderBasicAdjustSection();
+        return (
+          <BasicAdjustComponent
+            basicAdjust={basicAdjust}
+            setBasicAdjust={setBasicAdjust}
+            isMobile={isMobile}
+            expandedSliders={expandedSliders}
+            onToggleSlider={toggleSliderExpansion}
+          />
+        );
     }
   };
+
   const currentSection = sections.find((s) => s.id === activeSection);
   // Mobile Layout
   if (isMobile) {
@@ -937,46 +377,8 @@ const renderVignetteSection = () => {
       </div>
     );
   }
-  // Add this mobile-optimized SliderControl for mobile view (add this right after the existing SliderControl component):
-  const MobileSliderControl = ({
-    label,
-    value,
-    onChange,
-    min = -100,
-    max = 100,
-    icon,
-    color = "red",
-  }) => (
-    <div className="mb-3">
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center space-x-2">
-          {icon && <div className="text-gray-400">{icon}</div>}
-          <span className="text-xs text-gray-300 font-medium">{label}</span>
-        </div>
-        <span
-          className={`text-xs font-medium ${
-            value !== 0 ? `text-${color}-400` : "text-gray-400"
-          }`}
-        >
-          {value > 0 ? `+${value}` : value}
-        </span>
-      </div>
-      <div className="relative w-full h-2 bg-gray-700 rounded-lg">
-        <div
-          className={`absolute h-full bg-${color}-500 rounded-lg transition-all duration-75`}
-          style={{ width: `${((value - min) / (max - min)) * 100}%` }}
-        />
-        <input
-          type="range"
-          min={min}
-          max={max}
-          value={value}
-          onChange={(e) => onChange(parseInt(e.target.value))}
-          className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
-        />
-      </div>
-    </div>
-  );
+
+
   // Desktop Layout
   return (
     <div className="bg-gray-900 text-white h-full overflow-y-auto">

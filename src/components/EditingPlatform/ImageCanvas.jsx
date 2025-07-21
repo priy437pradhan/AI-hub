@@ -406,7 +406,7 @@ export default function ImageCanvas({
   );
 
   return (
-  <div className="w-full min-h-screen bg-gray-50 flex flex-col pb-24">
+ <div className="w-full min-h-screen bg-gray-50 flex flex-col pb-24">
     {/* Main Content Container */}
     <div className="flex flex-col lg:flex-row flex-1">
       {/* Main Image Area */}
@@ -414,7 +414,10 @@ export default function ImageCanvas({
         <div
           className={`
             w-full h-full flex justify-center items-center bg-white rounded-lg shadow-sm
-            ${showSideAd ? 'min-h-[60vh]' : 'min-h-[calc(100vh-8rem)]'}
+            ${showSideAd ? 
+              'min-h-[calc(100vh-5rem)] lg:min-h-[60vh]' : 
+              'min-h-[calc(100vh-5rem)] lg:min-h-[calc(100vh-8rem)]'
+            }
             ${showBottomAd ? 'lg:min-h-[calc(100vh-12rem)]' : ''}
             ${!imagePreview ? 'border-2 border-dashed border-blue-400' : 'border border-gray-200'}
           `}
@@ -428,7 +431,7 @@ export default function ImageCanvas({
                   alt="Preview"
                   ref={imageRef}
                   onLoad={handleImageLoad}
-                  className={`w-full h-auto max-w-full max-h-[70vh] object-contain transition-opacity duration-500 ${
+                  className={`w-full h-auto max-w-full max-h-[calc(70vh-5rem)] lg:max-h-[70vh] object-contain transition-opacity duration-500 ${
                     isImageLoaded ? 'opacity-100' : 'opacity-0'
                   }`}
                   draggable={false}
@@ -449,7 +452,7 @@ export default function ImageCanvas({
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={1.5}
-                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2 2v12a2 2 0 002 2z"
                 />
               </svg>
               <h3 className="text-xl font-semibold mb-2">Upload an Image</h3>

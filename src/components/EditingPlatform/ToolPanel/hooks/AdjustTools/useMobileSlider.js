@@ -1,4 +1,3 @@
-// Import all necessary icons
 import { 
   Sun, 
   Droplets, 

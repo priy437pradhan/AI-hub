@@ -26,17 +26,24 @@ export default function ImageCanvas({
   const [hoverHandle, setHoverHandle] = useState(null);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [screenHeight, setScreenHeight] = useState(0);
   const containerRef = useRef(null);
 
-  // Check if device is mobile
+  // Check if device is mobile and get screen height
   useEffect(() => {
-    const checkMobile = () => {
+    const checkMobileAndHeight = () => {
       setIsMobile(window.innerWidth < 768);
+      setScreenHeight(window.innerHeight);
     };
 
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
+    checkMobileAndHeight();
+    window.addEventListener("resize", checkMobileAndHeight);
+    window.addEventListener("orientationchange", checkMobileAndHeight);
+    
+    return () => {
+      window.removeEventListener("resize", checkMobileAndHeight);
+      window.removeEventListener("orientationchange", checkMobileAndHeight);
+    };
   }, []);
 
   const getCropStyle = () => ({
@@ -158,30 +165,40 @@ export default function ImageCanvas({
             )}
           </svg>
 
-          {/* Resize handles */}
+          {/* Resize handles - larger on mobile */}
           <div
-            className="resize-handle absolute -top-2 -left-2 w-4 h-4 bg-blue-500 border-2 border-white rounded-full cursor-nwse-resize"
+            className={`resize-handle absolute -top-2 -left-2 bg-blue-500 border-2 border-white rounded-full cursor-nwse-resize ${
+              isMobile ? 'w-6 h-6' : 'w-4 h-4'
+            }`}
             onMouseDown={(e) => handleResize(e, 'top-left')}
             onTouchStart={(e) => handleResize(e, 'top-left')}
           />
           <div
-            className="resize-handle absolute -top-2 -right-2 w-4 h-4 bg-blue-500 border-2 border-white rounded-full cursor-nesw-resize"
+            className={`resize-handle absolute -top-2 -right-2 bg-blue-500 border-2 border-white rounded-full cursor-nesw-resize ${
+              isMobile ? 'w-6 h-6' : 'w-4 h-4'
+            }`}
             onMouseDown={(e) => handleResize(e, 'top-right')}
             onTouchStart={(e) => handleResize(e, 'top-right')}
           />
           <div
-            className="resize-handle absolute -bottom-2 -left-2 w-4 h-4 bg-blue-500 border-2 border-white rounded-full cursor-nesw-resize"
+            className={`resize-handle absolute -bottom-2 -left-2 bg-blue-500 border-2 border-white rounded-full cursor-nesw-resize ${
+              isMobile ? 'w-6 h-6' : 'w-4 h-4'
+            }`}
             onMouseDown={(e) => handleResize(e, 'bottom-left')}
             onTouchStart={(e) => handleResize(e, 'bottom-left')}
           />
           <div
-            className="resize-handle absolute -bottom-2 -right-2 w-4 h-4 bg-blue-500 border-2 border-white rounded-full cursor-nwse-resize"
+            className={`resize-handle absolute -bottom-2 -right-2 bg-blue-500 border-2 border-white rounded-full cursor-nwse-resize ${
+              isMobile ? 'w-6 h-6' : 'w-4 h-4'
+            }`}
             onMouseDown={(e) => handleResize(e, 'bottom-right')}
             onTouchStart={(e) => handleResize(e, 'bottom-right')}
           />
 
           {/* Crop info */}
-          <div className="absolute -top-10 left-0 bg-gray-800 text-white text-xs px-2 py-1 rounded">
+          <div className={`absolute -top-10 left-0 bg-gray-800 text-white rounded ${
+            isMobile ? 'text-xs px-2 py-1' : 'text-xs px-2 py-1'
+          }`}>
             {Math.round(cropSettings.width)}% × {Math.round(cropSettings.height)}% ({shapeId})
           </div>
         </div>
@@ -207,30 +224,40 @@ export default function ImageCanvas({
           </div>
         </div>
 
-        {/* Resize handles */}
+        {/* Resize handles - larger on mobile */}
         <div
-          className="resize-handle absolute -top-2 -left-2 w-4 h-4 bg-blue-500 border-2 border-white rounded-full cursor-nwse-resize"
+          className={`resize-handle absolute -top-2 -left-2 bg-blue-500 border-2 border-white rounded-full cursor-nwse-resize ${
+            isMobile ? 'w-6 h-6' : 'w-4 h-4'
+          }`}
           onMouseDown={(e) => handleResize(e, 'top-left')}
           onTouchStart={(e) => handleResize(e, 'top-left')}
         />
         <div
-          className="resize-handle absolute -top-2 -right-2 w-4 h-4 bg-blue-500 border-2 border-white rounded-full cursor-nesw-resize"
+          className={`resize-handle absolute -top-2 -right-2 bg-blue-500 border-2 border-white rounded-full cursor-nesw-resize ${
+            isMobile ? 'w-6 h-6' : 'w-4 h-4'
+          }`}
           onMouseDown={(e) => handleResize(e, 'top-right')}
           onTouchStart={(e) => handleResize(e, 'top-right')}
         />
         <div
-          className="resize-handle absolute -bottom-2 -left-2 w-4 h-4 bg-blue-500 border-2 border-white rounded-full cursor-nesw-resize"
+          className={`resize-handle absolute -bottom-2 -left-2 bg-blue-500 border-2 border-white rounded-full cursor-nesw-resize ${
+            isMobile ? 'w-6 h-6' : 'w-4 h-4'
+          }`}
           onMouseDown={(e) => handleResize(e, 'bottom-left')}
           onTouchStart={(e) => handleResize(e, 'bottom-left')}
         />
         <div
-          className="resize-handle absolute -bottom-2 -right-2 w-4 h-4 bg-blue-500 border-2 border-white rounded-full cursor-nwse-resize"
+          className={`resize-handle absolute -bottom-2 -right-2 bg-blue-500 border-2 border-white rounded-full cursor-nwse-resize ${
+            isMobile ? 'w-6 h-6' : 'w-4 h-4'
+          }`}
           onMouseDown={(e) => handleResize(e, 'bottom-right')}
           onTouchStart={(e) => handleResize(e, 'bottom-right')}
         />
 
         {/* Crop info */}
-        <div className="absolute -top-10 left-0 bg-gray-800 text-white text-xs px-2 py-1 rounded">
+        <div className={`absolute -top-10 left-0 bg-gray-800 text-white rounded ${
+          isMobile ? 'text-xs px-2 py-1' : 'text-xs px-2 py-1'
+        }`}>
           {Math.round(cropSettings.width)}% × {Math.round(cropSettings.height)}%
         </div>
       </div>
@@ -398,88 +425,125 @@ export default function ImageCanvas({
 
   // Simple Ad Component
   const AdPlaceholder = ({ type }) => (
-    <div className="bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center">
+    <div className="bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center h-full">
       <span className="text-gray-500 text-sm">
         {type === 'side' ? 'Side Ad' : 'Bottom Ad'}
       </span>
     </div>
   );
 
-  return (
-  <div className="w-full min-h-screen bg-gray-50 flex flex-col pb-24">
-    {/* Main Content Container */}
-    <div className="flex flex-col lg:flex-row flex-1">
-      {/* Main Image Area */}
-      <div className={`flex-1 ${showSideAd ? 'p-4' : 'p-8'}`}>
-        <div
-          className={`
-            w-full h-full flex justify-center items-center bg-white rounded-lg shadow-sm
-            ${showSideAd ? 'min-h-[60vh]' : 'min-h-[calc(100vh-8rem)]'}
-            ${showBottomAd ? 'lg:min-h-[calc(100vh-12rem)]' : ''}
-            ${!imagePreview ? 'border-2 border-dashed border-blue-400' : 'border border-gray-200'}
-          `}
-          ref={containerRef}
-        >
-          {imagePreview ? (
-            <div className="relative w-full h-full flex items-center justify-center p-4">
-              <div className="relative max-w-full max-h-full">
-                <img
-                  src={imagePreview}
-                  alt="Preview"
-                  ref={imageRef}
-                  onLoad={handleImageLoad}
-                  className={`w-full h-auto max-w-full max-h-[70vh] object-contain transition-opacity duration-500 ${
-                    isImageLoaded ? 'opacity-100' : 'opacity-0'
-                  }`}
-                  draggable={false}
-                />
+  // Calculate dynamic heights for mobile
+  const getMobileHeights = () => {
+    const baseHeight = screenHeight > 0 ? screenHeight : window.innerHeight;
+    const bottomAdHeight = showBottomAd ? 128 : 0; // 8rem = 128px
+    const padding = 32; // 2rem = 32px
+    
+    return {
+      containerHeight: baseHeight - bottomAdHeight - padding,
+      imageAreaHeight: baseHeight - bottomAdHeight - padding - 64, // Extra space for UI
+    };
+  };
 
-                {cropSettings?.isActive && renderCropOverlay()}
+  const { containerHeight, imageAreaHeight } = getMobileHeights();
+
+  return (
+    <div 
+      className="w-full bg-gray-50 flex flex-col overflow-hidden"
+      style={{ 
+        height: isMobile ? `${screenHeight}px` : 'auto',
+        minHeight: isMobile ? `${screenHeight}px` : '100vh'
+      }}
+    >
+      {/* Main Content Container */}
+      <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
+        {/* Main Image Area */}
+        <div 
+          className={`flex-1 ${showSideAd ? 'p-2 lg:p-4' : 'p-2 lg:p-8'} overflow-hidden`}
+          style={{ 
+            height: isMobile ? `${containerHeight}px` : 'auto'
+          }}
+        >
+          <div
+            className={`
+              w-full h-full flex justify-center items-center bg-white rounded-lg shadow-sm overflow-hidden
+              ${!imagePreview ? 'border-2 border-dashed border-blue-400' : 'border border-gray-200'}
+            `}
+            ref={containerRef}
+            style={{ 
+              height: isMobile ? `${imageAreaHeight}px` : showSideAd ? 'calc(100vh - 8rem)' : 'calc(100vh - 8rem)'
+            }}
+          >
+            {imagePreview ? (
+              <div className="relative w-full h-full flex items-center justify-center p-2 lg:p-4">
+                <div className="relative max-w-full max-h-full">
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    ref={imageRef}
+                    onLoad={handleImageLoad}
+                    className={`w-full h-auto max-w-full object-contain transition-opacity duration-500 ${
+                      isImageLoaded ? 'opacity-100' : 'opacity-0'
+                    }`}
+                    style={{
+                      maxHeight: isMobile ? `${imageAreaHeight - 32}px` : '70vh'
+                    }}
+                    draggable={false}
+                  />
+
+                  {cropSettings?.isActive && renderCropOverlay()}
+                </div>
               </div>
-            </div>
-          ) : (
-            <div className="text-center p-8">
-              <svg
-                className="w-20 h-20 mx-auto text-gray-300 mb-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
-              <h3 className="text-xl font-semibold mb-2">Upload an Image</h3>
-              <p className="text-gray-500 mb-6">JPG, PNG, GIF, WebP supported</p>
-              <button
-                onClick={handleUploadClick}
-                className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-              >
-                Choose Image
-              </button>
-            </div>
-          )}
+            ) : (
+              <div className="text-center p-4 lg:p-8">
+                <svg
+                  className={`mx-auto text-gray-300 mb-4 ${isMobile ? 'w-12 h-12' : 'w-20 h-20'}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+                <h3 className={`font-semibold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`}>
+                  Upload an Image
+                </h3>
+                <p className={`text-gray-500 mb-4 lg:mb-6 ${isMobile ? 'text-sm' : 'text-base'}`}>
+                  JPG, PNG, GIF, WebP supported
+                </p>
+                <button
+                  onClick={handleUploadClick}
+                  className={`bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors ${
+                    isMobile ? 'px-4 py-2 text-sm' : 'px-6 py-3'
+                  }`}
+                >
+                  Choose Image
+                </button>
+              </div>
+            )}
+          </div>
         </div>
+
+        {/* Side Ad - Only show on desktop when enabled */}
+        {showSideAd && (
+          <div className="hidden lg:block w-60 border-l p-4">
+            <AdPlaceholder type="side" />
+          </div>
+        )}
       </div>
 
-      {/* Side Ad - Only show on desktop when enabled */}
-      {showSideAd && (
-        <div className="hidden lg:block w-60 border-l p-4">
-          <AdPlaceholder type="side" />
+      {/* Bottom Ad - Only show when enabled */}
+      {showBottomAd && (
+        <div 
+          className="w-full border-t p-2 lg:p-4 flex-shrink-0"
+          style={{ height: isMobile ? '120px' : '128px' }}
+        >
+          <AdPlaceholder type="bottom" />
         </div>
       )}
     </div>
-
-    {/* Bottom Ad - Only show when enabled */}
-    {showBottomAd && (
-      <div className="w-full h-32 border-t p-4">
-        <AdPlaceholder type="bottom" />
-      </div>
-    )}
-  </div>
-);
-
+  );
 }

@@ -435,12 +435,13 @@ export default function ImageCanvas({
   // Calculate dynamic heights for mobile
   const getMobileHeights = () => {
     const baseHeight = screenHeight > 0 ? screenHeight : window.innerHeight;
+    const headerHeight = 64; // 4rem = 64px for fixed header
     const bottomAdHeight = showBottomAd ? 128 : 0; // 8rem = 128px
-    const padding = 32; // 2rem = 32px
+    const padding = 16; // 1rem = 16px (reduced since header is separate)
     
     return {
-      containerHeight: baseHeight - bottomAdHeight - padding,
-      imageAreaHeight: baseHeight - bottomAdHeight - padding - 64, // Extra space for UI
+      containerHeight: baseHeight - headerHeight - bottomAdHeight - padding,
+      imageAreaHeight: baseHeight - headerHeight - bottomAdHeight - padding - 32, // Extra space for UI
     };
   };
 
@@ -454,8 +455,53 @@ export default function ImageCanvas({
         minHeight: isMobile ? `${screenHeight}px` : '100vh'
       }}
     >
-      {/* Main Content Container */}
-      <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
+      {/* Fixed Header */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm border-b border-gray-200">
+        <div className="flex items-center justify-between px-4 py-3 max-w-7xl mx-auto">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div>
+              <h1 className={`font-bold text-gray-900 ${isMobile ? 'text-lg' : 'text-xl'}`}>
+                Image Editor
+              </h1>
+              {!isMobile && (
+                <p className="text-sm text-gray-500">Edit, crop, and enhance your images</p>
+              )}
+            </div>
+          </div>
+          
+          {/* Header Actions */}
+          <div className="flex items-center space-x-2">
+            {imagePreview && (
+              <button className={`bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors ${
+                isMobile ? 'px-3 py-2 text-sm' : 'px-4 py-2'
+              }`}>
+                {isMobile ? 'Save' : 'Save Image'}
+              </button>
+            )}
+            {!imagePreview && (
+              <button 
+                onClick={handleUploadClick}
+                className={`bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors ${
+                  isMobile ? 'px-3 py-2 text-sm' : 'px-4 py-2'
+                }`}
+              >
+                {isMobile ? 'Upload' : 'Upload Image'}
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content Container - with top padding for fixed header */}
+      <div 
+        className="flex flex-col lg:flex-row flex-1 overflow-hidden"
+        style={{ paddingTop: '64px' }} // Space for fixed header
+      >
         {/* Main Image Area */}
         <div 
           className={`flex-1 ${showSideAd ? 'p-2 lg:p-4' : 'p-2 lg:p-8'} overflow-hidden`}

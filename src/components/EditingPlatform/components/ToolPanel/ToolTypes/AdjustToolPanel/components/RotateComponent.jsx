@@ -1,6 +1,7 @@
 import React from 'react';
 import { RotateCcw, RotateCw } from 'lucide-react';
-import useMobileGridButton from '../../../hooks/useMobileGridButton'
+import useMobileGridButton from '../../../hooks/useMobileGridButton';
+
 const RotateComponent = ({ performRotate, isMobile = false }) => {
   const { gridConfig, getButtonStateClass, ScrollbarStyles } = useMobileGridButton(isMobile);
 
@@ -14,34 +15,45 @@ const RotateComponent = ({ performRotate, isMobile = false }) => {
     {
       id: 'left',
       label: 'Rotate Left',
-      icon: RotateCcw,
+      icon: <RotateCcw size={24} />,
       action: () => handleRotate('left')
     },
     {
       id: 'right',
       label: 'Rotate Right',
-      icon: RotateCw, 
+      icon: <RotateCw size={24} />,
       action: () => handleRotate('right')
     }
   ];
 
-  return (
-    <div className={gridConfig.containerClass} style={gridConfig.containerStyle}>
-      {rotateOptions.map((option) => {
-        const IconComponent = option.icon;
-        return (
+  const RotateGrid = () => {
+    return (
+      <div className={gridConfig.containerClass} style={gridConfig.containerStyle}>
+        {rotateOptions.map((option) => (
           <button
             key={option.id}
             onClick={option.action}
-            className={`${gridConfig.buttonClass} ${getButtonStateClass()}`}
+            className={`
+              ${gridConfig.buttonClass} 
+              ${getButtonStateClass(false)} 
+              col-span-1
+              ${isMobile ? 'border-0' : ''}
+            `}
           >
-            <IconComponent size={gridConfig.iconSize} className="text-gray-200 mb-2" />
-            <span className="text-sm text-gray-300 font-medium">{option.label}</span>
+            <span className={`${isMobile ? 'text-sm' : 'text-lg'} mb-1`}>{option.icon}</span>
+            <span className="text-xs font-medium">{option.label}</span>
           </button>
-        );
-      })}
-      <ScrollbarStyles />
-    </div>
+        ))}
+        <ScrollbarStyles />
+      </div>
+    );
+  };
+
+  return (
+    <div className="flex items-center justify-center h-14">
+  <RotateGrid />
+</div>
+
   );
 };
 

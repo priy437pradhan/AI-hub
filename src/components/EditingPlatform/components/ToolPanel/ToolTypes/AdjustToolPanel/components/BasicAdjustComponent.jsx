@@ -36,32 +36,32 @@ const BasicAdjustComponent = ({
     });
   };
 
-  const handleOneTagEnhance = () => {
-    setBasicAdjust({
-      brightness: 10,
-      contrast: 15,
-      saturation: 20,
-      sharpness: 10,
-      // exposure: 5,
-      // highlights: -10,
-      // shadows: 15,
-      // whites: 5,
-      // blacks: -5,
-      // vibrance: 25,
-      // clarity: 15,
-      // dehaze: 10,
-    });
-  };
+  // const handleOneTagEnhance = () => {
+  //   setBasicAdjust({
+  //     brightness: 10,
+  //     contrast: 15,
+  //     saturation: 20,
+  //     sharpness: 10,
+  //     // exposure: 5,
+  //     // highlights: -10,
+  //     // shadows: 15,
+  //     // whites: 5,
+  //     // blacks: -5,
+  //     // vibrance: 25,
+  //     // clarity: 15,
+  //     // dehaze: 10,
+  //   });
+  // };
 
-  const enhanceButton = (
-    <button
-      onClick={handleOneTagEnhance}
-      className={`flex items-center space-x-2 px-${isMobile ? '3' : '4'} py-2 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-white font-medium hover:from-purple-700 hover:to-pink-700 transition-all ${isMobile ? 'whitespace-nowrap flex-shrink-0' : ''}`}
-    >
-      <Zap size={isMobile ? 14 : 16} />
-      <span className={isMobile ? 'text-xs' : ''}>{isMobile ? '1-Tap' : '1-Tap Enhance'}</span>
-    </button>
-  );
+  // const enhanceButton = (
+  //   <button
+  //     onClick={handleOneTagEnhance}
+  //     className={`flex items-center space-x-2 px-${isMobile ? '3' : '4'} py-2 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-white font-medium hover:from-purple-700 hover:to-pink-700 transition-all ${isMobile ? 'whitespace-nowrap flex-shrink-0' : ''}`}
+  //   >
+  //     <Zap size={isMobile ? 14 : 16} />
+  //     <span className={isMobile ? 'text-xs' : ''}>{isMobile ? '1-Tap' : '1-Tap Enhance'}</span>
+  //   </button>
+  // );
 
   if (isMobile) {
     return (
@@ -70,7 +70,7 @@ const BasicAdjustComponent = ({
         values={basicAdjust}
         handleChange={handleBasicAdjustChange}
         resetFunction={resetBasicAdjust}
-        enhanceButton={enhanceButton}
+        // enhanceButton={enhanceButton}
         expandedSliders={expandedSliders}
         onToggleSlider={onToggleSlider}
       />
@@ -83,7 +83,7 @@ const BasicAdjustComponent = ({
       values={basicAdjust}
       handleChange={handleBasicAdjustChange}
       resetFunction={resetBasicAdjust}
-      enhanceButton={enhanceButton}
+      // enhanceButton={enhanceButton}
     />
   );
 };

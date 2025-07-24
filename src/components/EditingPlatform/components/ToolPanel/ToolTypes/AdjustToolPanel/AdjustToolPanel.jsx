@@ -257,6 +257,7 @@ const renderSectionContent = () => {
           <ResizeComponent
             performResize={performResize}
             imageRef={imageRef}
+            isMobile={isMobile}
           />
         );
       case "basic":
@@ -290,9 +291,9 @@ const renderSectionContent = () => {
           />
         );
       case "flip":
-        return <FlipComponent performFlip={performFlip} />;
+        return <FlipComponent performFlip={performFlip}  isMobile={isMobile}/>;
       case "rotate":
-        return <RotateComponent performRotate={performRotate} />;
+        return <RotateComponent performRotate={performRotate} isMobile={isMobile}  />;
       default:
         return (
           <BasicAdjustComponent
@@ -313,7 +314,7 @@ const renderSectionContent = () => {
     return (
       <div className="fixed bottom-0 left-0 right-0 bg-black border-t border-gray-800 z-20">
         <div
-          className="flex items-center justify-between px-4 py-2"
+          className="flex items-center justify-between px-0 py-0"
           style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
         >
           {/* Back Button */}
@@ -354,7 +355,7 @@ const renderSectionContent = () => {
                   </span>
                 </div>
                 {/* Section content */}
-                <div className="px-2 pb-4">{renderSectionContent()}</div>
+                <div className="px-2 pb-0">{renderSectionContent()}</div>
               </div>
             )}
           </div>

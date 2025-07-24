@@ -125,7 +125,7 @@ export const MobileSlider = ({
   <div className={`
     flex flex-col space-y-3 flex-shrink-0 
     transition-all duration-300 ease-in-out
-    ${isExpanded ? 'min-w-[180px] p-3' : 'min-w-[90px] p-1'}
+    ${isExpanded ? 'min-w-[180px] p-3' : 'min-w-[90px] p-1~'}
      rounded-lg bg-gray-800/50 backdrop-blur-sm
     border border-gray-700/50 hover:border-gray-600/50
   `}>

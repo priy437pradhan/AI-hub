@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react';
-import BottomToolbar from './ToolPanel/BottomToolbar';
+import BottomToolbar from './components/ToolPanel/BottomToolbar';
 // We don't need to import BottomSheet anymore for mobile
 
 const App = () => {

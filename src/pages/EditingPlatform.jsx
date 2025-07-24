@@ -1,289 +1,153 @@
+// Complete EditingPlatform component update
 'use client'
 import { useState, useRef, useEffect } from 'react';
-import Header from '../components/EditingPlatform/Header'
-import Sidebar from '../components/EditingPlatform/Sidebar';
-import ToolPanel from '../components/EditingPlatform/ToolPanel/ToolPanel';
-import BottomToolbar from '../components/EditingPlatform/ToolPanel/BottomToolbar';
-// import BottomSheet from '../components/EditingPlatform/ToolPanel/BottomSheet'
-import ImageCanvas from '../components/EditingPlatform/ImageCanvas';
-import { useFlipImage } from '../components/EditingPlatform/tools/useFlipImage';
-import { useResizeImage } from '../components/EditingPlatform/tools/useResizeImage';
-import { useRotateImage } from '../components/EditingPlatform/tools/useRotateImage';
-import { useFrames } from '../components/EditingPlatform/tools/useFrames'; 
-import { useTextEditor } from '../components/EditingPlatform/tools/useTextEditor';
-import { useTextStyles } from '../components/EditingPlatform/tools/useTextStyle';
-import { useCrop } from '../components/EditingPlatform/tools/useCrop';
 
+import Header from '../components/EditingPlatform/components/Header'
+import Sidebar from '../components/EditingPlatform/components/Sidebar';
+import ToolPanel from '../components/EditingPlatform/components/ToolPanel/ToolPanel';
+import BottomToolbar from '../components/EditingPlatform/components/ToolPanel/BottomToolbar';
+import ImageCanvas from '../components/EditingPlatform/components/ImageCanvas/ImageCanvas';
+import { useFlipImage } from '../components/EditingPlatform/components/ToolPanel/ToolTypes/AdjustToolPanel/hooks/useFlipImage';
+import { useRotateImage } from '../components/EditingPlatform/components/ToolPanel/ToolTypes/AdjustToolPanel/hooks/useRotateImage';
+import { useFrames } from '../components/EditingPlatform/components/ToolPanel/hooks/useFrames'; 
+import { useTextEditor } from '../components/EditingPlatform/components/ToolPanel/hooks/useTextEditor';
+import { useTextStyles } from '../components/EditingPlatform/components/ToolPanel/hooks/useTextStyle';
+import { useCrop } from '../components/EditingPlatform/components/ToolPanel/ToolTypes/AdjustToolPanel/hooks/useCrop';
 
 export default function EditingPlatform() {
   // Tool constants
   const toolNames = {
-    ADJUST: 'adjust',
-    AI: 'ai',
-    EFFECTS: 'effects',
-    BEAUTY: 'beauty',
-    FRAMES: 'frames',
-    TEXT: 'text',
-    ELEMENTS: 'elements'
+    ADJUST: 'adjust', AI: 'ai', EFFECTS: 'effects', BEAUTY: 'beauty',
+    FRAMES: 'frames', TEXT: 'text', ELEMENTS: 'elements'
   };
 
-  // State for active tool selection
+  // State management
   const [activeTool, setActiveTool] = useState(toolNames.ADJUST);
-  const [activeAdjustTool, setActiveAdjustTool] = useState(null);
-  const [activeBeautyTool, setActiveBeautyTool] = useState(null);
-  const [activeFramesTool, setActiveFramesTool] = useState(null);
-  const [activeTextTool, setActiveTextTool] = useState(null);
-  
-  // Bottom sheet state for mobile (no longer used with new navigation)
+  const [activeTools, setActiveTools] = useState({
+    adjust: null, beauty: null, frames: null, text: null
+  });
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
-  
-  // State for image upload
   const [uploadedImage, setUploadedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [originalImage, setOriginalImage] = useState(null);
-  const fileInputRef = useRef(null);
-  const imageRef = useRef(null);
-  
-  const {
-    isFlippedHorizontally,
-    isFlippedVertically,
-    performFlipBase
-  } = useFlipImage({ imageRef });
-  
-  const { 
-    rotationDegrees, 
-    performRotateBase 
-  } = useRotateImage({ imageRef });
-
- const { 
-  performResizeBase,
-   scale 
-  } = useResizeImage({ imageRef });
-
-  const {
-    cropSettings,
-    setCropSettings,
-    performCrop: performCropBase,
-    setCropWithAspectRatio,
-    toggleCropMode,
-    cancelCrop,
-    updateCropPosition,
-    updateCropDimensions,
-    resetCrop
-  } = useCrop(imageRef, setImagePreview);
-  
-  // Temporary beauty settings state (since useBeautyFilters is commented out)
   const [beautySettings, setBeautySettings] = useState({});
-  
-  // Temporary beauty filter function (since useBeautyFilters is commented out)
-  const applyBeautyFilter = async (feature, settings) => {
-    // This is a placeholder - implement actual beauty filter logic
-    console.log('Applying beauty filter:', feature, settings);
-    return null;
-  };
-  
-  // Use the frames hook
-  const {
-    frameSettings,
-    setFrameSettings,
-    applyFrame: applyFrameBase,
-    applyFrameEffects: applyFrameEffectsBase
-  } = useFrames({ imageRef, setImagePreview });
-  
-  // Use the text editor hook
-  const {
-    textElements,
-    textSettings,
-    setTextSettings,
-    addTextElement,
-    removeTextElement,
-    updateTextElement,
-    applyTextToImage,
-    clearAllText
-  } = useTextEditor({ imageRef, setImagePreview });
-  
-  // Use the text styles hook
-  const {
-    styleSettings,
-    setStyleSettings,
-    applyTextStyle,
-    toggleStyle,
-    updateStyleSetting
-  } = useTextStyles({ imageRef, setImagePreview });
-  
- const performResize = async (direction) => {
-  const resizedImageUrl = await performResizeBase(direction);
-  if (resizedImageUrl) {
-    setImagePreview(resizedImageUrl);
-
-    if (imageRef.current) {
-      imageRef.current.src = resizedImageUrl; 
-    }
-  }
-};
-
-
-  const performRotate = async (direction) => {
-    const rotatedImageUrl = await performRotateBase(direction);
-    if (rotatedImageUrl) {
-      setImagePreview(rotatedImageUrl);
-    }
-  };
-  
-  const performFlip = async (direction) => {
-    const flippedImageUrl = await performFlipBase(direction);
-    if (flippedImageUrl) {
-      setImagePreview(flippedImageUrl);
-    }
-  };
-  
-  // Crop wrapper function
-  const performCrop = async () => {
-    const croppedImageUrl = await performCropBase(cropSettings, imagePreview);
-    if (croppedImageUrl) {
-      setImagePreview(croppedImageUrl);
-    }
-  };
-  
-  // Frame wrapper functions
-  const performApplyFrame = async (frameStyle, frameColor, frameWidth) => {
-    const framedImageUrl = await applyFrameBase(frameStyle, frameColor, frameWidth);
-    if (framedImageUrl) {
-      setImagePreview(framedImageUrl);
-    }
-  };
-
-  const performApplyFrameEffects = async (shadow, spread, shadowColor) => {
-    const effectImageUrl = await applyFrameEffectsBase(shadow, spread, shadowColor);
-    if (effectImageUrl) {
-      setImagePreview(effectImageUrl);
-    }
-  };
-  
-  // Handle beauty filter application
-  const handleBeautyFeature = async (feature, settings) => {
-    console.log('Applying beauty feature:', feature, 'with settings:', settings);
-    
-    if (!imageRef.current) {
-      console.error('No image reference available for beauty filters');
-      return;
-    }
-    
-    try {
-      const filteredImageUrl = await applyBeautyFilter(feature, settings);
-      if (filteredImageUrl) {
-        console.log('Beauty filter applied successfully, updating image preview');
-        
-        if (imagePreview && imagePreview.startsWith('blob:')) {
-          URL.revokeObjectURL(imagePreview);
-        }
-        
-        setImagePreview(filteredImageUrl);
-        
-        setBeautySettings(prevSettings => ({
-          ...prevSettings,
-          [feature]: settings
-        }));
-        
-        console.log('Image preview updated with beauty filter');
-      } else {
-        console.error('Failed to apply beauty filter - no URL returned');
-      }
-    } catch (error) {
-      console.error('Error applying beauty filter:', error);
-      alert('Failed to apply beauty filter. Please try again.');
-    }
-  };
-  
-  // Effect to update image with text when text elements change
-  useEffect(() => {
-    if (textElements.length > 0 && imageRef.current) {
-      const applyText = async () => {
-        const updatedImageUrl = await applyTextToImage();
-        if (updatedImageUrl) {
-          setImagePreview(updatedImageUrl);
-        }
-      };
-      // Only apply text when in TEXT tool mode
-      if (activeTool === toolNames.TEXT) {
-        applyText();
-      }
-    }
-  }, [textElements, applyTextToImage, activeTool, toolNames.TEXT]);
-  
-  // Reset image to original
-  const resetToOriginal = () => {
-    if (originalImage) {
-      setImagePreview(originalImage);
-      setBeautySettings({});
-      setFrameSettings({
-        style: 'none',
-        color: '#ffffff',
-        width: 10,
-        shadow: 0,
-        spread: 0,
-        shadowColor: '#000000'
-      });
-      // Clear text elements
-      clearAllText();
-      // Reset crop settings
-      resetCrop();
-    }
-  };
-  
-  // Responsive state
   const [isMobile, setIsMobile] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   
-  // Check if mobile on mount and window resize
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-      if (window.innerWidth < 768) {
-        setSidebarOpen(false);
-      } else {
-        setSidebarOpen(true);
-      } 
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+  // ✅ ADD Filter state variables
+  const [basicAdjust, setBasicAdjust] = useState({
+    brightness: 0,
+    contrast: 0,
+    saturation: 0,
+    sharpness: 0,
+  });
+
+  const [colorAdjust, setColorAdjust] = useState({
+    temperature: 0,
+    tint: 0,
+    invertcolors: 0,
+  });
+
+  const [finetuneAdjust, setFinetuneAdjust] = useState({
+    exposure: 0,
+    highlights: 0,
+    shadows: 0,
+  });
   
-  const handleFileChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      setUploadedImage(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result;
-        setImagePreview(result);
-        setOriginalImage(result);
-        setBeautySettings({});
-        setFrameSettings({
-          style: 'none',
-          color: '#ffffff',
-          width: 10,
-          shadow: 0,
-          spread: 0,
-          shadowColor: '#000000'
-        });
-        // Clear text elements
-        clearAllText();
-        // Reset crop settings
-        resetCrop();
-      };
-      reader.readAsDataURL(file);
-      setActiveTool(toolNames.ADJUST);
+  // Refs
+  const fileInputRef = useRef(null);
+  const imageRef = useRef(null);
+  
+  // Custom hooks
+  const { performFlipBase } = useFlipImage({ imageRef });
+  const { performRotateBase } = useRotateImage({ imageRef });
+  const cropHook = useCrop(imageRef, setImagePreview);
+  const frameHook = useFrames({ imageRef, setImagePreview });
+  const textHook = useTextEditor({ imageRef, setImagePreview });
+  const styleHook = useTextStyles({ imageRef, setImagePreview });
+  
+  // Consolidated image operations with auto-preview update
+  const performImageOperation = async (operation, ...args) => {
+    try {
+      const result = await operation(...args);
+      if (result) setImagePreview(result);
+      return result;
+    } catch (error) {
+      console.error('Image operation failed:', error);
+      return null;
+    }
+  };
+
+  // Image operation handlers
+  const performRotate = (direction) => performImageOperation(performRotateBase, direction);
+  const performFlip = (direction) => performImageOperation(performFlipBase, direction);
+  const performCrop = () => performImageOperation(cropHook.performCrop, cropHook.cropSettings, imagePreview);
+  const performApplyFrame = (frameStyle, frameColor, frameWidth) => 
+    performImageOperation(frameHook.applyFrame, frameStyle, frameColor, frameWidth);
+  const performApplyFrameEffects = (shadow, spread, shadowColor) => 
+    performImageOperation(frameHook.applyFrameEffects, shadow, spread, shadowColor);
+  
+  // Beauty filter handler
+  const handleBeautyFeature = async (feature, settings) => {
+    if (!imageRef.current) return;
+    console.log('Applying beauty filter:', feature, settings);
+    setBeautySettings(prev => ({ ...prev, [feature]: settings }));
+  };
+  
+  // Utility functions
+  const initializeDefaults = () => {
+    setBeautySettings({});
+    // ✅ Reset filter states
+    setBasicAdjust({
+      brightness: 0,
+      contrast: 0,
+      saturation: 0,
+      sharpness: 0,
+    });
+    setColorAdjust({
+      temperature: 0,
+      tint: 0,
+      invertcolors: 0,
+    });
+    setFinetuneAdjust({
+      exposure: 0,
+      highlights: 0,
+      shadows: 0,
+    });
+    frameHook.setFrameSettings({
+      style: 'none', color: '#ffffff', width: 10,
+      shadow: 0, spread: 0, shadowColor: '#000000'
+    });
+    textHook.clearAllText();
+    cropHook.resetCrop();
+  };
+
+  const resetToOriginal = () => {
+    if (originalImage) {
+      setImagePreview(originalImage);
+      initializeDefaults();
     }
   };
   
-  // Handle upload button click
-  const handleUploadClick = () => {
-    fileInputRef.current.click();
+  // File handling
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    setUploadedImage(file);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = reader.result;
+      setImagePreview(result);
+      setOriginalImage(result);
+      initializeDefaults();
+    };
+    reader.readAsDataURL(file);
+    setActiveTool(toolNames.ADJUST);
   };
   
-  // Download the image
+  const handleUploadClick = () => fileInputRef.current.click();
+  
   const downloadImage = () => {
     if (!imagePreview) {
       alert("Please upload an image first.");
@@ -295,196 +159,106 @@ export default function EditingPlatform() {
     link.click();
   };
   
-  const demoImages = [
-    '/path/to/demo-image-1.jpg',
-    '/path/to/demo-image-2.jpg'
-  ];
-  
-  // Load demo image
+  // Demo images
   const loadDemoImage = (index) => {
+    const demoImages = ['/path/to/demo-image-1.jpg', '/path/to/demo-image-2.jpg'];
     const demoImageUrl = demoImages[index];
     setImagePreview(demoImageUrl);
     setOriginalImage(demoImageUrl);
     setUploadedImage("demo-image");
-    setBeautySettings({});
-    setFrameSettings({
-      style: 'none',
-      color: '#ffffff',
-      width: 10,
-      shadow: 0,
-      spread: 0,
-      shadowColor: '#000000'
-    });
-    clearAllText();
-    resetCrop();
+    initializeDefaults();
     setActiveTool(toolNames.ADJUST);
+  };
+  
+  // Effects
+  useEffect(() => {
+    if (textHook.textElements.length > 0 && imageRef.current && activeTool === toolNames.TEXT) {
+      textHook.applyTextToImage().then(result => {
+        if (result) setImagePreview(result);
+      });
+    }
+  }, [textHook.textElements, textHook.applyTextToImage, activeTool, toolNames.TEXT]);
+  
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+      setSidebarOpen(window.innerWidth >= 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Consolidated tool panel props
+  const toolPanelProps = {
+    activeTool, 
+    activeAdjustTool: activeTools.adjust, setActiveAdjustTool: (tool) => setActiveTools(prev => ({...prev, adjust: tool})),
+    activeBeautyTool: activeTools.beauty, setActiveBeautyTool: (tool) => setActiveTools(prev => ({...prev, beauty: tool})),
+    activeFramesTool: activeTools.frames, setActiveFramesTool: (tool) => setActiveTools(prev => ({...prev, frames: tool})),
+    activeTextTool: activeTools.text, setActiveTextTool: (tool) => setActiveTools(prev => ({...prev, text: tool})),
+    isMobile, setSidebarOpen, imageRef,
+    performFlip, performRotate, performCrop,
+    applyBeautyFeature: handleBeautyFeature, beautySettings,
+    applyFrame: performApplyFrame, applyFrameEffects: performApplyFrameEffects,
+    // ✅ ADD filter state props
+    basicAdjust, setBasicAdjust,
+    colorAdjust, setColorAdjust,
+    finetuneAdjust, setFinetuneAdjust,
+    ...cropHook, ...frameHook, ...textHook, ...styleHook
   };
   
   return (
     <div className="flex flex-col h-screen bg-gray-100 dark:bg-dark-bg">
-      <input 
-        type="file" 
-        ref={fileInputRef} 
-        onChange={handleFileChange} 
-        accept="image/*" 
-        className="hidden" 
-      />
+      <input type="file" ref={fileInputRef} onChange={handleFileChange} 
+             accept="image/*" className="hidden" />
+      
       <Header 
-        isMobile={isMobile}
-        sidebarOpen={sidebarOpen}
-        setSidebarOpen={setSidebarOpen}
-        handleUploadClick={handleUploadClick}
-        downloadImage={downloadImage}
+        isMobile={isMobile} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}
+        handleUploadClick={handleUploadClick} downloadImage={downloadImage}
         resetToOriginal={resetToOriginal}
+        // ✅ ADD filter state props to Header
+        imageRef={imageRef}
+        basicAdjust={basicAdjust}
+        colorAdjust={colorAdjust}
+        finetuneAdjust={finetuneAdjust}
       />
       
       <div className="flex flex-1 overflow-hidden">
-        {/* Show sidebar only on desktop and when it's open */}
         {sidebarOpen && !isMobile && (
           <Sidebar 
-            activeTool={activeTool}
-            setActiveTool={setActiveTool}
-            isMobile={isMobile}
-            setSidebarOpen={setSidebarOpen}
+            activeTool={activeTool} setActiveTool={setActiveTool}
+            isMobile={isMobile} setSidebarOpen={setSidebarOpen}
           />
         )}
         
-        {/* Only show the tool panel on desktop */}
-        {!isMobile && (
-          <ToolPanel 
-          
-            activeTool={activeTool}
-            activeAdjustTool={activeAdjustTool}
-            setActiveAdjustTool={setActiveAdjustTool}
-            activeBeautyTool={activeBeautyTool}
-            setActiveBeautyTool={setActiveBeautyTool}
-            activeFramesTool={activeFramesTool}
-            setActiveFramesTool={setActiveFramesTool}
-            activeTextTool={activeTextTool}
-            setActiveTextTool={setActiveTextTool}
-            isMobile={isMobile}
-            setSidebarOpen={setSidebarOpen}
-            imageRef={imageRef}
-            performFlip={performFlip}
-            performRotate={performRotate}
-            performResize={performResize}
-            // Crop functionality props
-           cropSettings={cropSettings}
-          imagePreview={imagePreview}
-          setCropSettings={setCropSettings}
-          performCrop={() => performCrop(cropSettings, imagePreview)}
-          setCropWithAspectRatio={setCropWithAspectRatio}
-          toggleCropMode={toggleCropMode}
-          cancelCrop={cancelCrop}
-          updateCropPosition={updateCropPosition}
-          updateCropDimensions={updateCropDimensions}
-          resetCrop={resetCrop}
-            // Other existing props
-            applyBeautyFeature={handleBeautyFeature}
-            beautySettings={beautySettings}
-            frameSettings={frameSettings}
-            setFrameSettings={setFrameSettings}
-            applyFrame={performApplyFrame}
-            applyFrameEffects={performApplyFrameEffects}
-            textElements={textElements}
-            textSettings={textSettings}
-            setTextSettings={setTextSettings}
-            addTextElement={addTextElement}
-            removeTextElement={removeTextElement}
-            updateTextElement={updateTextElement}
-            applyTextToImage={applyTextToImage}
-            clearAllText={clearAllText}
-            styleSettings={styleSettings}
-            setStyleSettings={setStyleSettings}
-            applyTextStyle={applyTextStyle}
-            toggleStyle={toggleStyle}
-            updateStyleSetting={updateStyleSetting}
-              
-          />
-        )}
+        {!isMobile && <ToolPanel {...toolPanelProps} />}
         
         <div className={`flex-1 ${isMobile ? 'pb-20' : ''}`}>
-          
-  <ImageCanvas  showSideAd={true} showBottomAd={true} 
-  imagePreview={imagePreview}
-  handleUploadClick={handleUploadClick}
-  imageRef={imageRef}
-  activeTool={activeTool}
-  activeAdjustTool={activeAdjustTool}
-  setImagePreview={setImagePreview}
-  textElements={textElements}
-  cropSettings={cropSettings}
-  updateTextElement={updateTextElement}
-  updateCropPosition={updateCropPosition}  
-  updateCropDimensions={updateCropDimensions}
-  performCrop={performCrop} 
-
-/>
+          <ImageCanvas  
+            showSideAd={true} showBottomAd={true} imagePreview={imagePreview}
+            handleUploadClick={handleUploadClick} imageRef={imageRef}
+            activeTool={activeTool} activeAdjustTool={activeTools.adjust}
+            setImagePreview={setImagePreview} textElements={textHook.textElements}
+            cropSettings={cropHook.cropSettings} 
+            updateTextElement={textHook.updateTextElement}
+            updateCropPosition={cropHook.updateCropPosition} 
+            updateCropDimensions={cropHook.updateCropDimensions}
+            performCrop={performCrop}
+          />
         </div>
       </div>
       
-      {/* Mobile Layout - Navigation + Tool Panel */}
       {isMobile && (
         <div className="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-700 z-30">
-          {/* Bottom Navigation Toolbar */}
           <BottomToolbar 
-            activeTool={activeTool} 
-            setActiveTool={setActiveTool}
-            setSidebarOpen={setSidebarOpen} 
-            isMobile={isMobile}
+            activeTool={activeTool} setActiveTool={setActiveTool}
+            setSidebarOpen={setSidebarOpen} isMobile={isMobile}
             setIsBottomSheetOpen={setIsBottomSheetOpen} 
           />
           
-          {/* Inline Tool Panel for Active Tool */}
           {activeTool && (
             <div className="max-h-48 overflow-y-auto bg-gray-800 border-t border-gray-700">
-              <ToolPanel 
-                activeTool={activeTool}
-                activeAdjustTool={activeAdjustTool}
-                setActiveAdjustTool={setActiveAdjustTool}
-                activeBeautyTool={activeBeautyTool}
-                setActiveBeautyTool={setActiveBeautyTool}
-                activeFramesTool={activeFramesTool}
-                setActiveFramesTool={setActiveFramesTool}
-                activeTextTool={activeTextTool}
-                setActiveTextTool={setActiveTextTool}
-                isMobile={isMobile}
-                setSidebarOpen={setSidebarOpen}
-                imageRef={imageRef}
-                performFlip={performFlip}
-                performRotate={performRotate}
-                performResize={performResize}
-                // Crop functionality props for mobile
-                cropSettings={cropSettings}
-                setCropSettings={setCropSettings}
-                performCrop={() => performCrop(cropSettings, imagePreview)}
-                setCropWithAspectRatio={setCropWithAspectRatio}
-                toggleCropMode={toggleCropMode}
-                cancelCrop={cancelCrop}
-                updateCropPosition={updateCropPosition}
-                updateCropDimensions={updateCropDimensions}
-                resetCrop={resetCrop}
-                // Other existing props
-                applyBeautyFeature={handleBeautyFeature}
-                beautySettings={beautySettings}
-                frameSettings={frameSettings}
-                setFrameSettings={setFrameSettings}
-                applyFrame={performApplyFrame}
-                applyFrameEffects={performApplyFrameEffects}
-                textElements={textElements}
-                textSettings={textSettings}
-                setTextSettings={setTextSettings}
-                addTextElement={addTextElement}
-                removeTextElement={removeTextElement}
-                updateTextElement={updateTextElement}
-                applyTextToImage={applyTextToImage}
-                clearAllText={clearAllText}
-                styleSettings={styleSettings}
-                setStyleSettings={setStyleSettings}
-                applyTextStyle={applyTextStyle}
-                toggleStyle={toggleStyle}
-                updateStyleSetting={updateStyleSetting}
-              />
+              <ToolPanel {...toolPanelProps} />
             </div>
           )}
         </div>

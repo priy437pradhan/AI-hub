@@ -1,25 +1,25 @@
 import React from 'react';
-import { useMobileSliders } from "../../../hooks/useMobileSlider";
-import { useDesktopSliders } from "../../../hooks/useDesktopSliders";
+import { useMobileSliders } from "../../../constants/MobileSlider";
+import { useDesktopSliders } from "../../../constants/DesktopSliders";
 import { MobileSliderContainer } from "../../../components/MobileSlider";
 import { DesktopSliderContainer } from "../../../components/DesktopSlider";
 
-const FineTuneComponent = ({
-  finetune,
-  setFinetune,
+const fineTuneComponent = ({
+  fineTune,
+  setfineTune,
   isMobile = false,
   expandedSliders,
   onToggleSlider
 }) => {
   const { fineTuneSliders } = useDesktopSliders();
-  const { finetuneSliders: mobileFinetuneSliders } = useMobileSliders();
+  const { fineTuneSliders: mobilefineTuneSliders } = useMobileSliders();
 
-  const handleFinetuneChange = (property, value) => {
-    setFinetune((prev) => ({ ...prev, [property]: parseInt(value) }));
+  const handlefineTuneChange = (property, value) => {
+    setfineTune((prev) => ({ ...prev, [property]: parseInt(value) }));
   };
 
-  const resetFinetune = () => {
-    setFinetune({
+  const resetfineTune = () => {
+    setfineTune({
       exposure: 0,
       highlights: 0,
       shadows: 0,
@@ -29,10 +29,10 @@ const FineTuneComponent = ({
   if (isMobile) {
     return (
       <MobileSliderContainer
-        sliders={mobileFinetuneSliders}
-        values={finetune} 
-        handleChange={handleFinetuneChange}
-        resetFunction={resetFinetune}
+        sliders={mobilefineTuneSliders}
+        values={fineTune} 
+        handleChange={handlefineTuneChange}
+        resetFunction={resetfineTune}
         expandedSliders={expandedSliders}
         onToggleSlider={onToggleSlider}
       />
@@ -42,11 +42,11 @@ const FineTuneComponent = ({
   return (
     <DesktopSliderContainer
       sliders={fineTuneSliders}
-      values={finetune}
-      handleChange={handleFinetuneChange}
-      resetFunction={resetFinetune}
+      values={fineTune}
+      handleChange={handlefineTuneChange}
+      resetFunction={resetfineTune}
     />
   );
 };
 
-export default FineTuneComponent;
+export default fineTuneComponent;

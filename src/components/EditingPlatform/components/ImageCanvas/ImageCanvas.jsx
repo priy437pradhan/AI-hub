@@ -16,10 +16,7 @@ export default function ImageCanvas({
   imagePreview,
   handleUploadClick,
   imageRef,
-  activeTool,
-  activeAdjustTool,
-  setImagePreview,
-  textElements,
+ 
   cropSettings = { x: 10, y: 10, width: 50, height: 50, isActive: false },
   updateTextElement,
   updateCropPosition = (x, y) =>

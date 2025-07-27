@@ -5,9 +5,9 @@ import useMobileGridButton from '../../../hooks/useMobileGridButton';
 const ResizeComponent = ({ performResize, imageRef, isMobile = false }) => {
   const { gridConfig, getButtonStateClass, ScrollbarStyles } = useMobileGridButton(isMobile);
 
-  const handleResize = (type) => {
+  const handleResize = (direction) => {
     if (performResize) {
-      performResize(type);
+      performResize(direction);
     }
   };
 
@@ -62,7 +62,8 @@ const ResizeComponent = ({ performResize, imageRef, isMobile = false }) => {
   };
 
   return (
-    <div className="flex items-center justify-center h-14">
+  <div className="flex items-center justify-center h-16 md:h-auto">
+
       <ResizeGrid />
     </div>
   );

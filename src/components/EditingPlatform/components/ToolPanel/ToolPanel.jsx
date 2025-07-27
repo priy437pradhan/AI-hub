@@ -23,12 +23,14 @@ const ToolPanel = ({
   isMobile,
   setSidebarOpen,
   imagePreview,
-  // ✅ Undo/Redo props
-  canUndo,
-  canRedo,
-  performUndo,
-  performRedo,
-  // ✅ Crop props
+  
+  // Undo/Redo props (with default values to prevent errors)
+  canUndo = false,
+  canRedo = false,
+  performUndo = () => {},
+  performRedo = () => {},
+
+  // Crop props
   cropSettings,
   setCropSettings,
   performCrop,
@@ -38,6 +40,7 @@ const ToolPanel = ({
   updateCropPosition,
   updateCropDimensions,
   resetCrop,
+  
   // Adjust panel props
   imageRef,
   performFlip,
@@ -45,29 +48,50 @@ const ToolPanel = ({
   performResize,
   activeAdjustTool,
   setActiveAdjustTool,
-  // ✅ ADD these filter state props
-  basicAdjust,
-  setBasicAdjust,
-  colorAdjust,
-  setColorAdjust,
-  finetuneAdjust,
-  setFinetuneAdjust,
+  
+  // Filter state props - with default values
+  basicAdjust = { brightness: 0, contrast: 0, saturation: 0, sharpness: 0 },
+  setBasicAdjust = () => {},
+  colorAdjust = { temperature: 0, tint: 0, invertcolors: 0 },
+  setColorAdjust = () => {},
+  fineTuneAdjust = { exposure: 0, highlights: 0, shadows: 0 },
+  setfineTuneAdjust = () => {},
+  structureAdjust = { details: 0, gradient: 0 },
+  setStructureAdjust = () => {},
+  denoiseAdjust = { colornoise: 0, luminancenoise: 0 },
+  setDenoiseAdjust = () => {},
+  vignetteAdjust = { intensity: 0, size: 50, feather: 50 },
+  setVignetteAdjust = () => {},
+  mosaicAdjust = {  type: 'square', 
+      size: 0, 
+      pixelSize: 1, },
+  setMosaicAdjust = () => {},
+  blurAdjust ={type: 'circular', 
+      intensity: 0,
+      applied: false,
+       preview: false,
+    },
+  setBlurAdjust = () => {},
+  onApplyBlur,
   // AI Panel props
   activeAIFeature,
   setActiveAIFeature,
   performBackgroundRemoval,
   applyAIFeature,
+  
   // Effects Panel props
   activeEffect,
   setActiveEffect,
   effectIntensity,
   setEffectIntensity,
   applyEffect,
+  
   // Beauty Panel props
   activeBeautyTool,
   setActiveBeautyTool,
   applyBeautyFeature,
   beautySettings,
+  
   // Frames Panel props
   activeFramesTool,
   setActiveFramesTool,
@@ -75,9 +99,11 @@ const ToolPanel = ({
   setFrameSettings,
   applyFrame,
   applyFrameEffects,
+  
   // Text tool selection props
   activeTextTool,
   setActiveTextTool,
+  
   // Text editing props
   textElements,
   textSettings,
@@ -87,12 +113,14 @@ const ToolPanel = ({
   updateTextElement,
   applyTextToImage,
   clearAllText,
+  
   // Text styles props
   styleSettings,
   setStyleSettings,
   applyTextStyle,
   toggleStyle,
   updateStyleSetting,
+  
   // Element Panel props
   activeElementType,
   setActiveElementType,
@@ -111,38 +139,50 @@ const ToolPanel = ({
     setIsExpanded(!isExpanded);
   };
 
+  // Common props for AdjustToolPanel to avoid repetition
+  const adjustToolPanelProps = {
+    activeAdjustTool,
+    setActiveAdjustTool,
+    imageRef,
+    performFlip,
+    performRotate,
+    performResize,
+    cropSettings,
+    setCropSettings,
+    performCrop,
+    setCropWithAspectRatio,
+    toggleCropMode,
+    cancelCrop,
+    updateCropPosition,
+    updateCropDimensions,
+    resetCrop,
+    imagePreview,
+    performBackgroundRemoval,
+    // Filter state props
+    basicAdjust,
+    setBasicAdjust,
+    colorAdjust,
+    setColorAdjust,
+    fineTuneAdjust,
+    setfineTuneAdjust,
+    structureAdjust,
+    setStructureAdjust,
+    denoiseAdjust,
+    setDenoiseAdjust,
+    vignetteAdjust,
+    setVignetteAdjust,
+    mosaicAdjust,
+    setMosaicAdjust,
+     blurAdjust,
+  setBlurAdjust
+  };
+
   // Determine which panel to render based on active tool
   const renderActiveToolPanel = () => {
     switch (activeTool) {
       case toolNames.ADJUST:
-        return (
-          <AdjustToolPanel
-            activeAdjustTool={activeAdjustTool}
-            setActiveAdjustTool={setActiveAdjustTool}
-            imageRef={imageRef}
-            performFlip={performFlip}
-            performRotate={performRotate}
-            performResize={performResize}
-            cropSettings={cropSettings}
-            setCropSettings={setCropSettings}
-            performCrop={performCrop}
-            setCropWithAspectRatio={setCropWithAspectRatio}
-            toggleCropMode={toggleCropMode}
-            cancelCrop={cancelCrop}
-            updateCropPosition={updateCropPosition}
-            updateCropDimensions={updateCropDimensions}
-            resetCrop={resetCrop}
-            imagePreview={imagePreview}
-            performBackgroundRemoval={performBackgroundRemoval}
-            // ✅ PASS the filter state props to AdjustToolPanel
-            basicAdjust={basicAdjust}
-            setBasicAdjust={setBasicAdjust}
-            colorAdjust={colorAdjust}
-            setColorAdjust={setColorAdjust}
-            finetuneAdjust={finetuneAdjust}
-            setFinetuneAdjust={setFinetuneAdjust}
-          />
-        );
+        return <AdjustToolPanel {...adjustToolPanelProps} />;
+        
       case toolNames.AI:
         return (
           <AIToolPanel
@@ -151,6 +191,7 @@ const ToolPanel = ({
             applyAIFeature={applyAIFeature}
           />
         );
+        
       case toolNames.EFFECTS:
         return (
           <EffectsToolPanel
@@ -161,6 +202,7 @@ const ToolPanel = ({
             applyEffect={applyEffect}
           />
         );
+        
       case toolNames.BEAUTY:
         return (
           <BeautyToolPanel
@@ -170,6 +212,7 @@ const ToolPanel = ({
             beautySettings={beautySettings}
           />
         );
+        
       case toolNames.FRAMES:
         return (
           <FramesToolPanel
@@ -181,6 +224,7 @@ const ToolPanel = ({
             applyFrameEffects={applyFrameEffects}
           />
         );
+        
       case toolNames.TEXT:
         return (
           <TextToolPanel
@@ -203,6 +247,7 @@ const ToolPanel = ({
             updateStyleSetting={updateStyleSetting}
           />
         );
+        
       case toolNames.ELEMENTS:
         return (
           <ElementToolPanel
@@ -217,34 +262,9 @@ const ToolPanel = ({
             addElement={addElement}
           />
         );
+        
       default:
-        return (
-          <AdjustToolPanel
-            activeAdjustTool={activeAdjustTool}
-            setActiveAdjustTool={setActiveAdjustTool}
-            imageRef={imageRef}
-            performFlip={performFlip}
-            performRotate={performRotate}
-            performResize={performResize}
-            cropSettings={cropSettings}
-            setCropSettings={setCropSettings}
-            performCrop={performCrop}
-            setCropWithAspectRatio={setCropWithAspectRatio}
-            toggleCropMode={toggleCropMode}
-            cancelCrop={cancelCrop}
-            updateCropPosition={updateCropPosition}
-            updateCropDimensions={updateCropDimensions}
-            resetCrop={resetCrop}
-            imagePreview={imagePreview}
-            // ✅ ALSO pass filter state props to default case
-            basicAdjust={basicAdjust}
-            setBasicAdjust={setBasicAdjust}
-            colorAdjust={colorAdjust}
-            setColorAdjust={setColorAdjust}
-            finetuneAdjust={finetuneAdjust}
-            setFinetuneAdjust={setFinetuneAdjust}
-          />
-        );
+        return <AdjustToolPanel {...adjustToolPanelProps} />;
     }
   };
 
@@ -254,7 +274,7 @@ const ToolPanel = ({
         
         {/* Undo/Redo Controls - Always visible when expanded */}
         {isExpanded && (
-          <div style={{ display:"none" }} className="sticky  top-0 z-10 bg-gray-900 border-b border-gray-700 p-3 flex gap-2">
+          <div style={{ display: "none" }} className="sticky top-0 z-10 bg-gray-900 border-b border-gray-700 p-3 flex gap-2">
             <button
               onClick={performUndo}
               disabled={!canUndo}

@@ -6,7 +6,7 @@ const useMobileGridButton = (isMobile = false) => {
       return {
         containerClass: "flex space-x-2 overflow-x-auto mb-4 flex-shrink-0",
         containerStyle: { scrollbarWidth: "none", msOverflowStyle: "none" },
-        buttonClass: "flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 whitespace-nowrap flex-shrink-0 min-w-[60px]",
+        buttonClass: "flex flex-col items-center justify-center px-2 py-0 rounded-lg transition-all duration-200 whitespace-nowrap flex-shrink-0 min-w-[60px]",
         iconSize: 20,
         showScrollbarStyles: true
       };

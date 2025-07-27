@@ -1,7 +1,7 @@
 import React from 'react';
 import { Zap } from 'lucide-react';
-import { useMobileSliders } from "../../../hooks/useMobileSlider";
-import { useDesktopSliders } from "../../../hooks/useDesktopSliders";
+import { useMobileSliders } from "../../../constants/MobileSlider";
+import { useDesktopSliders } from "../../../constants/DesktopSliders";
 import { MobileSliderContainer } from "../../../components/MobileSlider";
 import { DesktopSliderContainer } from "../../../components/DesktopSlider";
 
@@ -25,14 +25,7 @@ const BasicAdjustComponent = ({
       contrast: 0,
       saturation: 0,
       sharpness: 0,
-      // exposure: 0,
-      // highlights: 0,
-      // shadows: 0,
-      // whites: 0,
-      // blacks: 0,
-      // vibrance: 0,
-      // clarity: 0,
-      // dehaze: 0,
+      
     });
   };
 
@@ -42,14 +35,7 @@ const BasicAdjustComponent = ({
   //     contrast: 15,
   //     saturation: 20,
   //     sharpness: 10,
-  //     // exposure: 5,
-  //     // highlights: -10,
-  //     // shadows: 15,
-  //     // whites: 5,
-  //     // blacks: -5,
-  //     // vibrance: 25,
-  //     // clarity: 15,
-  //     // dehaze: 10,
+  //     
   //   });
   // };
 

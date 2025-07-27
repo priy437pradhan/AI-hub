@@ -35,7 +35,7 @@ const PhotoEditorHero = () => {
           </div>
           <h2 className="text-xl font-bold mb-3">Step 2: Edit photo</h2>
           <p className="text-gray-600">
-            Adjust lighting, color, and exposure, apply photo effects, and customize your photo with text.
+            Adjust lighting, color,  apply photo effects, and customize your photo with text.
           </p>
         </div>
 

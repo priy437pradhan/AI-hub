@@ -1,6 +1,6 @@
 import React from 'react';
-import { useMobileSliders } from "../../../hooks/useMobileSlider";
-import { useDesktopSliders } from "../../../hooks/useDesktopSliders";
+import { useMobileSliders } from "../../../constants/MobileSlider";
+import { useDesktopSliders } from "../../../constants/DesktopSliders";
 import { MobileSliderContainer } from "../../../components/MobileSlider";
 import { DesktopSliderContainer } from "../../../components/DesktopSlider";
 

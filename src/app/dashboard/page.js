@@ -1,14 +1,12 @@
 
 "use client"
-import Dashboard from '../../pages/DashbordEdit'
 
+
+
+const Dashboard = dynamic(() => import('../../components/DashbordEdit'), {
+  ssr: false,
+});
 
 export default function Dashboarda() {
-  return (
-    <>
-   
-      <Dashboard />
- 
-    </>
-  );
+ <Dashboard />
 }

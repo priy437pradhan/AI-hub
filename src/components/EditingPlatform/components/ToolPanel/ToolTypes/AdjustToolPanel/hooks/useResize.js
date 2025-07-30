@@ -8,7 +8,7 @@ export const useResize = (imageRef, containerRef) => {
     originalWidth: null,
     originalHeight: null,
     isActive: false,
-    type: null // 'enlarge', 'shrink', 'fitToScreen', 'original'
+    type: null 
   });
 
   // Initialize original dimensions when image loads

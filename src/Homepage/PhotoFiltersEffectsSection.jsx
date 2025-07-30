@@ -1,5 +1,5 @@
 "use client"
-import AniTwo from '../images/animation-two.webp';
+import AniTwo from '../../src/app/images/animation-two.webp';
 import React from 'react';
 
 const PhotoFiltersEffectsSection = () => {

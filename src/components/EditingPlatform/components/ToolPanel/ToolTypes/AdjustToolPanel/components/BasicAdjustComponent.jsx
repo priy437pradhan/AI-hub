@@ -1,3 +1,4 @@
+// BasicAdjustComponent.jsx
 import React from 'react';
 import { Zap } from 'lucide-react';
 import { useMobileSliders } from "../../../constants/MobileSlider";
@@ -25,29 +26,56 @@ const BasicAdjustComponent = ({
       contrast: 0,
       saturation: 0,
       sharpness: 0,
-      
     });
   };
 
-  // const handleOneTagEnhance = () => {
-  //   setBasicAdjust({
-  //     brightness: 10,
-  //     contrast: 15,
-  //     saturation: 20,
-  //     sharpness: 10,
-  //     
-  //   });
-  // };
+  // Basic adjustment filter function
+  const applyBasicFilters = (data, basicAdjust) => {
+    for (let i = 0; i < data.length; i += 4) {
+      let r = data[i];
+      let g = data[i + 1];
+      let b = data[i + 2];
 
-  // const enhanceButton = (
-  //   <button
-  //     onClick={handleOneTagEnhance}
-  //     className={`flex items-center space-x-2 px-${isMobile ? '3' : '4'} py-2 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-white font-medium hover:from-purple-700 hover:to-pink-700 transition-all ${isMobile ? 'whitespace-nowrap flex-shrink-0' : ''}`}
-  //   >
-  //     <Zap size={isMobile ? 14 : 16} />
-  //     <span className={isMobile ? 'text-xs' : ''}>{isMobile ? '1-Tap' : '1-Tap Enhance'}</span>
-  //   </button>
-  // );
+      // Apply brightness
+      if (basicAdjust.brightness !== 0) {
+        const brightnessFactor = basicAdjust.brightness * 2.55; 
+        r = Math.max(0, Math.min(255, r + brightnessFactor));
+        g = Math.max(0, Math.min(255, g + brightnessFactor));
+        b = Math.max(0, Math.min(255, b + brightnessFactor));
+      }
+
+      // Apply contrast
+      if (basicAdjust.contrast !== 0) {
+        const contrastFactor = (259 * (basicAdjust.contrast + 255)) / (255 * (259 - basicAdjust.contrast));
+        r = Math.max(0, Math.min(255, contrastFactor * (r - 128) + 128));
+        g = Math.max(0, Math.min(255, contrastFactor * (g - 128) + 128));
+        b = Math.max(0, Math.min(255, contrastFactor * (b - 128) + 128));
+      }
+
+      // Apply saturation
+      if (basicAdjust.saturation !== 0) {
+        const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+        const saturationFactor = (basicAdjust.saturation + 100) / 100;
+        r = Math.max(0, Math.min(255, gray + saturationFactor * (r - gray)));
+        g = Math.max(0, Math.min(255, gray + saturationFactor * (g - gray)));
+        b = Math.max(0, Math.min(255, gray + saturationFactor * (b - gray)));
+      }
+
+      // Apply sharpness
+      if (basicAdjust.sharpness !== 0) {
+        const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+        const sharpnessFactor = (basicAdjust.sharpness + 100) / 100;
+        r = Math.max(0, Math.min(255, gray + sharpnessFactor * (r - gray)));
+        g = Math.max(0, Math.min(255, gray + sharpnessFactor * (g - gray)));
+        b = Math.max(0, Math.min(255, gray + sharpnessFactor * (b - gray)));
+      }
+
+      // Update pixel data
+      data[i] = Math.round(r);
+      data[i + 1] = Math.round(g);
+      data[i + 2] = Math.round(b);
+    }
+  };
 
   if (isMobile) {
     return (
@@ -56,7 +84,6 @@ const BasicAdjustComponent = ({
         values={basicAdjust}
         handleChange={handleBasicAdjustChange}
         resetFunction={resetBasicAdjust}
-        // enhanceButton={enhanceButton}
         expandedSliders={expandedSliders}
         onToggleSlider={onToggleSlider}
       />
@@ -69,9 +96,56 @@ const BasicAdjustComponent = ({
       values={basicAdjust}
       handleChange={handleBasicAdjustChange}
       resetFunction={resetBasicAdjust}
-      // enhanceButton={enhanceButton}
     />
   );
+};
+
+// Export the filter function for use in main filter application
+export const applyBasicFilters = (data, basicAdjust) => {
+  for (let i = 0; i < data.length; i += 4) {
+    let r = data[i];
+    let g = data[i + 1];
+    let b = data[i + 2];
+
+    // Apply brightness
+    if (basicAdjust.brightness !== 0) {
+      const brightnessFactor = basicAdjust.brightness * 2.55; 
+      r = Math.max(0, Math.min(255, r + brightnessFactor));
+      g = Math.max(0, Math.min(255, g + brightnessFactor));
+      b = Math.max(0, Math.min(255, b + brightnessFactor));
+    }
+
+    // Apply contrast
+    if (basicAdjust.contrast !== 0) {
+      const contrastFactor = (259 * (basicAdjust.contrast + 255)) / (255 * (259 - basicAdjust.contrast));
+      r = Math.max(0, Math.min(255, contrastFactor * (r - 128) + 128));
+      g = Math.max(0, Math.min(255, contrastFactor * (g - 128) + 128));
+      b = Math.max(0, Math.min(255, contrastFactor * (b - 128) + 128));
+    }
+
+    // Apply saturation
+    if (basicAdjust.saturation !== 0) {
+      const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+      const saturationFactor = (basicAdjust.saturation + 100) / 100;
+      r = Math.max(0, Math.min(255, gray + saturationFactor * (r - gray)));
+      g = Math.max(0, Math.min(255, gray + saturationFactor * (g - gray)));
+      b = Math.max(0, Math.min(255, gray + saturationFactor * (b - gray)));
+    }
+
+    // Apply sharpness
+    if (basicAdjust.sharpness !== 0) {
+      const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+      const sharpnessFactor = (basicAdjust.sharpness + 100) / 100;
+      r = Math.max(0, Math.min(255, gray + sharpnessFactor * (r - gray)));
+      g = Math.max(0, Math.min(255, gray + sharpnessFactor * (g - gray)));
+      b = Math.max(0, Math.min(255, gray + sharpnessFactor * (b - gray)));
+    }
+
+    // Update pixel data
+    data[i] = Math.round(r);
+    data[i + 1] = Math.round(g);
+    data[i + 2] = Math.round(b);
+  }
 };
 
 export default BasicAdjustComponent;

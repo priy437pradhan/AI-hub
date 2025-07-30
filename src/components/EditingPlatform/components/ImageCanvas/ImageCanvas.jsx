@@ -7,29 +7,94 @@ import { ShapeCropOverlay } from "./ToolTypes/AdjustToolPanel/components/ShapeCr
 import { RectangularCropOverlay } from "./ToolTypes/AdjustToolPanel/components/RectangularCropOverlay";
 import { useCropHandlers } from "./ToolTypes/AdjustToolPanel/hooks/useCropHandlers";
 import { useMobileHandling } from "./hooks/useMobileHandling";
-// In your ImageCanvas component
+
 import { useResize } from '../ToolPanel/ToolTypes/AdjustToolPanel/hooks/useResize';
 import { useResizeOverlay } from './ToolTypes/AdjustToolPanel/components/ResizeOverlay';
 import { useResizeHandlers } from './ToolTypes/AdjustToolPanel/hooks/useResizeHandler';
 
+// Redux hooks
+import { 
+  useAppDispatch, 
+  useImageState, 
+  useToolsState, 
+  useCropState, 
+  useTextState 
+} from '../../../../app/store/hooks/redux';
+
+import { setImagePreview } from '../../../../app/store/slices/imageSlice';
+import { updateCropPosition, updateCropDimensions } from '../../../../app/store/slices/cropSlice';
+import { updateTextElement } from '../../../../app/store/slices/textSlice';
+
 export default function ImageCanvas({
-  imagePreview,
   handleUploadClick,
   imageRef,
- 
-  cropSettings = { x: 10, y: 10, width: 50, height: 50, isActive: false },
-  updateTextElement,
-  updateCropPosition = (x, y) =>
-    console.log("updateCropPosition not implemented:", x, y),
-  updateCropDimensions = (width, height) =>
-    console.log("updateCropDimensions not implemented:", width, height),
   performCrop = (settings, src) =>
     console.log("performCrop not implemented:", settings, src),
   showSideAd = false,
   showBottomAd = false,
 }) {
+  const dispatch = useAppDispatch();
+  
+  // Redux state
+  const imageState = useImageState();
+  const toolsState = useToolsState();
+  const cropState = useCropState();
+  const textState = useTextState();
+
+  // Local state
   const [isImageLoaded, setIsImageLoaded] = useState(false);
   const containerRef = useRef(null);
+
+  // Extract values from Redux state
+  const imagePreview = imageState.imagePreview;
+  const activeTool = toolsState.activeTool;
+  const activeAdjustTool = toolsState.activeTools.adjust;
+  const textElements = textState.textElements;
+
+  // FIXED: Handle the crop settings properly
+  // If cropSettings is the full Redux state, extract the actual settings
+  const actualCropSettings = cropState?.cropSettings || cropState || {
+    x: 10, 
+    y: 10, 
+    width: 50, 
+    height: 50, 
+    isActive: false 
+  };
+  
+  const aspectRatio = cropState?.aspectRatio || null;
+  
+  // Create normalized crop settings that include aspectRatio
+  const normalizedCropSettings = {
+    ...actualCropSettings,
+    aspectRatio: aspectRatio
+  };
+
+  // FIXED: Determine when to show crop overlay
+  const shouldShowCropOverlay = 
+    activeTool === 'adjust' && 
+    activeAdjustTool === 'crop' && 
+    normalizedCropSettings.isActive;
+
+  console.log('Debug crop overlay:', {
+    activeTool,
+    activeAdjustTool, 
+    isActive: normalizedCropSettings.isActive,
+    shouldShow: shouldShowCropOverlay,
+    cropSettings: normalizedCropSettings
+  });
+
+  // Redux-enabled update functions
+  const reduxUpdateCropPosition = (x, y) => {
+    dispatch(updateCropPosition({ x, y }));
+  };
+
+  const reduxUpdateCropDimensions = (width, height) => {
+    dispatch(updateCropDimensions({ width, height }));
+  };
+
+  const reduxUpdateTextElement = (id, updates) => {
+    dispatch(updateTextElement({ id, updates }));
+  };
 
   // Move the resize hooks AFTER the component props are available
   const {
@@ -59,23 +124,31 @@ export default function ImageCanvas({
     handlePointerDown,
     handleResize
   } = useCropHandlers(
-    cropSettings,
+    normalizedCropSettings,
     containerRef,
-    updateCropPosition,
-    updateCropDimensions
+    reduxUpdateCropPosition,
+    reduxUpdateCropDimensions
   );
 
   // Use the crop handlers' isDragging and isResizing for mobile handling
   const { isMobile } = useMobileHandling(isDragging, cropIsResizing);
 
   const renderCropOverlay = () => {
-    const shapeId = cropSettings.aspectRatio?.id;
+    // FIXED: Only render if crop should be shown
+    if (!shouldShowCropOverlay) {
+      console.log('Not showing crop overlay - conditions not met');
+      return null;
+    }
+
+    console.log('Rendering crop overlay with settings:', normalizedCropSettings);
+
+    const shapeId = normalizedCropSettings.aspectRatio?.id;
     const isSpecialShape = ['circle', 'triangle', 'star'].includes(shapeId);
 
     if (isSpecialShape) {
       return (
         <ShapeCropOverlay
-          cropSettings={cropSettings}
+          cropSettings={normalizedCropSettings}
           getCropStyle={getCropStyle}
           handlePointerDown={handlePointerDown}
           handleResize={handleResize}
@@ -86,7 +159,7 @@ export default function ImageCanvas({
 
     return (
       <RectangularCropOverlay
-        cropSettings={cropSettings}
+        cropSettings={normalizedCropSettings}
         getCropStyle={getCropStyle}
         handlePointerDown={handlePointerDown}
         handleResize={handleResize}
@@ -102,17 +175,17 @@ export default function ImageCanvas({
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === "Enter" && cropSettings.isActive) {
+      if (e.key === "Enter" && normalizedCropSettings.isActive) {
         const imgSrc = imageRef.current?.src || "";
-        performCrop(cropSettings, imgSrc);
+        performCrop(normalizedCropSettings, imgSrc);
       }
-      if (e.key === "Escape" && cropSettings.isActive) {
+      if (e.key === "Escape" && normalizedCropSettings.isActive) {
         // Cancel crop functionality could be added here
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [cropSettings, imageRef, performCrop]);
+  }, [normalizedCropSettings, imageRef, performCrop]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -144,7 +217,7 @@ export default function ImageCanvas({
                   imageRef={imageRef}
                   isImageLoaded={isImageLoaded}
                   handleImageLoad={handleImageLoad}
-                  cropSettings={cropSettings}
+                  cropSettings={normalizedCropSettings}
                   containerRef={containerRef}
                   renderCropOverlay={renderCropOverlay}
                 />

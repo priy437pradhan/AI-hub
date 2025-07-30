@@ -1,647 +1,471 @@
-'use client'
-import { useState, useRef, useEffect, useMemo } from 'react';
-import { applyAllFiltersToCanvas } from '../components/EditingPlatform/components/ToolPanel/utils/imageFilters';
+"use client";
+import { useRef, useEffect, useMemo } from "react";
+import { useImageProcessor } from "../../src/components/EditingPlatform/components/ToolPanel/hooks/useImageProcessor";
 
-import Header from '../components/EditingPlatform/components/Header'
-import Sidebar from '../components/EditingPlatform/components/Sidebar';
-import ToolPanel from '../components/EditingPlatform/components/ToolPanel/ToolPanel';
-import BottomToolbar from '../components/EditingPlatform/components/ToolPanel/BottomToolbar';
-import ImageCanvas from '../components/EditingPlatform/components/ImageCanvas/ImageCanvas';
-import { useFlipImage } from '../components/EditingPlatform/components/ToolPanel/ToolTypes/AdjustToolPanel/hooks/useFlipImage';
-import { useRotateImage } from '../components/EditingPlatform/components/ToolPanel/ToolTypes/AdjustToolPanel/hooks/useRotateImage';
-import { useFrames } from '../components/EditingPlatform/components/ToolPanel/hooks/useFrames'; 
-import { useTextEditor } from '../components/EditingPlatform/components/ToolPanel/hooks/useTextEditor';
-import { useTextStyles } from '../components/EditingPlatform/components/ToolPanel/hooks/useTextStyle';
-import { useCrop } from '../components/EditingPlatform/components/ToolPanel/ToolTypes/AdjustToolPanel/hooks/useCrop';
+import Header from "../components/EditingPlatform/components/Header";
+import Sidebar from "../components/EditingPlatform/components/Sidebar";
+import ToolPanel from "../components/EditingPlatform/components/ToolPanel/ToolPanel";
+import BottomToolbar from "../components/EditingPlatform/components/ToolPanel/BottomToolbar";
+import ImageCanvas from "../components/EditingPlatform/components/ImageCanvas/ImageCanvas";
 
-export default function EditingPlatform() {
-  // Tool constants
-  const toolNames = {
-    ADJUST: 'adjust', 
-    AI: 'ai', 
-    EFFECTS: 'effects', 
-    BEAUTY: 'beauty',
-    FRAMES: 'frames', 
-    TEXT: 'text', 
-    ELEMENTS: 'elements'
-  };
 
-  // Core state management
-  const [activeTool, setActiveTool] = useState(toolNames.ADJUST);
-  const [activeTools, setActiveTools] = useState({
-    adjust: null, 
-    beauty: null, 
-    frames: null, 
-    text: null
-  });
-  const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
-  const [uploadedImage, setUploadedImage] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
-  const [originalImage, setOriginalImage] = useState(null);
-  const [beautySettings, setBeautySettings] = useState({});
-  const [isMobile, setIsMobile] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+import {useAppDispatch,useImageState,useToolsState,useFiltersState,useUIState,useCropState,useTextState,
+useFrameState,useBeautyState,} from '../../src/app/store/hooks/redux';
+
+import {setUploadedImage,setImagePreview,setOriginalImage,setCurrentBaseImage,
+  resetToOriginal as resetImageToOriginal,} from '../../src/app/store/slices/imageSlice';
+
+import { setActiveTool, setActiveSubTool, toolNames,} from '../../src/app/store/slices/toolsSlice';
+
+import { updateFilter, resetFilters,} from '../../src/app/store/slices/filtersSlice';
+
+import {setIsMobile,setSidebarOpen,setIsBottomSheetOpen,} from '../../src/app/store/slices/uiSlice';
+
+import {resetCrop,setCropActive,setCropSettings,toggleCropMode,} from '../../src/app/store/slices/cropSlice';
+
+import {clearAllText,} from '../../src/app/store/slices/textSlice';
+
+import {resetFrameSettings,} from '../../src/app/store/slices/frameSlice';
+
+import {resetBeautySettings,} from '../../src/app/store/slices/beautySlice';
+
+
+import { useFlipImage } from "../components/EditingPlatform/components/ToolPanel/ToolTypes/AdjustToolPanel/hooks/useFlipImage";
+import { useRotateImage } from "../components/EditingPlatform/components/ToolPanel/ToolTypes/AdjustToolPanel/hooks/useRotateImage";
+import { useFrames } from "../components/EditingPlatform/components/ToolPanel/hooks/useFrames";
+import { useTextEditor } from "../components/EditingPlatform/components/ToolPanel/hooks/useTextEditor";
+import { useTextStyles } from "../components/EditingPlatform/components/ToolPanel/hooks/useTextStyle";
+import { useCrop } from "../components/EditingPlatform/components/ToolPanel/ToolTypes/AdjustToolPanel/hooks/useCrop";
+
+
+function EditingPlatformInternal() {
+  const dispatch = useAppDispatch();
   
-  // Undo/Redo state management
-  const [history, setHistory] = useState([]);
-  const [historyIndex, setHistoryIndex] = useState(-1);
-  
-  // Filter states - Single source of truth - Initialize all at once
-  const [basicAdjust, setBasicAdjust] = useState({
-    brightness: 0,
-    contrast: 0,
-    saturation: 0,
-    sharpness: 0,
-  });
+ 
+  const imageState = useImageState();
+  const toolsState = useToolsState();
+  const filtersState = useFiltersState();
+  const uiState = useUIState();
+  const cropState = useCropState();
+  const textState = useTextState();
+  const frameState = useFrameState();
+  const beautyState = useBeautyState();
 
-  const [colorAdjust, setColorAdjust] = useState({
-    temperature: 0,
-    tint: 0,
-    invertcolors: 0,
-  });
+  // REPLACE the old filter logic with this:
+  const { processImage, hasFilterChanges } = useImageProcessor();
 
-  const [fineTuneAdjust, setfineTuneAdjust] = useState({
-    exposure: 0,
-    highlights: 0,
-    shadows: 0,
-  });
-
-  const [structureAdjust, setStructureAdjust] = useState({
-    details: 0,
-    gradient: 0,
-  });
-
-  const [denoiseAdjust, setDenoiseAdjust] = useState({
-    colornoise: 0,
-    luminancenoise: 0,
-  });
-const [vignetteAdjust, setVignetteAdjust] = useState({
-  intensity: 0,
-  size: 50,
-  feather: 50,
-});
-const [mosaicAdjust, setMosaicAdjust] = useState({
-  type: 'square',
-  size: 0,
-  pixelSize: 1,
-});
-const [blurAdjust, setBlurAdjust] = useState({
-  type: 'circular', // 'circular' or 'linear'
-  intensity: 0,
-   preview: false,
-  applied: false
-});
   // Refs
   const fileInputRef = useRef(null);
   const imageRef = useRef(null);
-  
-  // Custom hooks
+
+  // Custom hooks (maintaining existing functionality)
   const { performFlipBase } = useFlipImage({ imageRef });
   const { performRotateBase } = useRotateImage({ imageRef });
-  const cropHook = useCrop(imageRef, setImagePreview);
-  const frameHook = useFrames({ imageRef, setImagePreview });
-  const textHook = useTextEditor({ imageRef, setImagePreview });
-  const styleHook = useTextStyles({ imageRef, setImagePreview });
-  
-  // Undo/Redo functionality
-  const saveToHistory = (imageData, filterState) => {
-    const newHistoryItem = {
-      imageData,
-      filterState: {
-        basicAdjust: { ...filterState.basicAdjust },
-        colorAdjust: { ...filterState.colorAdjust },
-        fineTuneAdjust: { ...filterState.fineTuneAdjust },
-        structureAdjust: { ...filterState.structureAdjust },
-        denoiseAdjust: { ...filterState.denoiseAdjust },
-        vignetteAdjust: { ...filterState.vignetteAdjust },
-        mosaicAdjust: { ...filterState.mosaicAdjust}
-      },
-      timestamp: Date.now()
-    };
+  const cropHook = useCrop(imageRef, (preview) => dispatch(setImagePreview(preview)));
+  const frameHook = useFrames({ imageRef, setImagePreview: (preview) => dispatch(setImagePreview(preview)) });
+  const textHook = useTextEditor({ imageRef, setImagePreview: (preview) => dispatch(setImagePreview(preview)) });
+  const styleHook = useTextStyles({ imageRef, setImagePreview: (preview) => dispatch(setImagePreview(preview)) });
 
-    // Remove any future history if we're not at the end
-    const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push(newHistoryItem);
-    
-    // Limit history to 50 items to prevent memory issues
-    if (newHistory.length > 50) {
-      newHistory.shift();
-    } else {
-      setHistoryIndex(historyIndex + 1);
-    }
-    
-    setHistory(newHistory);
+  // Helper functions
+  const updateFilterState = (category, values) => {
+    dispatch(updateFilter({ category, values }));
   };
 
-  const performUndo = () => {
-    if (historyIndex > 0) {
-      const previousIndex = historyIndex - 1;
-      const previousState = history[previousIndex];
-      
-      // Restore image and filter states
-      setImagePreview(previousState.imageData);
-      setBasicAdjust(previousState.filterState.basicAdjust);
-      setColorAdjust(previousState.filterState.colorAdjust);
-      setfineTuneAdjust(previousState.filterState.fineTuneAdjust);
-      setStructureAdjust(previousState.filterState.structureAdjust);
-      setDenoiseAdjust(previousState.filterState.denoiseAdjust);
-      setVignetteAdjust(previousState.filterState.vignetteAdjust);
-      setMosaicAdjust(previousState.filterState.setMosaicAdjust);
-      
-      setHistoryIndex(previousIndex);
-    }
+  const resetAllFilters = () => {
+    dispatch(resetFilters());
   };
 
-  const performRedo = () => {
-    if (historyIndex < history.length - 1) {
-      const nextIndex = historyIndex + 1;
-      const nextState = history[nextIndex];
-      
-      // Restore image and filter states
-      setImagePreview(nextState.imageData);
-      setBasicAdjust(nextState.filterState.basicAdjust);
-      setColorAdjust(nextState.filterState.colorAdjust);
-      setfineTuneAdjust(nextState.filterState.fineTuneAdjust);
-      setStructureAdjust(nextState.filterState.structureAdjust);
-      setDenoiseAdjust(nextState.filterState.denoiseAdjust);
-            setVignetteAdjust(nextState.filterState.vignetteAdjust);
-      setMosaicAdjust(nextState.filterState.setMosaicAdjust);
-      setHistoryIndex(nextIndex);
-    }
+  // CROP CONTROL FUNCTIONS - Properly using setCropActive
+  const activateCropMode = () => {
+    dispatch(setCropActive(true));
+    // Also update the crop settings if needed
+    dispatch(setCropSettings({ isActive: true }));
   };
 
-  const canUndo = historyIndex > 0;
-  const canRedo = historyIndex < history.length - 1;
-  
-  // Memoize the filter values to ensure stable references
-  const filterValues = useMemo(() => ({
-    basicAdjust,
-    colorAdjust,
-    fineTuneAdjust,
-    structureAdjust,
-    denoiseAdjust,
-    vignetteAdjust,
-    mosaicAdjust,
-    blurAdjust  
-  }), [basicAdjust, colorAdjust, fineTuneAdjust, structureAdjust, denoiseAdjust,vignetteAdjust, mosaicAdjust ,blurAdjust ]);
+  const deactivateCropMode = () => {
+    dispatch(setCropActive(false));
+    dispatch(setCropSettings({ isActive: false }));
+  };
 
-  // Centralized filter application effect
+  const toggleCrop = () => {
+    const newActiveState = !cropState.cropSettings.isActive;
+    dispatch(setCropActive(newActiveState));
+    dispatch(setCropSettings({ isActive: newActiveState }));
+  };
+
+  const resetCropState = () => {
+    dispatch(resetCrop());
+  };
+
   useEffect(() => {
-    const applyFiltersToImage = async () => {
-      if (!imageRef.current) return;
+  const applyFiltersToImage = async () => {
+    if (!imageRef.current || !imageState.currentBaseImage) return;
 
-      // Store original image source if not already stored
-      if (!imageRef.current.getAttribute('data-original-src')) {
-        imageRef.current.setAttribute('data-original-src', imageRef.current.src);
-      }
-
-      // Check if any filters are applied using the memoized values
-      const hasChanges = Object.values({
-        ...filterValues.basicAdjust, 
-        ...filterValues.colorAdjust, 
-        ...filterValues.fineTuneAdjust,
-        ...filterValues.structureAdjust,
-        ...filterValues.denoiseAdjust,
-        ...filterValues.vignetteAdjust,
-        ...filterValues.mosaicAdjust,
-        ...filterValues.blurAdjust
-      }).some(value => value !== 0);
-
-      if (!hasChanges) {
-        // Reset to original if no filters
-        const originalSrc = imageRef.current.getAttribute('data-original-src');
-        if (originalSrc && imageRef.current.src !== originalSrc) {
-          imageRef.current.src = originalSrc;
-        }
-        return;
-      }
-
-      // Apply filters to create new image
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      const originalImg = new Image();
-      originalImg.crossOrigin = "anonymous";
+    try {
+      console.log('Applying filters to current base image:', imageState.currentBaseImage.substring(0, 50));
       
-      originalImg.onload = () => {
-        try {
-          const processedDataURL = applyAllFiltersToCanvas(
-            canvas, 
-            ctx, 
-            originalImg, 
-            filterValues.basicAdjust, 
-            filterValues.colorAdjust, 
-            filterValues.fineTuneAdjust,
-            filterValues.structureAdjust,
-            filterValues.denoiseAdjust,
-            filterValues.vignetteAdjust,
-            filterValues.mosaicAdjust,
-            filterValues.blurAdjust
-          );
-          
-          // Update the image with processed version
-          if (imageRef.current && imageRef.current.src !== processedDataURL) {
-            imageRef.current.src = processedDataURL;
-            setImagePreview(processedDataURL);
-          }
-        } catch (error) {
-          console.error('Failed to apply filters:', error);
-        }
-      };
-
-      originalImg.onerror = () => {
-        console.error('Failed to load original image for filter application');
-      };
-
-      originalImg.src = imageRef.current.getAttribute('data-original-src');
-    };
-
-    applyFiltersToImage();
-  }, [filterValues]); // Use the memoized object as dependency
-
-  // Save to history when filters change (debounced)
-  useEffect(() => {
-    if (imagePreview && imageRef.current) {
-      const currentFilterState = {
-        basicAdjust,
-        colorAdjust,
-        fineTuneAdjust,
-        structureAdjust,
-        denoiseAdjust,
-        vignetteAdjust,
-        mosaicAdjust
-      };
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
       
-      // Only save if there are actual changes
-      const hasChanges = Object.values({
-        ...basicAdjust,
-        ...colorAdjust,
-        ...fineTuneAdjust,
-        ...structureAdjust,
-        ...denoiseAdjust,
-        ...vignetteAdjust,
-        ...mosaicAdjust
-      }).some(value => value !== 0);
+      // CRITICAL FIX: Pass the currentBaseImage explicitly to processImage
+      const processedDataURL = await processImage(
+        imageRef, 
+        canvas, 
+        ctx,
+        imageState.currentBaseImage // Explicitly pass the cropped/flipped image
+      );
       
-      if (hasChanges) {
-        // Debounce the history saving to avoid too many entries
-        const timeoutId = setTimeout(() => {
-          saveToHistory(imagePreview, currentFilterState);
-        }, 1000); // Save after 1 second of no changes
-        
-        return () => clearTimeout(timeoutId);
+      if (processedDataURL && imageRef.current) {
+        console.log('Setting processed image as preview:', processedDataURL.substring(0, 50));
+        imageRef.current.src = processedDataURL;
+        dispatch(setImagePreview(processedDataURL));
       }
+    } catch (error) {
+      console.error("Failed to apply filters:", error);
     }
-  }, [imagePreview, basicAdjust, colorAdjust, fineTuneAdjust, structureAdjust, denoiseAdjust, vignetteAdjust, mosaicAdjust,historyIndex]);
+  };
 
-  // Image operation wrapper
+  const timeoutId = setTimeout(applyFiltersToImage, 50);
+  return () => clearTimeout(timeoutId);
+}, [processImage, imageState.currentBaseImage, filtersState, dispatch]);
+
+
+  // UNMODIFIED: Image operations - flip and rotate work correctly
   const performImageOperation = async (operation, ...args) => {
     try {
       const result = await operation(...args);
-      if (result) setImagePreview(result);
+      if (result) {
+        dispatch(setImagePreview(result));
+        dispatch(setCurrentBaseImage(result));
+
+        if (
+          operation === performRotateBase ||
+          operation === performFlipBase ||
+          operation === cropHook.performCrop
+        ) {
+          resetAllFilters();
+        }
+      }
       return result;
     } catch (error) {
-      console.error('Image operation failed:', error);
+      console.error("Image operation failed:", error);
       return null;
     }
   };
 
-  // Image transformation functions
-  const performRotate = (direction) => performImageOperation(performRotateBase, direction);
-  const performFlip = (direction) => performImageOperation(performFlipBase, direction);
-  const performCrop = () => performImageOperation(cropHook.performCrop, cropHook.cropSettings, imagePreview);
-  const performApplyFrame = (frameStyle, frameColor, frameWidth) => 
-    performImageOperation(frameHook.applyFrame, frameStyle, frameColor, frameWidth);
-  const performApplyFrameEffects = (shadow, spread, shadowColor) => 
-    performImageOperation(frameHook.applyFrameEffects, shadow, spread, shadowColor);
-  
-  // Beauty filter handler
+  const performRotate = (direction) =>
+    performImageOperation(performRotateBase, direction);
+  const performFlip = (direction) =>
+    performImageOperation(performFlipBase, direction);
+
+const performCrop = async (cropSettings, imageSource) => {
+  try {
+    console.log('=== CROP DEBUG: Starting crop operation ===');
+    console.log('Current currentBaseImage before crop:', imageState.currentBaseImage?.substring(0, 50));
+    console.log('Crop settings:', cropSettings);
+    
+    // Use the current preview or the provided image source
+    const sourceImage = imageSource || imageState.imagePreview || imageState.currentBaseImage;
+    console.log('Using source image:', sourceImage?.substring(0, 50));
+    
+    const result = await cropHook.performCrop(
+      cropSettings,
+      sourceImage,
+      (newBaseImage) => {
+        console.log('=== CROP DEBUG: Crop hook callback - updating currentBaseImage ===');
+        console.log('New base image from crop:', newBaseImage?.substring(0, 50));
+        dispatch(setCurrentBaseImage(newBaseImage));
+      }
+    );
+    
+    if (result) {
+      console.log('=== CROP DEBUG: Crop successful, updating all states ===');
+      console.log('Crop result:', result.substring(0, 50));
+      
+      // CRITICAL: Update currentBaseImage FIRST and IMMEDIATELY
+      dispatch(setCurrentBaseImage(result));
+      
+      // Small delay to ensure Redux state is updated
+      await new Promise(resolve => setTimeout(resolve, 10));
+      
+      // Then update preview
+      dispatch(setImagePreview(result));
+      
+      // Update the image reference immediately
+      if (imageRef.current) {
+        imageRef.current.src = result;
+      }
+      
+      // Reset all filters after crop to avoid conflicts
+      resetAllFilters();
+      
+      // Deactivate crop mode
+      dispatch(setCropActive(false));
+      
+      console.log('=== CROP DEBUG: Crop operation completed ===');
+      console.log('Final currentBaseImage should be:', result.substring(0, 50));
+    }
+    return result;
+  } catch (error) {
+    console.error("Crop operation failed:", error);
+    dispatch(setCropActive(false));
+    return null;
+  }
+};
+
+  const performApplyFrame = (frameStyle, frameColor, frameWidth) =>
+    performImageOperation(
+      frameHook.applyFrame,
+      frameStyle,
+      frameColor,
+      frameWidth,
+    );
+  const performApplyFrameEffects = (shadow, spread, shadowColor) =>
+    performImageOperation(
+      frameHook.applyFrameEffects,
+      shadow,
+      spread,
+      shadowColor,
+    );
+
   const handleBeautyFeature = async (feature, settings) => {
     if (!imageRef.current) return;
-    console.log('Applying beauty filter:', feature, settings);
-    setBeautySettings(prev => ({ ...prev, [feature]: settings }));
-  };
-  
-  const initializeDefaults = () => {
-    setBeautySettings({});
-    
-    // Reset all filter states
-    setBasicAdjust({
-      brightness: 0,
-      contrast: 0,
-      saturation: 0,
-      sharpness: 0,
-    });
-    
-    setColorAdjust({
-      temperature: 0,
-      tint: 0,
-      invertcolors: 0,
-    });
-    
-    setfineTuneAdjust({
-      exposure: 0,
-      highlights: 0,
-      shadows: 0,
-    });
-    
-    setStructureAdjust({
-      details: 0,
-      gradient: 0,
-    });
-    
-    setDenoiseAdjust({
-      colornoise: 0,
-      luminancenoise: 0,
-    });
-      setVignetteAdjust({
-    intensity: 0,
-    size: 50,
-    feather: 50,
-  });
-   setMosaicAdjust({
-      type: 'square', 
-      size: 0, 
-      pixelSize: 1,
-    });
-    // Reset history
-    setHistory([]);
-    setHistoryIndex(-1);
-    
-    // Reset other tools
-    frameHook.setFrameSettings({
-      style: 'none', 
-      color: '#ffffff', 
-      width: 10,
-      shadow: 0, 
-      spread: 0, 
-      shadowColor: '#000000'
-    });
-    
-    textHook.clearAllText();
-    cropHook.resetCrop();
+    // Update beauty settings in Redux store would be handled by beauty slice
   };
 
-  // Reset to original image
+  const initializeDefaults = () => {
+    dispatch(resetBeautySettings());
+    resetAllFilters();
+    frameHook.setFrameSettings({
+      style: "none",
+      color: "#ffffff",
+      width: 10,
+      shadow: 0,
+      spread: 0,
+      shadowColor: "#000000",
+    });
+    textHook.clearAllText();
+    resetCropState(); // Use the proper reset function
+  };
+
   const resetToOriginal = () => {
-    if (originalImage) {
-      setImagePreview(originalImage);
+    if (imageState.originalImage) {
+      dispatch(setImagePreview(imageState.originalImage));
+      dispatch(setCurrentBaseImage(imageState.originalImage));
       initializeDefaults();
-      
-      // Reset image ref to original
-      if (imageRef.current) {
-        imageRef.current.src = originalImage;
-        imageRef.current.setAttribute('data-original-src', originalImage);
-      }
+      if (imageRef.current) imageRef.current.src = imageState.originalImage;
     }
   };
-  
-  // File handling
+
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     if (!file) return;
+
+    // Store only serializable file metadata instead of the File object
+    const fileMetadata = {
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      lastModified: file.lastModified
+    };
     
-    setUploadedImage(file);
+    dispatch(setUploadedImage(fileMetadata));
+    
     const reader = new FileReader();
     reader.onloadend = () => {
       const result = reader.result;
-      setImagePreview(result);
-      setOriginalImage(result);
-      
-      // Initialize history with original image
-      const initialState = {
-        basicAdjust: { brightness: 0, contrast: 0, saturation: 0, sharpness: 0 },
-        colorAdjust: { temperature: 0, tint: 0, invertcolors: 0 },
-        fineTuneAdjust: { exposure: 0, highlights: 0, shadows: 0 },
-        structureAdjust: { details: 0, gradient: 0 },
-        denoiseAdjust: { colornoise: 0, luminancenoise: 0 },
-        vignetteAdjust:{intensity: 0,
-      size: 50, 
-      feather: 50,}
-      };
-       setMosaicAdjust({
-      type: 'square', 
-      size: 0, 
-      pixelSize: 1,
-    });
-      
-      setHistory([{
-        imageData: result,
-        filterState: initialState,
-        timestamp: Date.now()
-      }]);
-      setHistoryIndex(0);
-      
+      dispatch(setImagePreview(result));
+      dispatch(setOriginalImage(result));
+      dispatch(setCurrentBaseImage(result));
       initializeDefaults();
     };
     reader.readAsDataURL(file);
-    setActiveTool(toolNames.ADJUST);
+    dispatch(setActiveTool(toolNames.ADJUST));
   };
-  
+
   const handleUploadClick = () => fileInputRef.current?.click();
-  
   const downloadImage = () => {
-    if (!imagePreview) {
-      alert("Please upload an image first.");
-      return;
-    }
-    const link = document.createElement('a');
-    link.download = 'edited-image.jpg';
-    link.href = imagePreview;
+    if (!imageState.imagePreview) return alert("Please upload an image first.");
+    const link = document.createElement("a");
+    link.download = "edited-image.jpg";
+    link.href = imageState.imagePreview;
     link.click();
   };
-  
-  // Demo images loader
+
   const loadDemoImage = (index) => {
-    const demoImages = ['/path/to/demo-image-1.jpg', '/path/to/demo-image-2.jpg'];
+    const demoImages = [
+      "/path/to/demo-image-1.jpg",
+      "/path/to/demo-image-2.jpg",
+    ];
     const demoImageUrl = demoImages[index];
-    setImagePreview(demoImageUrl);
-    setOriginalImage(demoImageUrl);
-    setUploadedImage("demo-image");
-    
-    // Initialize history with demo image
-    const initialState = {
-      basicAdjust: { brightness: 0, contrast: 0, saturation: 0, sharpness: 0 },
-      colorAdjust: { temperature: 0, tint: 0, invertcolors: 0 },
-      fineTuneAdjust: { exposure: 0, highlights: 0, shadows: 0 },
-      structureAdjust: { details: 0, gradient: 0 },
-      denoiseAdjust: { colornoise: 0, luminancenoise: 0 },
-          vignetteAdjust:{intensity: 0,
-      size: 50, 
-      feather: 50,},
-        mosaicAdjust:{ type: 'square', 
-      size: 0, 
-      pixelSize: 1,}
-    };
-  
-    
-    setHistory([{
-      imageData: demoImageUrl,
-      filterState: initialState,
-      timestamp: Date.now()
-    }]);
-    setHistoryIndex(0);
-    
+    dispatch(setImagePreview(demoImageUrl));
+    dispatch(setOriginalImage(demoImageUrl));
+    dispatch(setCurrentBaseImage(demoImageUrl));
+    dispatch(setUploadedImage("demo-image"));
     initializeDefaults();
-    setActiveTool(toolNames.ADJUST);
+    dispatch(setActiveTool(toolNames.ADJUST));
   };
-  
-  // Text editor effect
+
+  // Effects
   useEffect(() => {
-    if (textHook.textElements.length > 0 && imageRef.current && activeTool === toolNames.TEXT) {
-      textHook.applyTextToImage().then(result => {
-        if (result) setImagePreview(result);
+    if (
+      textState.textElements.length > 0 &&
+      imageRef.current &&
+      toolsState.activeTool === toolNames.TEXT
+    ) {
+      textHook.applyTextToImage().then((result) => {
+        if (result) dispatch(setImagePreview(result));
       });
     }
-  }, [textHook.textElements, textHook.applyTextToImage, activeTool, toolNames.TEXT]);
-  
-  // Mobile/desktop detection
+  }, [
+    textState.textElements,
+    textHook.applyTextToImage,
+    toolsState.activeTool,
+    toolNames.TEXT,
+    dispatch,
+  ]);
+
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-      setSidebarOpen(window.innerWidth >= 768);
+      const isMobile = window.innerWidth < 768;
+      dispatch(setIsMobile(isMobile));
+      dispatch(setSidebarOpen(window.innerWidth >= 768));
     };
-    
     checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, [dispatch]);
 
-  // Consolidated tool panel props
-  const toolPanelProps = {
-    // Tool states
-    activeTool, 
-    activeAdjustTool: activeTools.adjust, 
-    setActiveAdjustTool: (tool) => setActiveTools(prev => ({...prev, adjust: tool})),
-    activeBeautyTool: activeTools.beauty, 
-    setActiveBeautyTool: (tool) => setActiveTools(prev => ({...prev, beauty: tool})),
-    activeFramesTool: activeTools.frames, 
-    setActiveFramesTool: (tool) => setActiveTools(prev => ({...prev, frames: tool})),
-    activeTextTool: activeTools.text, 
-    setActiveTextTool: (tool) => setActiveTools(prev => ({...prev, text: tool})),
-    
-    // UI states
-    isMobile, 
-    setSidebarOpen, 
-    imageRef,
-    
-    // Undo/Redo functionality
-    canUndo,
-    canRedo,
-    performUndo,
-    performRedo,
-    
-    // Image operations
-    performFlip, 
-    performRotate, 
-    performCrop,
-    applyBeautyFeature: handleBeautyFeature, 
-    beautySettings,
-    applyFrame: performApplyFrame, 
-    applyFrameEffects: performApplyFrameEffects,
-    
-    // Filter states
-    basicAdjust, 
-    setBasicAdjust,
-    colorAdjust, 
-    setColorAdjust,
-    fineTuneAdjust, 
-    setfineTuneAdjust,
-    structureAdjust,
-    setStructureAdjust,
-    denoiseAdjust,
-    setDenoiseAdjust,
-    vignetteAdjust,
-  setVignetteAdjust,
-  mosaicAdjust,
-  setMosaicAdjust,
-  blurAdjust,
-  setBlurAdjust,
-  
-    // Hook props spread
-    ...cropHook, 
-    ...frameHook, 
-    ...textHook, 
-    ...styleHook
+  // Filter setter helpers
+  const createFilterSetter = (category) => (values) => {
+    if (typeof values === "function") {
+      // Handle function updates
+      const currentCategoryState = filtersState[category];
+      const newValues = values(currentCategoryState);
+      updateFilterState(category, values);
+    } else {
+      updateFilterState(category, values);
+    }
   };
-  
+
+  const toolPanelProps = {
+    activeTool: toolsState.activeTool,
+    activeAdjustTool: toolsState.activeTools.adjust,
+    setActiveAdjustTool: (tool) =>
+      dispatch(setActiveSubTool({ toolType: 'adjust', subTool: tool })),
+    activeBeautyTool: toolsState.activeTools.beauty,
+    setActiveBeautyTool: (tool) =>
+      dispatch(setActiveSubTool({ toolType: 'beauty', subTool: tool })),
+    activeFramesTool: toolsState.activeTools.frames,
+    setActiveFramesTool: (tool) =>
+      dispatch(setActiveSubTool({ toolType: 'frames', subTool: tool })),
+    activeTextTool: toolsState.activeTools.text,
+    setActiveTextTool: (tool) =>
+      dispatch(setActiveSubTool({ toolType: 'text', subTool: tool })),
+    isMobile: uiState.isMobile,
+    setSidebarOpen: (open) => dispatch(setSidebarOpen(open)),
+    imageRef,
+    performFlip,
+    performRotate,
+    performCrop,
+    applyBeautyFeature: handleBeautyFeature,
+    beautySettings: beautyState.beautySettings,
+    applyFrame: performApplyFrame,
+    applyFrameEffects: performApplyFrameEffects,
+
+    // CROP CONTROL PROPS - Now properly connected to Redux actions
+    cropSettings: cropState.cropSettings,
+    activateCropMode,
+    deactivateCropMode,
+    toggleCrop,
+    resetCropState,
+    isCropActive: cropState.cropSettings.isActive,
+     basicAdjust: filtersState.basicAdjust,
+    setBasicAdjust: createFilterSetter("basicAdjust"),
+    colorAdjust: filtersState.colorAdjust,
+    setColorAdjust: createFilterSetter("colorAdjust"),
+    fineTuneAdjust: filtersState.fineTuneAdjust,
+    setfineTuneAdjust: createFilterSetter("fineTuneAdjust"),
+    structureAdjust: filtersState.structureAdjust,
+    setStructureAdjust: createFilterSetter("structureAdjust"),
+    denoiseAdjust: filtersState.denoiseAdjust,
+    setDenoiseAdjust: createFilterSetter("denoiseAdjust"),
+    vignetteAdjust: filtersState.vignetteAdjust,
+    setVignetteAdjust: createFilterSetter("vignetteAdjust"),
+    mosaicAdjust: filtersState.mosaicAdjust,
+    setMosaicAdjust: createFilterSetter("mosaicAdjust"),
+    blurAdjust: filtersState.blurAdjust,
+    setBlurAdjust: createFilterSetter("blurAdjust"),
+
+    ...cropHook,
+    ...frameHook,
+    ...textHook,
+    ...styleHook,
+  };
+
   return (
     <div className="flex flex-col h-screen bg-gray-100 dark:bg-dark-bg">
-      {/* Hidden file input */}
-      <input 
-        type="file" 
-        ref={fileInputRef} 
-        onChange={handleFileChange} 
-        accept="image/*" 
-        className="hidden" 
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        accept="image/*"
+        className="hidden"
       />
-      
-      {/* Header */}
-      <Header 
-        isMobile={isMobile} 
-        sidebarOpen={sidebarOpen} 
-        setSidebarOpen={setSidebarOpen}
-        handleUploadClick={handleUploadClick} 
+
+      <Header
+        isMobile={uiState.isMobile}
+        sidebarOpen={uiState.sidebarOpen}
+        setSidebarOpen={(open) => dispatch(setSidebarOpen(open))}
+        handleUploadClick={handleUploadClick}
         downloadImage={downloadImage}
         resetToOriginal={resetToOriginal}
         imageRef={imageRef}
-        basicAdjust={basicAdjust}
-        colorAdjust={colorAdjust}
-        fineTuneAdjust={fineTuneAdjust}
-        structureAdjust={structureAdjust}
-        denoiseAdjust={denoiseAdjust}
-        vignetteAdjust ={vignetteAdjust}
-         mosaicAdjust ={mosaicAdjust}
+        filters={filtersState}
+        currentBaseImage={imageState.currentBaseImage}
+        imagePreview={imageState.imagePreview}
       />
-      
-      {/* Main content area */}
+
       <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar - Desktop only */}
-        {sidebarOpen && !isMobile && (
-          <Sidebar 
-            activeTool={activeTool} 
-            setActiveTool={setActiveTool}
-            isMobile={isMobile} 
-            setSidebarOpen={setSidebarOpen}
+        {uiState.sidebarOpen && !uiState.isMobile && (
+          <Sidebar
+            activeTool={toolsState.activeTool}
+            setActiveTool={(tool) => dispatch(setActiveTool(tool))}
+            isMobile={uiState.isMobile}
+            setSidebarOpen={(open) => dispatch(setSidebarOpen(open))}
           />
         )}
-        
-        {/* Tool Panel - Desktop only */}
-        {!isMobile && <ToolPanel {...toolPanelProps} />}
-        
-        {/* Image Canvas */}
-        <div className={`flex-1 ${isMobile ? 'pb-20' : ''}`}>
-          <ImageCanvas  
-            showSideAd={true} 
-            showBottomAd={true} 
-            imagePreview={imagePreview}
-            handleUploadClick={handleUploadClick} 
+
+        {!uiState.isMobile && <ToolPanel {...toolPanelProps} />}
+
+        <div className={`flex-1 ${uiState.isMobile ? "pb-20" : ""}`}>
+          <ImageCanvas
+            showSideAd={true}
+            showBottomAd={true}
+            handleUploadClick={handleUploadClick}
             imageRef={imageRef}
-            activeTool={activeTool} 
-            activeAdjustTool={activeTools.adjust}
-            setImagePreview={setImagePreview} 
-            textElements={textHook.textElements}
-            cropSettings={cropHook.cropSettings} 
-            updateTextElement={textHook.updateTextElement}
-            updateCropPosition={cropHook.updateCropPosition} 
-            updateCropDimensions={cropHook.updateCropDimensions}
             performCrop={performCrop}
+            // Pass crop state and controls to ImageCanvas
+            cropSettings={cropState.cropSettings}
+            isCropActive={cropState.cropSettings.isActive}
+            activateCropMode={activateCropMode}
+            deactivateCropMode={deactivateCropMode}
           />
         </div>
       </div>
-      
-      {/* Mobile bottom toolbar and tool panel */}
-      {isMobile && (
-        <div className="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-700 z-30">
-          <BottomToolbar 
-            activeTool={activeTool} 
-            setActiveTool={setActiveTool}
-            setSidebarOpen={setSidebarOpen} 
-            isMobile={isMobile}
-            setIsBottomSheetOpen={setIsBottomSheetOpen} 
+
+      {uiState.isMobile && (
+        <div className="fixed bottom-0 left-0 right-0 bg-gray-900  border-gray-700 z-30">
+          <BottomToolbar
+            activeTool={toolsState.activeTool}
+            setActiveTool={(tool) => dispatch(setActiveTool(tool))}
+            setSidebarOpen={(open) => dispatch(setSidebarOpen(open))}
+            isMobile={uiState.isMobile}
+            setIsBottomSheetOpen={(open) => dispatch(setIsBottomSheetOpen(open))}
           />
-          
-          {activeTool && (
-            <div className="max-h-48 overflow-y-auto bg-gray-800 border-t border-gray-700">
+
+          {toolsState.activeTool && (
+            <div className="max-h-48 overflow-y-auto bg-gray-800 border-gray-700">
               <ToolPanel {...toolPanelProps} />
             </div>
           )}
@@ -650,3 +474,5 @@ const [blurAdjust, setBlurAdjust] = useState({
     </div>
   );
 }
+
+export default EditingPlatformInternal

@@ -1,10 +1,10 @@
 "use client"
 
 import React, { useState } from 'react';
-import AniOne from '../images/animation-one.webp';
-import Replace from '../images/Replace.webp';
-import Extended from '../images/Extended.webp';
-import Avtar from '../images/Avtar.webp';
+import AniOne from '../../src/app/images//animation-one.webp';
+import Replace from '../../src/app/images//Replace.webp';
+import Extended from '../../src/app/images//Extended.webp';
+import Avtar from '../../src/app/images/Avtar.webp';
 
 const AIImageGeneratorHero = () => {
  

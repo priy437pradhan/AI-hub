@@ -1,15 +1,16 @@
-// app/providers.js
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
+import { Provider as ReduxProvider } from 'react-redux'
+import { store } from './store/index' 
 
-// Create theme context
+
+// Theme context
 const ThemeContext = createContext({
   theme: 'light',
   setTheme: () => {},
 })
 
-// Export the hook to use the context
 export function useThemeContext() {
   const context = useContext(ThemeContext)
   if (context === undefined) {
@@ -21,16 +22,14 @@ export function useThemeContext() {
 export default function Providers({ children }) {
   const [theme, setTheme] = useState('light')
   const [mounted, setMounted] = useState(false)
-  
-  // Only run on client side
+
   useEffect(() => {
     setMounted(true)
-    
-    // Get initial theme
+
     try {
       const savedTheme = localStorage.getItem('theme')
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-      
+
       if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
         setTheme('dark')
         document.documentElement.classList.add('dark')
@@ -42,11 +41,10 @@ export default function Providers({ children }) {
       console.error("Error accessing localStorage:", e)
     }
   }, [])
-  
- 
+
   useEffect(() => {
     if (!mounted) return
-    
+
     try {
       if (theme === 'dark') {
         document.documentElement.classList.add('dark')
@@ -59,17 +57,17 @@ export default function Providers({ children }) {
       console.error("Error updating theme:", e)
     }
   }, [theme, mounted])
-  
+
   const contextValue = {
     theme,
-    setTheme: (newTheme) => {
-      setTheme(newTheme)
-    }
+    setTheme,
   }
-  
+
   return (
-    <ThemeContext.Provider value={contextValue}>
-      {children}
-    </ThemeContext.Provider>
+    <ReduxProvider store={store}>
+      <ThemeContext.Provider value={contextValue}>
+        {children}
+      </ThemeContext.Provider>
+    </ReduxProvider>
   )
 }

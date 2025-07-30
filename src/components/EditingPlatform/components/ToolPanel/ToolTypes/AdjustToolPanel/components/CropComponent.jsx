@@ -1,4 +1,8 @@
+// CropComponent.js - FIXED VERSION
 import React, { useState } from 'react';
+import { useAppDispatch, useCropState } from '../../../../../../../../src/app/store/hooks/redux';
+import { setAspectRatio, setCropActive } from '../../../../../../../../src/app/store/slices/cropSlice';
+
 export const aspectRatios = [
   { id: "freeform", label: "Freeform", icon: "⊞", dimensions: null },
   { id: "original", label: "Original", icon: "▣", dimensions: null },
@@ -17,31 +21,40 @@ export const aspectRatios = [
   { id: "9x16", label: "9:16", icon: "▯", dimensions: { width: 9, height: 16 } },
   { id: "16x9", label: "16:9", icon: "▭", dimensions: { width: 16, height: 9 } },
 
-  // Social Media Specific (you can add icons if needed)
+  // Social Media Specific
   { id: "whatsapp-dp", label: "WhatsApp DP", title: "social", icon: "", dimensions: { width: 1, height: 1 } },
   { id: "fb-dp", label: "Facebook DP", title: "social", icon: "", dimensions: { width: 1, height: 1 } },
   { id: "fb-cover", label: "FB Cover", title: "social", icon: "", dimensions: { width: 820, height: 312 } },
   { id: "fb-post", label: "FB Post", title: "social", icon: "", dimensions: { width: 4, height: 5 } },
   { id: "yt-thumbnail", label: "YouTube Thumbnail", title: "social", icon: "", dimensions: { width: 16, height: 9 } },
 ];
+
 import useMobileGridButton from '../../../hooks/useMobileGridButton';
 
 const CropComponent = ({
-  aspectRatio,
-  setAspectRatio,
   setCropWithAspectRatio,
   performCrop,
   cancelCrop,
-  cropSettings,
   imagePreview,
   imageRef,
   isMobile = false
 }) => {
+  const dispatch = useAppDispatch();
+  const { aspectRatio, cropSettings } = useCropState();
   const [keepAspectRatio, setKeepAspectRatio] = useState(false);
   const { gridConfig, getButtonStateClass, ScrollbarStyles } = useMobileGridButton(isMobile);
 
   const handleAspectRatioChange = (ratioId) => {
-    setAspectRatio(ratioId);
+    console.log('Aspect ratio changed to:', ratioId);
+    
+    // Update Redux state
+    const selectedRatio = aspectRatios.find(ratio => ratio.id === ratioId);
+    dispatch(setAspectRatio(selectedRatio));
+    
+    // Enable crop mode
+    dispatch(setCropActive(true));
+    
+    // Call the hook function if available
     if (setCropWithAspectRatio) {
       setCropWithAspectRatio(ratioId, aspectRatios, (newSettings) => {
         console.log("Crop settings updated:", newSettings);
@@ -49,7 +62,7 @@ const CropComponent = ({
     }
   };
 
-  const handleCropApply = () => {
+  const handleCropApply = async () => {
     console.log("Apply crop clicked", {
       performCrop,
       cropSettings,
@@ -63,29 +76,41 @@ const CropComponent = ({
       return;
     }
     
-    if (!cropSettings) {
-      console.error("cropSettings is not available");
-      alert("No crop area selected");
+    if (!cropSettings || !cropSettings.isActive) {
+      console.error("No active crop area selected");
+      alert("Please select a crop area first");
       return;
     }
     
-    const imageSource = imagePreview || imageRef?.current;
+    const imageSource = imagePreview || imageRef?.current?.src;
     
     if (!imageSource) {
-      console.error("Neither imagePreview nor imageRef is available");
+      console.error("No image available for cropping");
       alert("No image available for cropping");
       return;
     }
     
     try {
-      performCrop(cropSettings, imageSource);
+      console.log('Performing crop with settings:', cropSettings);
+      await performCrop(cropSettings, imageSource);
+      console.log('Crop applied successfully');
     } catch (error) {
       console.error("Error applying crop:", error);
-      alert("Failed to apply crop");
+      alert("Failed to apply crop: " + error.message);
+    }
+  };
+
+  const handleCancelCrop = () => {
+    console.log('Canceling crop');
+    dispatch(setCropActive(false));
+    if (cancelCrop) {
+      cancelCrop();
     }
   };
 
   const AspectRatioGrid = () => {
+    const currentAspectRatioId = aspectRatio?.id || null;
+    
     return (
       <div className={gridConfig.containerClass} style={gridConfig.containerStyle}>
         {aspectRatios.map((ratio) => (
@@ -93,11 +118,11 @@ const CropComponent = ({
             key={ratio.id}
             onClick={() => handleAspectRatioChange(ratio.id)}
             className={`
-  ${gridConfig.buttonClass} 
-  ${getButtonStateClass(aspectRatio === ratio.id)} 
-  ${!isMobile && ratio.title === "social" ? "col-span-2" : "col-span-1"}
-  ${isMobile ? 'border-0' : ''}
-`}
+              ${gridConfig.buttonClass} 
+              ${getButtonStateClass(currentAspectRatioId === ratio.id)} 
+              ${!isMobile && ratio.title === "social" ? "col-span-2" : "col-span-1"}
+              ${isMobile ? 'border-0' : ''}
+            `}
           >
             <span className={`${isMobile ? 'text-sm' : 'text-lg'} mb-1`}>{ratio.icon}</span>
             <span className="text-xs font-medium">{ratio.label}</span>
@@ -109,15 +134,22 @@ const CropComponent = ({
   };
 
   return (
-    <div className="space-y-0">
+    <div className="space-y-4">
       <AspectRatioGrid />
      
+     
+
       {/* Mobile Simple Buttons */}
       {isMobile ? (
         <div className="flex justify-center space-x-4">
           <button
             onClick={handleCropApply}
-            className="p-3 text-green-500 hover:text-green-400 transition-colors touch-manipulation"
+            disabled={!cropSettings?.isActive}
+            className={`p-3 transition-colors touch-manipulation ${
+              cropSettings?.isActive 
+                ? 'text-green-500 hover:text-green-400' 
+                : 'text-gray-500 cursor-not-allowed'
+            }`}
             style={{ WebkitTapHighlightColor: 'transparent' }}
             aria-label="Apply crop">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -125,7 +157,7 @@ const CropComponent = ({
             </svg>
           </button>
           <button
-            onClick={cancelCrop}
+            onClick={handleCancelCrop}
             className="p-3 text-red-500 hover:text-red-400 transition-colors touch-manipulation"
             style={{ WebkitTapHighlightColor: 'transparent' }}
             aria-label="Cancel crop"
@@ -141,13 +173,18 @@ const CropComponent = ({
         <div className="flex space-x-2">
           <button
             onClick={handleCropApply}
-            className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-lg font-medium text-white transition-colors touch-manipulation"
+            disabled={!cropSettings?.isActive}
+            className={`flex-1 py-3 rounded-lg font-medium text-white transition-colors touch-manipulation ${
+              cropSettings?.isActive
+                ? 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800'
+                : 'bg-gray-600 cursor-not-allowed'
+            }`}
             style={{ WebkitTapHighlightColor: 'transparent' }}
           >
             Apply Crop
           </button>
           <button
-            onClick={cancelCrop}
+            onClick={handleCancelCrop}
             className="px-4 py-3 bg-gray-600 hover:bg-gray-700 rounded-lg font-medium text-white transition-colors"
           >
             Cancel

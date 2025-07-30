@@ -1,56 +1,63 @@
-// Complete Header.jsx component rewrite
+// Fixed Header.jsx component
 'use client'
-import { ChevronDown, Upload, Search, Download, Grid } from 'lucide-react';
-;import { applyAllFiltersToCanvas } from '../../EditingPlatform/components/ToolPanel/utils/imageFilters';
+import { ChevronDown, Upload, Search, Download, Grid, RotateCcw } from 'lucide-react';
+// ADD THIS:
+import { useImageProcessor } from '../../../components/EditingPlatform/components/ToolPanel/hooks/useImageProcessor';
 
 export default function Header({ 
   isMobile, 
+  sidebarOpen,
+  setSidebarOpen,
   handleUploadClick, 
+  downloadImage,
+  resetToOriginal,
   imageRef,
-  basicAdjust,
-  colorAdjust,
-  fineTuneAdjust
+  filters,
+  currentBaseImage,
+  imagePreview // Add this prop to get the current preview
 }) {
 
   const downloadImageWithFilters = async () => {
-    if (!imageRef.current) {
+    // Priority 1: Download what's currently being shown (imagePreview)
+    if (imagePreview) {
+      const link = document.createElement('a');
+      link.download = 'edited-image.jpg';
+      link.href = imagePreview;
+      link.click();
+      return;
+    }
+
+    // Fallback: If no preview, try with current base image
+    if (!imageRef.current || !currentBaseImage) {
       alert("Please upload an image first.");
       return;
     }
 
     try {
+      // Check if any filters are applied
+      const hasFilterChanges = Object.values(filters).some(category => 
+        Object.values(category).some(value => typeof value === 'number' && value !== 0)
+      );
+
+      // If no filters applied, download the current base image
+      if (!hasFilterChanges) {
+        const link = document.createElement('a');
+        link.download = 'edited-image.jpg';
+        link.href = currentBaseImage;
+        link.click();
+        return;
+      }
+
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       
-      // Create a new image element to get the original unfiltered image
-      const originalImg = new Image();
-      originalImg.crossOrigin = "anonymous";
+      // Create a new image element to get the current base image
+      const baseImg = new Image();
+      baseImg.crossOrigin = "anonymous";
       
-      // Use Promise to handle image loading
-      const processedDataURL = await new Promise((resolve, reject) => {
-        originalImg.onload = () => {
-          try {
-            const result = applyAllFiltersToCanvas(
-              canvas, 
-              ctx, 
-              originalImg, 
-              basicAdjust, 
-              colorAdjust, 
-              fineTuneAdjust
-            );
-            resolve(result);
-          } catch (error) {
-            reject(error);
-          }
-        };
+      const processedDataURL = await processImage(imageRef, canvas, ctx);
 
-        originalImg.onerror = () => reject(new Error('Failed to load original image'));
-        
-        // Get the original image source (before any filters were applied)
-        originalImg.src = imageRef.current.getAttribute('data-original-src') || imageRef.current.src;
-      });
-
-      // Download the processed image
+    
       const link = document.createElement('a');
       link.download = 'edited-image.jpg';
       link.href = processedDataURL;
@@ -58,10 +65,15 @@ export default function Header({
       
     } catch (error) {
       console.error('Download failed:', error);
-      alert('Failed to download image. Please try again.');
+      // Fallback to original download method
+      if (downloadImage) {
+        downloadImage();
+      } else {
+        alert('Failed to download image. Please try again.');
+      }
     }
   };
-
+ const { processImage } = useImageProcessor();
   return (
     <header className="flex items-center justify-between bg-white dark:bg-dark-card px-4 py-3 border-b border-gray-200 dark:border-dark-border">
       <div className="flex items-center space-x-2 md:space-x-4">
@@ -90,6 +102,17 @@ export default function Header({
             </>
           )}
         </button>
+
+        {resetToOriginal && (
+          <button 
+            onClick={resetToOriginal}
+            className="flex items-center px-2 md:px-3 py-1 text-sm bg-transparent hover:bg-gray-100 dark:hover:bg-dark-border rounded"
+            title="Reset to Original"
+          >
+            <RotateCcw size={16} className="mr-1 text-gray-600 dark:text-gray-400" />
+            {!isMobile && <span className="dark:text-dark-text">Reset</span>}
+          </button>
+        )}
       </div>
       
       <div className="flex items-center space-x-2 md:space-x-4">

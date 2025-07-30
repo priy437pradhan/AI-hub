@@ -1,4 +1,4 @@
-import EditorPreview from '../include/EditorPreview'
+import EditorPreview from '../app/include/EditorPreview'
 export default function MainContent() {
 return (
 <main>

@@ -19,7 +19,7 @@ export const ImageDisplay = ({
       alt="Preview"
       ref={imageRef}
       onLoad={handleImageLoad}
-      className={`w-full h-auto max-w-full max-h-[70vh] object-contain transition-opacity duration-500 select-none ${
+      className={`w-full z-20 h-auto max-w-full max-h-[70vh] object-contain transition-opacity duration-500 select-none ${
         isImageLoaded ? 'opacity-100' : 'opacity-0'
       }`}
       draggable={false}

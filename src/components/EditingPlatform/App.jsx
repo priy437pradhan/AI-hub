@@ -37,7 +37,7 @@ const App = () => {
         </div>
       )}
       
-      <div className="h-16 bg-gray-800 border-t border-gray-700">
+      <div className="h-16 bg-gray-800 border-gray-700">
         <BottomToolbar 
           activeTool={activeTool}
           setActiveTool={setActiveTool}

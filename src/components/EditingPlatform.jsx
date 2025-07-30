@@ -3,7 +3,7 @@
 import { useDispatch, useSelector } from 'react-redux';;
 import { useRef, useEffect, useMemo } from "react";
 import { useImageProcessor } from "./EditingPlatform/components/ToolPanel/hooks/useImageProcessor";
-
+import { useCropOperations } from "./EditingPlatform/components/ToolPanel/ToolTypes/AdjustToolPanel/hooks/useCropOperations";
 import Header from "./EditingPlatform/components/Header";
 import Sidebar from "./EditingPlatform/components/Sidebar";
 import ToolPanel from "./EditingPlatform/components/ToolPanel/ToolPanel";
@@ -59,11 +59,16 @@ function EditingPlatformInternal() {
   // Refs
   const fileInputRef = useRef(null);
   const imageRef = useRef(null);
+  const containerRef = useRef(null); // ✅ ADD THE MISSING containerRef
 
   // Custom hooks (maintaining existing functionality)
   const { performFlipBase } = useFlipImage({ imageRef });
   const { performRotateBase } = useRotateImage({ imageRef });
-  const cropHook = useCrop(imageRef, (preview) => dispatch(setImagePreview(preview)));
+ const cropHook = useCrop(
+  imageRef, 
+  (preview) => dispatch(setImagePreview(preview)),
+  containerRef
+);
   const frameHook = useFrames({ imageRef, setImagePreview: (preview) => dispatch(setImagePreview(preview)) });
   const textHook = useTextEditor({ imageRef, setImagePreview: (preview) => dispatch(setImagePreview(preview)) });
   const styleHook = useTextStyles({ imageRef, setImagePreview: (preview) => dispatch(setImagePreview(preview)) });
@@ -109,12 +114,11 @@ function EditingPlatformInternal() {
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
       
-      // CRITICAL FIX: Pass the currentBaseImage explicitly to processImage
       const processedDataURL = await processImage(
         imageRef, 
         canvas, 
         ctx,
-        imageState.currentBaseImage // Explicitly pass the cropped/flipped image
+        imageState.currentBaseImage 
       );
       
       if (processedDataURL && imageRef.current) {
@@ -159,61 +163,45 @@ function EditingPlatformInternal() {
     performImageOperation(performRotateBase, direction);
   const performFlip = (direction) =>
     performImageOperation(performFlipBase, direction);
-
-const performCrop = async (cropSettings, imageSource) => {
-  try {
-    console.log('=== CROP DEBUG: Starting crop operation ===');
-    console.log('Current currentBaseImage before crop:', imageState.currentBaseImage?.substring(0, 50));
-    console.log('Crop settings:', cropSettings);
-    
-    // Use the current preview or the provided image source
-    const sourceImage = imageSource || imageState.imagePreview || imageState.currentBaseImage;
-    console.log('Using source image:', sourceImage?.substring(0, 50));
-    
-    const result = await cropHook.performCrop(
-      cropSettings,
-      sourceImage,
-      (newBaseImage) => {
-        console.log('=== CROP DEBUG: Crop hook callback - updating currentBaseImage ===');
-        console.log('New base image from crop:', newBaseImage?.substring(0, 50));
-        dispatch(setCurrentBaseImage(newBaseImage));
+const cropOperations = useCropOperations(
+  imageRef,
+  (preview) => dispatch(setImagePreview(preview))
+);
+ const performCrop = async (cropSettings, imageSource) => {
+    try {
+      console.log('=== CROP DEBUG: Starting crop operation ===');
+      
+      const sourceImage = imageSource || imageState.imagePreview || imageState.currentBaseImage;
+      console.log('Using source image:', sourceImage?.substring(0, 50));
+      
+      const result = await cropHook.performCrop(
+        cropSettings,
+        sourceImage,
+        (newBaseImage) => {
+          console.log('=== CROP DEBUG: Updating currentBaseImage ===');
+          dispatch(setCurrentBaseImage(newBaseImage));
+        }
+      );
+      
+      if (result) {
+        dispatch(setCurrentBaseImage(result));
+        await new Promise(resolve => setTimeout(resolve, 10));
+        dispatch(setImagePreview(result));
+        
+        if (imageRef.current) {
+          imageRef.current.src = result;
+        }
+        
+        resetAllFilters();
+        dispatch(setCropActive(false));
       }
-    );
-    
-    if (result) {
-      console.log('=== CROP DEBUG: Crop successful, updating all states ===');
-      console.log('Crop result:', result.substring(0, 50));
-      
-      // CRITICAL: Update currentBaseImage FIRST and IMMEDIATELY
-      dispatch(setCurrentBaseImage(result));
-      
-      // Small delay to ensure Redux state is updated
-      await new Promise(resolve => setTimeout(resolve, 10));
-      
-      // Then update preview
-      dispatch(setImagePreview(result));
-      
-      // Update the image reference immediately
-      if (imageRef.current) {
-        imageRef.current.src = result;
-      }
-      
-      // Reset all filters after crop to avoid conflicts
-      resetAllFilters();
-      
-      // Deactivate crop mode
+      return result;
+    } catch (error) {
+      console.error("Crop operation failed:", error);
       dispatch(setCropActive(false));
-      
-      console.log('=== CROP DEBUG: Crop operation completed ===');
-      console.log('Final currentBaseImage should be:', result.substring(0, 50));
+      return null;
     }
-    return result;
-  } catch (error) {
-    console.error("Crop operation failed:", error);
-    dispatch(setCropActive(false));
-    return null;
-  }
-};
+  };
 
   const performApplyFrame = (frameStyle, frameColor, frameWidth) =>
     performImageOperation(
@@ -351,6 +339,7 @@ const performCrop = async (cropSettings, imageSource) => {
   };
 
   const toolPanelProps = {
+    
     activeTool: toolsState.activeTool,
     activeAdjustTool: toolsState.activeTools.adjust,
     setActiveAdjustTool: (tool) =>
@@ -377,10 +366,10 @@ const performCrop = async (cropSettings, imageSource) => {
 
     // CROP CONTROL PROPS - Now properly connected to Redux actions
     cropSettings: cropState.cropSettings,
-    activateCropMode,
-    deactivateCropMode,
-    toggleCrop,
-    resetCropState,
+    activateCropMode: () => dispatch(setCropActive(true)),
+    deactivateCropMode: () => dispatch(setCropActive(false)),
+    toggleCrop: () => dispatch(toggleCropMode()),
+    resetCropState: () => dispatch(resetCrop()),
     isCropActive: cropState.cropSettings.isActive,
      basicAdjust: filtersState.basicAdjust,
     setBasicAdjust: createFilterSetter("basicAdjust"),
@@ -399,10 +388,17 @@ const performCrop = async (cropSettings, imageSource) => {
     blurAdjust: filtersState.blurAdjust,
     setBlurAdjust: createFilterSetter("blurAdjust"),
 
-    ...cropHook,
+    setCropWithAspectRatio: cropOperations.setCropWithAspectRatio,
+    cancelCrop: () => dispatch(setCropActive(false)),
+
+   ...cropHook,
+  ...cropOperations,
     ...frameHook,
     ...textHook,
     ...styleHook,
+    performFlip,
+    performRotate,
+    performCrop,
   };
 
   return (
@@ -446,8 +442,10 @@ const performCrop = async (cropSettings, imageSource) => {
             showBottomAd={true}
             handleUploadClick={handleUploadClick}
             imageRef={imageRef}
+            containerRef={containerRef} // ✅ PASS THE containerRef TO ImageCanvas
             performCrop={performCrop}
             // Pass crop state and controls to ImageCanvas
+              cropHook={cropHook}
             cropSettings={cropState.cropSettings}
             isCropActive={cropState.cropSettings.isActive}
             activateCropMode={activateCropMode}

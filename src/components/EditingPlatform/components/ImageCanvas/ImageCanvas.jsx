@@ -4,15 +4,8 @@ import { AdPlaceholder } from "./components/AdPlaceholder";
 import { EmptyImageState } from "./components/EmptyImageState";
 import { ImageDisplay } from "./components/ImageDisplay";
 import { ShapeCropOverlay } from "./ToolTypes/AdjustToolPanel/components/ShapeCropOverlay";
-import { RectangularCropOverlay } from "./ToolTypes/AdjustToolPanel/components/RectangularCropOverlay";
-import { useCropHandlers } from "./ToolTypes/AdjustToolPanel/hooks/useCropHandlers";
-import { useMobileHandling } from "./hooks/useMobileHandling";
+// REMOVED: RectangularCropOverlay import since ShapeCropOverlay now handles everything
 
-import { useResize } from '../ToolPanel/ToolTypes/AdjustToolPanel/hooks/useResize';
-
-// import { useResizeHandlers } from './ToolTypes/AdjustToolPanel/hooks/useResizeHandler';
-
-// Redux hooks
 import { 
   useAppDispatch, 
   useImageState, 
@@ -21,15 +14,15 @@ import {
   useTextState 
 } from '../../../../app/store/hooks/redux';
 
-import { setImagePreview } from '../../../../app/store/slices/imageSlice';
 import { updateCropPosition, updateCropDimensions } from '../../../../app/store/slices/cropSlice';
 import { updateTextElement } from '../../../../app/store/slices/textSlice';
 
 export default function ImageCanvas({
   handleUploadClick,
   imageRef,
-  performCrop = (settings, src) =>
-    console.log("performCrop not implemented:", settings, src),
+  containerRef, // ✅ NOW RECEIVED FROM PARENT
+  performCrop,
+  cropHook, // ✅ RECEIVE THE UNIFIED CROP HOOK
   showSideAd = false,
   showBottomAd = false,
 }) {
@@ -43,7 +36,6 @@ export default function ImageCanvas({
 
   // Local state
   const [isImageLoaded, setIsImageLoaded] = useState(false);
-  const containerRef = useRef(null);
 
   // Extract values from Redux state
   const imagePreview = imageState.imagePreview;
@@ -51,8 +43,7 @@ export default function ImageCanvas({
   const activeAdjustTool = toolsState.activeTools.adjust;
   const textElements = textState.textElements;
 
-  // FIXED: Handle the crop settings properly
-  // If cropSettings is the full Redux state, extract the actual settings
+  // Handle the crop settings properly
   const actualCropSettings = cropState?.cropSettings || cropState || {
     x: 10, 
     y: 10, 
@@ -68,18 +59,19 @@ export default function ImageCanvas({
     ...actualCropSettings,
     aspectRatio: aspectRatio
   };
-const shouldShowCropOverlay = 
-  (activeTool === 'adjust' && activeAdjustTool === 'crop') || 
-  normalizedCropSettings.isActive ||
-  (activeTool === 'adjust' && toolsState.activeTool === 'adjust');
-  // const shouldShowCropOverlay = normalizedCropSettings.isActive;
+
+  const shouldShowCropOverlay = 
+    (activeTool === 'adjust' && activeAdjustTool === 'crop') || 
+    normalizedCropSettings.isActive ||
+    (activeTool === 'adjust' && toolsState.activeTool === 'adjust');
 
   console.log('Debug crop overlay:', {
     activeTool,
     activeAdjustTool, 
     isActive: normalizedCropSettings.isActive,
     shouldShow: shouldShowCropOverlay,
-    cropSettings: normalizedCropSettings
+    cropSettings: normalizedCropSettings,
+    shapeId: normalizedCropSettings.aspectRatio?.id
   });
 
   // Redux-enabled update functions
@@ -95,22 +87,6 @@ const shouldShowCropOverlay =
     dispatch(updateTextElement({ id, updates }));
   };
 
-  // Move the resize hooks AFTER the component props are available
-  const {
-    resizeSettings,
-    performResize,
-    resetResize,
-    updateResizeDimensions
-  } = useResize(imageRef, containerRef);
-
-
-
-  // const {
-  //   isDragging: resizeIsDragging,
-  //   isResizing,
-  //   handleResize: handleResizeResize
-  // } = useResizeHandlers(resizeSettings, containerRef, updateResizeDimensions, resetResize);
-
   const {
     isDragging,
     isResizing: cropIsResizing,
@@ -119,42 +95,34 @@ const shouldShowCropOverlay =
     getCropStyle,
     handlePointerDown,
     handleResize
-  } = useCropHandlers(
-    normalizedCropSettings,
-    containerRef,
-    reduxUpdateCropPosition,
-    reduxUpdateCropDimensions
-  );
-
-  // Use the crop handlers' isDragging and isResizing for mobile handling
-  const { isMobile } = useMobileHandling(isDragging, cropIsResizing);
+  } = cropHook;
 
   const renderCropOverlay = () => {
-    // FIXED: Only render if crop should be shown
-    if (!shouldShowCropOverlay) {
-      console.log('Not showing crop overlay - conditions not met');
+    // Only render if crop should be shown and image is loaded
+    if (!shouldShowCropOverlay || !isImageLoaded) {
+      console.log('Not showing crop overlay - conditions not met', {
+        shouldShow: shouldShowCropOverlay,
+        imageLoaded: isImageLoaded
+      });
       return null;
     }
 
-    console.log('Rendering crop overlay with settings:', normalizedCropSettings);
+    console.log('=== CROP OVERLAY RENDER DEBUG ===');
+    console.log('Crop settings:', normalizedCropSettings);
+    console.log('Aspect ratio:', aspectRatio);
 
     const shapeId = normalizedCropSettings.aspectRatio?.id;
-    const isSpecialShape = ['circle', 'triangle', 'star'].includes(shapeId);
 
-    if (isSpecialShape) {
-      return (
-        <ShapeCropOverlay
-          cropSettings={normalizedCropSettings}
-          getCropStyle={getCropStyle}
-          handlePointerDown={handlePointerDown}
-          handleResize={handleResize}
-          isDragging={isDragging}
-        />
-      );
-    }
+    console.log('Shape detection:', { 
+      shapeId, 
+      aspectRatio: normalizedCropSettings.aspectRatio 
+    });
 
+    // SIMPLIFIED: Always use ShapeCropOverlay since it now handles all shapes and aspect ratios
+    console.log('✓ Rendering ShapeCropOverlay for:', shapeId || 'default');
     return (
-      <RectangularCropOverlay
+      <ShapeCropOverlay
+        key={`crop-overlay-${shapeId || 'default'}`}
         cropSettings={normalizedCropSettings}
         getCropStyle={getCropStyle}
         handlePointerDown={handlePointerDown}

@@ -1,8 +1,7 @@
 // components/ImageDisplay.jsx
 "use client";
 import React from "react";
-import { ShapeCropOverlay } from "../ToolTypes/AdjustToolPanel/components/ShapeCropOverlay";
-import { RectangularCropOverlay } from "../ToolTypes/AdjustToolPanel/components/RectangularCropOverlay";
+
 
 export const ImageDisplay = ({
   imagePreview,

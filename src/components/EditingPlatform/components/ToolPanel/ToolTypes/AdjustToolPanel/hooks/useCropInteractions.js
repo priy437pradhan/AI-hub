@@ -1,12 +1,11 @@
-"use client";
-import { useState, useCallback } from "react";
 
-export const useCropHandlers = (
-  cropSettings,
-  containerRef,
-  updateCropPosition,
-  updateCropDimensions
-) => {
+// hooks/useCropInteractions.js - LOW-LEVEL UI INTERACTIONS
+import { useState, useCallback } from "react";
+import { useAppDispatch } from '../../../../../../../app/store/hooks/redux';
+import { updateCropPosition, updateCropDimensions } from '../../../../../../../app/store/slices/cropSlice';
+
+export const useCropInteractions = (cropSettings, containerRef) => {
+  const dispatch = useAppDispatch();
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -33,10 +32,8 @@ export const useCropHandlers = (
 
     const coords = getEventCoordinates(e);
     const bounds = containerRef.current.getBoundingClientRect();
-    const startDragX =
-      ((coords.clientX - bounds.left) * 100) / bounds.width - cropSettings.x;
-    const startDragY =
-      ((coords.clientY - bounds.top) * 100) / bounds.height - cropSettings.y;
+    const startDragX = ((coords.clientX - bounds.left) * 100) / bounds.width - cropSettings.x;
+    const startDragY = ((coords.clientY - bounds.top) * 100) / bounds.height - cropSettings.y;
 
     setDragStart({ x: startDragX, y: startDragY });
 
@@ -48,26 +45,14 @@ export const useCropHandlers = (
       const currentBounds = containerRef.current?.getBoundingClientRect();
       if (!currentBounds) return;
 
-      const x = Math.max(
-        0,
-        Math.min(
-          100 - cropSettings.width,
-          ((moveCoords.clientX - currentBounds.left) * 100) /
-            currentBounds.width - startDragX
-        )
-      );
-      const y = Math.max(
-        0,
-        Math.min(
-          100 - cropSettings.height,
-          ((moveCoords.clientY - currentBounds.top) * 100) /
-            currentBounds.height - startDragY
-        )
-      );
+      const x = Math.max(0, Math.min(100 - cropSettings.width,
+        ((moveCoords.clientX - currentBounds.left) * 100) / currentBounds.width - startDragX
+      ));
+      const y = Math.max(0, Math.min(100 - cropSettings.height,
+        ((moveCoords.clientY - currentBounds.top) * 100) / currentBounds.height - startDragY
+      ));
 
-      if (typeof updateCropPosition === "function") {
-        updateCropPosition(x, y);
-      }
+      dispatch(updateCropPosition({ x, y }));
     };
 
     const handleGlobalEnd = () => {
@@ -82,7 +67,7 @@ export const useCropHandlers = (
     document.addEventListener("mouseup", handleGlobalEnd);
     document.addEventListener("touchmove", handleGlobalMove, { passive: false });
     document.addEventListener("touchend", handleGlobalEnd);
-  }, [cropSettings, containerRef, getEventCoordinates, updateCropPosition]);
+  }, [cropSettings, containerRef, getEventCoordinates, dispatch]);
 
   const handleResize = useCallback((e, direction) => {
     e.stopPropagation();
@@ -127,12 +112,8 @@ export const useCropHandlers = (
         newHeight = initialSettings.height - constrainedDy;
       }
 
-      if (typeof updateCropDimensions === "function") {
-        updateCropDimensions(newWidth, newHeight);
-      }
-      if (typeof updateCropPosition === "function") {
-        updateCropPosition(newX, newY);
-      }
+      dispatch(updateCropDimensions({ width: newWidth, height: newHeight }));
+      dispatch(updateCropPosition({ x: newX, y: newY }));
     };
 
     const onEnd = () => {
@@ -147,7 +128,7 @@ export const useCropHandlers = (
     window.addEventListener("mouseup", onEnd);
     window.addEventListener("touchmove", onMove, { passive: false });
     window.addEventListener("touchend", onEnd);
-  }, [cropSettings, containerRef, getEventCoordinates, updateCropDimensions, updateCropPosition]);
+  }, [cropSettings, containerRef, getEventCoordinates, dispatch]);
 
   return {
     isDragging,

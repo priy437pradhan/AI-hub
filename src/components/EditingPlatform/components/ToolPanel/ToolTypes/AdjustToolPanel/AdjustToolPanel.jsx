@@ -26,7 +26,7 @@ import {
   EyeOff
 } from "lucide-react";
 
-
+import { useCropOperations } from "./hooks/useCropOperations";
 import {
   useAppDispatch,
   useToolsState,
@@ -35,7 +35,16 @@ import {
   useCropState,
   useImageState,
 } from '../../../../../../app/store/hooks/redux';
+// ADD THIS IMPORT - This is what's missing!
+import {
+  setActiveSubTool,
+} from '../../../../../../app/store/slices/toolsSlice';
 
+// ADD THIS IMPORT - For crop actions
+import {
+  setCropActive,
+  setCropSettings,
+} from '../../../../../../app/store/slices/cropSlice';
 import {
   updateFilter,
   resetFilters,
@@ -251,6 +260,8 @@ const AdjustToolPanel = ({
   performResize,
   performCrop,
   performBackgroundRemoval,
+  setCropWithAspectRatio, // ADD THIS PROP
+  cancelCrop, // ADD THIS PROP
   onBack,
     
 }) => {
@@ -281,6 +292,10 @@ const AdjustToolPanel = ({
       {},
     ),
     []
+  );
+ const cropOperations = useCropOperations(
+    imageRef,
+    (preview) => dispatch(setImagePreview(preview))
   );
 
   const hasFilterChanges = useMemo(
@@ -396,17 +411,19 @@ const AdjustToolPanel = ({
   // Section content renderer
   const renderSectionContent = () => {
     const components = {
-      crop: (
-        <CropComponent
-          aspectRatio={aspectRatio}
-          setAspectRatio={setAspectRatio}
-          performCrop={performCrop}
-          cropSettings={cropState.cropSettings}
-          imagePreview={imageState.imagePreview}
-          imageRef={imageRef}
-          {...createComponentProps()}
-        />
-      ),
+    crop: (
+      <CropComponent
+        aspectRatio={aspectRatio}
+        setAspectRatio={setAspectRatio}
+        performCrop={performCrop}
+        setCropWithAspectRatio={setCropWithAspectRatio} // ADD THIS LINE
+      cancelCrop={cancelCrop}
+        cropSettings={cropState.cropSettings}
+        imagePreview={imageState.imagePreview}
+        imageRef={imageRef}
+        {...createComponentProps()}
+      />
+    ),
       resize: (
         <ResizeComponent
           performResize={performResize}

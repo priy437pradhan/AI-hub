@@ -12,8 +12,7 @@ import ImageCanvas from "../components/EditingPlatform/components/ImageCanvas/Im
 import {useAppDispatch,useImageState,useToolsState,useFiltersState,useUIState,useCropState,useTextState,
 useFrameState,useBeautyState,} from '../../src/app/store/hooks/redux';
 
-import {setUploadedImage,setImagePreview,setOriginalImage,setCurrentBaseImage,
-  resetToOriginal as resetImageToOriginal,} from '../../src/app/store/slices/imageSlice';
+import {setUploadedImage,setImagePreview,setOriginalImage,setCurrentBaseImage, resetToOriginal as resetImageToOriginal,} from '../../src/app/store/slices/imageSlice';
 
 import { setActiveTool, setActiveSubTool, toolNames,} from '../../src/app/store/slices/toolsSlice';
 

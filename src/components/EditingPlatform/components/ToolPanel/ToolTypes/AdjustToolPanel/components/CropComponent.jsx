@@ -36,6 +36,7 @@ const CropComponent = ({
   performCrop,
   cancelCrop,
   imagePreview,
+  
   imageRef,
   isMobile = false
 }) => {
@@ -44,23 +45,28 @@ const CropComponent = ({
   const [keepAspectRatio, setKeepAspectRatio] = useState(false);
   const { gridConfig, getButtonStateClass, ScrollbarStyles } = useMobileGridButton(isMobile);
 
-  const handleAspectRatioChange = (ratioId) => {
-    console.log('Aspect ratio changed to:', ratioId);
-    
-    // Update Redux state
-    const selectedRatio = aspectRatios.find(ratio => ratio.id === ratioId);
-    dispatch(setAspectRatio(selectedRatio));
-    
-    // Enable crop mode
-    dispatch(setCropActive(true));
-    
-    // Call the hook function if available
-    if (setCropWithAspectRatio) {
-      setCropWithAspectRatio(ratioId, aspectRatios, (newSettings) => {
-        console.log("Crop settings updated:", newSettings);
-      });
-    }
-  };
+const handleAspectRatioChange = (ratioId) => {
+  console.log('=== CROP COMPONENT: Aspect ratio changed to:', ratioId);
+  
+  // Update Redux state
+  const selectedRatio = aspectRatios.find(ratio => ratio.id === ratioId);
+  console.log('Selected ratio object:', selectedRatio);
+  
+  dispatch(setAspectRatio(selectedRatio));
+  
+  // Enable crop mode
+  dispatch(setCropActive(true));
+  
+  // Call the hook function if available
+  if (setCropWithAspectRatio) {
+    console.log('Calling setCropWithAspectRatio hook');
+    setCropWithAspectRatio(ratioId, aspectRatios, (newSettings) => {
+      console.log("Crop settings updated via callback:", newSettings);
+    });
+  } else {
+    console.error('setCropWithAspectRatio hook not available!');
+  }
+};
 
   const handleCropApply = async () => {
     console.log("Apply crop clicked", {

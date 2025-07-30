@@ -138,7 +138,7 @@ const BlurComponent = ({
   isMobile = false,
   expandedSliders,
   onToggleSlider,
-  onApplyBlur // Callback for apply button
+  onApplyBlur 
 }) => {
   const { blurAdjustSliders } = useDesktopSliders();
   const { blurAdjustSliders: mobileBlurAdjustSliders } = useMobileSliders();

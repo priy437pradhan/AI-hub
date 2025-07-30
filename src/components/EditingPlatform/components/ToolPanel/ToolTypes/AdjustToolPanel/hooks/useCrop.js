@@ -49,34 +49,57 @@ export const useCrop = (imageRef, setImagePreview) => {
     ctx.closePath();
   }, []);
 
-  // Calculate aspect ratio dimensions properly
   const calculateAspectRatioDimensions = useCallback((aspectRatio, containerWidth, containerHeight) => {
-    if (!aspectRatio?.dimensions) {
-      return { width: 80, height: 80 };
-    }
+  console.log('=== ASPECT RATIO CALCULATION DEBUG ===');
+  console.log('Input aspectRatio:', aspectRatio);
+  console.log('Container dimensions:', containerWidth, 'x', containerHeight);
 
-    const { width: ratioWidth, height: ratioHeight } = aspectRatio.dimensions;
-    const targetAspectRatio = ratioWidth / ratioHeight;
-    const containerAspectRatio = containerWidth / containerHeight;
+  if (!aspectRatio?.dimensions) {
+    console.log('No aspect ratio dimensions, using default');
+    return { width: 80, height: 80 };
+  }
 
-    let cropWidth, cropHeight;
+  const { width: ratioWidth, height: ratioHeight } = aspectRatio.dimensions;
+  console.log('Ratio dimensions:', ratioWidth, 'x', ratioHeight);
 
-    if (targetAspectRatio > containerAspectRatio) {
-      cropWidth = Math.min(90, 80);
-      cropHeight = cropWidth / targetAspectRatio;
-    } else {
-      cropHeight = Math.min(90, 80);
-      cropWidth = cropHeight * targetAspectRatio;
-    }
+  if (!ratioWidth || !ratioHeight || ratioWidth <= 0 || ratioHeight <= 0) {
+    console.log('Invalid ratio dimensions, using default');
+    return { width: 80, height: 80 };
+  }
 
-    const widthPercent = Math.min(90, (cropWidth * 100) / 100);
-    const heightPercent = Math.min(90, (cropHeight * 100) / 100);
+  const targetAspectRatio = ratioWidth / ratioHeight;
+  const containerAspectRatio = containerWidth / containerHeight;
+  
+  console.log('Target aspect ratio:', targetAspectRatio);
+  console.log('Container aspect ratio:', containerAspectRatio);
 
-    return {
-      width: widthPercent,
-      height: heightPercent
-    };
-  }, []);
+  let cropWidth, cropHeight;
+
+  // Start with a reasonable base size (80% of container)
+  const maxSize = 80; // Maximum 80% of container
+  
+  if (targetAspectRatio > containerAspectRatio) {
+    // Crop is wider than container - fit by width
+    cropWidth = maxSize;
+    cropHeight = cropWidth / targetAspectRatio;
+  } else {
+    // Crop is taller than container - fit by height  
+    cropHeight = maxSize;
+    cropWidth = cropHeight * targetAspectRatio;
+  }
+
+  // Ensure minimum size
+  const minSize = 20;
+  cropWidth = Math.max(minSize, Math.min(90, cropWidth));
+  cropHeight = Math.max(minSize, Math.min(90, cropHeight));
+
+  console.log('Calculated crop dimensions:', cropWidth, 'x', cropHeight);
+
+  return {
+    width: cropWidth,
+    height: cropHeight
+  };
+}, []);
 
   // Redux action dispatchers
   const dispatchResetCrop = useCallback(() => {
@@ -113,83 +136,93 @@ export const useCrop = (imageRef, setImagePreview) => {
 
   // Set crop with aspect ratio
   const setCropWithAspectRatio = useCallback((aspectRatioId, aspectRatios, callback) => {
-    const selectedRatio = aspectRatios.find(ratio => ratio.id === aspectRatioId);
+  const selectedRatio = aspectRatios.find(ratio => ratio.id === aspectRatioId);
+  
+  console.log('=== SET CROP WITH ASPECT RATIO DEBUG ===');
+  console.log('Setting crop with aspect ratio:', { aspectRatioId, selectedRatio });
+
+  if (selectedRatio?.dimensions && imageRef.current) {
+    console.log('Processing rectangular aspect ratio');
     
-    console.log('Setting crop with aspect ratio:', { aspectRatioId, selectedRatio });
+    const imgRect = imageRef.current.getBoundingClientRect();
+    console.log('Image rect:', imgRect);
+    
+    const dimensions = calculateAspectRatioDimensions(
+      selectedRatio,
+      imgRect.width,
+      imgRect.height
+    );
 
-    if (selectedRatio?.dimensions && imageRef.current) {
-      const imgRect = imageRef.current.getBoundingClientRect();
-      const dimensions = calculateAspectRatioDimensions(
-        selectedRatio,
-        imgRect.width,
-        imgRect.height
-      );
+    const newSettings = {
+      width: dimensions.width,
+      height: dimensions.height,
+      aspectRatio: selectedRatio,
+      isActive: true,
+      x: (100 - dimensions.width) / 2,
+      y: (100 - dimensions.height) / 2
+    };
 
-      const newSettings = {
-        width: dimensions.width,
-        height: dimensions.height,
-        aspectRatio: selectedRatio,
-        isActive: true,
-        x: (100 - dimensions.width) / 2,
-        y: (100 - dimensions.height) / 2
-      };
+    console.log('New rectangular crop settings:', newSettings);
 
-      console.log('New crop settings with correct aspect ratio:', newSettings);
+    dispatch(setCropSettings(newSettings));
+    dispatch(setAspectRatio(selectedRatio));
 
-      dispatch(setCropSettings(newSettings));
-      dispatch(setAspectRatio(selectedRatio));
-
-      if (typeof callback === 'function') {
-        setTimeout(() => callback(newSettings), 0);
-      }
-    } else if (aspectRatioId === 'freeform') {
-      const newSettings = {
-        x: 10,
-        y: 10,
-        width: 80,
-        height: 80,
-        aspectRatio: null,
-        isActive: true
-      };
-      
-      dispatch(setCropSettings(newSettings));
-      dispatch(setAspectRatio(null));
-      
-      console.log('Set freeform crop:', newSettings);
-    } else if (aspectRatioId === 'original') {
-      dispatchResetCrop();
-    } else if (['circle', 'triangle', 'star'].includes(aspectRatioId)) {
-      if (!imageRef.current) return;
-      
-      const imgRect = imageRef.current.getBoundingClientRect();
-      const containerAspectRatio = imgRect.width / imgRect.height;
-      
-      let size;
-      if (containerAspectRatio > 1) {
-        size = Math.min(60, (60 * imgRect.height) / imgRect.width);
-      } else {
-        size = Math.min(60, (60 * imgRect.width) / imgRect.height);
-      }
-      
-      const newSettings = {
-        width: size,
-        height: size,
-        aspectRatio: selectedRatio,
-        isActive: true,
-        x: (100 - size) / 2,
-        y: (100 - size) / 2
-      };
-      
-      console.log('Set shape crop:', newSettings);
-      
-      dispatch(setCropSettings(newSettings));
-      dispatch(setAspectRatio(selectedRatio));
-      
-      if (typeof callback === 'function') {
-        setTimeout(() => callback(newSettings), 0);
-      }
+    if (typeof callback === 'function') {
+      setTimeout(() => callback(newSettings), 0);
     }
-  }, [calculateAspectRatioDimensions, imageRef, dispatch, dispatchResetCrop]);
+  } else if (aspectRatioId === 'freeform') {
+    console.log('Setting freeform crop');
+    const newSettings = {
+      x: 10,
+      y: 10,
+      width: 80,
+      height: 80,
+      aspectRatio: null,
+      isActive: true
+    };
+    
+    dispatch(setCropSettings(newSettings));
+    dispatch(setAspectRatio(null));
+    
+    console.log('Set freeform crop:', newSettings);
+  } else if (aspectRatioId === 'original') {
+    console.log('Resetting to original');
+    dispatchResetCrop();
+  } else if (['circle', 'triangle', 'star'].includes(aspectRatioId)) {
+    console.log('Setting shape crop:', aspectRatioId);
+    if (!imageRef.current) return;
+    
+    const imgRect = imageRef.current.getBoundingClientRect();
+    const containerAspectRatio = imgRect.width / imgRect.height;
+    
+    let size;
+    if (containerAspectRatio > 1) {
+      size = Math.min(60, (60 * imgRect.height) / imgRect.width);
+    } else {
+      size = Math.min(60, (60 * imgRect.width) / imgRect.height);
+    }
+    
+    const newSettings = {
+      width: size,
+      height: size,
+      aspectRatio: selectedRatio,
+      isActive: true,
+      x: (100 - size) / 2,
+      y: (100 - size) / 2
+    };
+    
+    console.log('Set shape crop:', newSettings);
+    
+    dispatch(setCropSettings(newSettings));
+    dispatch(setAspectRatio(selectedRatio));
+    
+    if (typeof callback === 'function') {
+      setTimeout(() => callback(newSettings), 0);
+    }
+  } else {
+    console.log('Unknown aspect ratio type:', aspectRatioId);
+  }
+}, [calculateAspectRatioDimensions, imageRef, dispatch, dispatchResetCrop]);
 
  // FIXED performCrop function in your useCrop hook
 const performCrop = useCallback((settings, imagePreview, setCurrentBaseImage) => {
@@ -343,6 +376,8 @@ const performCrop = useCallback((settings, imagePreview, setCurrentBaseImage) =>
     img.src = imageSrc;
   });
 }, [imageRef, setImagePreview, drawTriangle, drawStar, dispatchResetCrop]);
+
+
 
   // Apply crop on Enter key
   const handleCropApply = useCallback(async (setCurrentBaseImage) => {

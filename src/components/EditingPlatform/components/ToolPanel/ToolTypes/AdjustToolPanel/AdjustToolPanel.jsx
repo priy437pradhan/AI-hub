@@ -252,6 +252,7 @@ const AdjustToolPanel = ({
   performCrop,
   performBackgroundRemoval,
   onBack,
+    
 }) => {
   const dispatch = useAppDispatch();
   
@@ -304,12 +305,26 @@ const AdjustToolPanel = ({
 
   const toggleSliderExpansionHandler = (sliderKey) => {
     dispatch(toggleSliderExpansion(sliderKey));
+    
   };
 
   const handleSectionClick = (sectionId) => {
     setActiveSection(
       isMobile ? sectionId : activeSection === sectionId ? "" : sectionId,
     );
+    // CRITICAL FIX: Update the activeAdjustTool when crop is selected
+  if (sectionId === 'crop') {
+    dispatch(setActiveSubTool({ toolType: 'adjust', subTool: 'crop' }));
+    // Also activate crop mode immediately
+    dispatch(setCropActive(true));
+    dispatch(setCropSettings({ 
+      x: 10, 
+      y: 10, 
+      width: 80, 
+      height: 80, 
+      isActive: true 
+    }));
+  }
   };
 
   const handleBack = () => {

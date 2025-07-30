@@ -9,8 +9,8 @@ import { useCropHandlers } from "./ToolTypes/AdjustToolPanel/hooks/useCropHandle
 import { useMobileHandling } from "./hooks/useMobileHandling";
 
 import { useResize } from '../ToolPanel/ToolTypes/AdjustToolPanel/hooks/useResize';
-import { useResizeOverlay } from './ToolTypes/AdjustToolPanel/components/ResizeOverlay';
-import { useResizeHandlers } from './ToolTypes/AdjustToolPanel/hooks/useResizeHandler';
+
+// import { useResizeHandlers } from './ToolTypes/AdjustToolPanel/hooks/useResizeHandler';
 
 // Redux hooks
 import { 
@@ -68,12 +68,11 @@ export default function ImageCanvas({
     ...actualCropSettings,
     aspectRatio: aspectRatio
   };
-
-  // FIXED: Determine when to show crop overlay
-  const shouldShowCropOverlay = 
-    activeTool === 'adjust' && 
-    activeAdjustTool === 'crop' && 
-    normalizedCropSettings.isActive;
+const shouldShowCropOverlay = 
+  (activeTool === 'adjust' && activeAdjustTool === 'crop') || 
+  normalizedCropSettings.isActive ||
+  (activeTool === 'adjust' && toolsState.activeTool === 'adjust');
+  // const shouldShowCropOverlay = normalizedCropSettings.isActive;
 
   console.log('Debug crop overlay:', {
     activeTool,
@@ -104,16 +103,13 @@ export default function ImageCanvas({
     updateResizeDimensions
   } = useResize(imageRef, containerRef);
 
-  const {
-    getOverlayStyle,
-    handlePointerStart
-  } = useResizeOverlay(resizeSettings, containerRef, updateResizeDimensions);
 
-  const {
-    isDragging: resizeIsDragging,
-    isResizing,
-    handleResize: handleResizeResize
-  } = useResizeHandlers(resizeSettings, containerRef, updateResizeDimensions, resetResize);
+
+  // const {
+  //   isDragging: resizeIsDragging,
+  //   isResizing,
+  //   handleResize: handleResizeResize
+  // } = useResizeHandlers(resizeSettings, containerRef, updateResizeDimensions, resetResize);
 
   const {
     isDragging,

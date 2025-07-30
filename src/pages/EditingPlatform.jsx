@@ -8,61 +8,27 @@ import ToolPanel from "../components/EditingPlatform/components/ToolPanel/ToolPa
 import BottomToolbar from "../components/EditingPlatform/components/ToolPanel/BottomToolbar";
 import ImageCanvas from "../components/EditingPlatform/components/ImageCanvas/ImageCanvas";
 
-import {
-  useAppDispatch,
-  useImageState,
-  useToolsState,
-  useFiltersState,
-  useUIState,
-  useCropState,
-  useTextState,
-  useFrameState,
-  useBeautyState,
-} from '../../src/app/store/hooks/redux';
 
-import {
-  setUploadedImage,
-  setImagePreview,
-  setOriginalImage,
-  setCurrentBaseImage,
-  resetToOriginal as resetImageToOriginal,
-} from '../../src/app/store/slices/imageSlice';
+import {useAppDispatch,useImageState,useToolsState,useFiltersState,useUIState,useCropState,useTextState,
+useFrameState,useBeautyState,} from '../../src/app/store/hooks/redux';
 
-import {
-  setActiveTool,
-  setActiveSubTool,
-  toolNames,
-} from '../../src/app/store/slices/toolsSlice';
+import {setUploadedImage,setImagePreview,setOriginalImage,setCurrentBaseImage,
+  resetToOriginal as resetImageToOriginal,} from '../../src/app/store/slices/imageSlice';
 
-import {
-  updateFilter,
-  resetFilters,
-} from '../../src/app/store/slices/filtersSlice';
+import { setActiveTool, setActiveSubTool, toolNames,} from '../../src/app/store/slices/toolsSlice';
 
-import {
-  setIsMobile,
-  setSidebarOpen,
-  setIsBottomSheetOpen,
-} from '../../src/app/store/slices/uiSlice';
+import { updateFilter, resetFilters,} from '../../src/app/store/slices/filtersSlice';
 
-import {
-  resetCrop,
-  setCropActive,
-  setCropSettings,
-  toggleCropMode,
-} from '../../src/app/store/slices/cropSlice';
+import {setIsMobile,setSidebarOpen,setIsBottomSheetOpen,} from '../../src/app/store/slices/uiSlice';
 
-import {
-  clearAllText,
-} from '../../src/app/store/slices/textSlice';
+import {resetCrop,setCropActive,setCropSettings,toggleCropMode,} from '../../src/app/store/slices/cropSlice';
 
-import {
-  resetFrameSettings,
-} from '../../src/app/store/slices/frameSlice';
+import {clearAllText,} from '../../src/app/store/slices/textSlice';
 
-import {
-  resetBeautySettings,
-} from '../../src/app/store/slices/beautySlice';
+import {resetFrameSettings,} from '../../src/app/store/slices/frameSlice';
+
+import {resetBeautySettings,} from '../../src/app/store/slices/beautySlice';
+
 
 import { useFlipImage } from "../components/EditingPlatform/components/ToolPanel/ToolTypes/AdjustToolPanel/hooks/useFlipImage";
 import { useRotateImage } from "../components/EditingPlatform/components/ToolPanel/ToolTypes/AdjustToolPanel/hooks/useRotateImage";
@@ -71,9 +37,11 @@ import { useTextEditor } from "../components/EditingPlatform/components/ToolPane
 import { useTextStyles } from "../components/EditingPlatform/components/ToolPanel/hooks/useTextStyle";
 import { useCrop } from "../components/EditingPlatform/components/ToolPanel/ToolTypes/AdjustToolPanel/hooks/useCrop";
 
+
 function EditingPlatformInternal() {
   const dispatch = useAppDispatch();
   
+ 
   const imageState = useImageState();
   const toolsState = useToolsState();
   const filtersState = useFiltersState();
@@ -94,18 +62,9 @@ function EditingPlatformInternal() {
   const { performFlipBase } = useFlipImage({ imageRef });
   const { performRotateBase } = useRotateImage({ imageRef });
   const cropHook = useCrop(imageRef, (preview) => dispatch(setImagePreview(preview)));
-  const frameHook = useFrames({ 
-    imageRef, 
-    setImagePreview: (preview) => dispatch(setImagePreview(preview)) 
-  });
-  const textHook = useTextEditor({ 
-    imageRef, 
-    setImagePreview: (preview) => dispatch(setImagePreview(preview)) 
-  });
-  const styleHook = useTextStyles({ 
-    imageRef, 
-    setImagePreview: (preview) => dispatch(setImagePreview(preview)) 
-  });
+  const frameHook = useFrames({ imageRef, setImagePreview: (preview) => dispatch(setImagePreview(preview)) });
+  const textHook = useTextEditor({ imageRef, setImagePreview: (preview) => dispatch(setImagePreview(preview)) });
+  const styleHook = useTextStyles({ imageRef, setImagePreview: (preview) => dispatch(setImagePreview(preview)) });
 
   // Helper functions
   const updateFilterState = (category, values) => {
@@ -138,38 +97,38 @@ function EditingPlatformInternal() {
     dispatch(resetCrop());
   };
 
-  // Apply filters effect with proper error handling
   useEffect(() => {
-    const applyFiltersToImage = async () => {
-      if (!imageRef.current || !imageState.currentBaseImage) return;
+  const applyFiltersToImage = async () => {
+    if (!imageRef.current || !imageState.currentBaseImage) return;
 
-      try {
-        console.log('Applying filters to current base image:', imageState.currentBaseImage.substring(0, 50));
-        
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-        
-        // CRITICAL FIX: Pass the currentBaseImage explicitly to processImage
-        const processedDataURL = await processImage(
-          imageRef, 
-          canvas, 
-          ctx,
-          imageState.currentBaseImage // Explicitly pass the cropped/flipped image
-        );
-        
-        if (processedDataURL && imageRef.current) {
-          console.log('Setting processed image as preview:', processedDataURL.substring(0, 50));
-          imageRef.current.src = processedDataURL;
-          dispatch(setImagePreview(processedDataURL));
-        }
-      } catch (error) {
-        console.error("Failed to apply filters:", error);
+    try {
+      console.log('Applying filters to current base image:', imageState.currentBaseImage.substring(0, 50));
+      
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      
+      // CRITICAL FIX: Pass the currentBaseImage explicitly to processImage
+      const processedDataURL = await processImage(
+        imageRef, 
+        canvas, 
+        ctx,
+        imageState.currentBaseImage // Explicitly pass the cropped/flipped image
+      );
+      
+      if (processedDataURL && imageRef.current) {
+        console.log('Setting processed image as preview:', processedDataURL.substring(0, 50));
+        imageRef.current.src = processedDataURL;
+        dispatch(setImagePreview(processedDataURL));
       }
-    };
+    } catch (error) {
+      console.error("Failed to apply filters:", error);
+    }
+  };
 
-    const timeoutId = setTimeout(applyFiltersToImage, 50);
-    return () => clearTimeout(timeoutId);
-  }, [processImage, imageState.currentBaseImage, filtersState, dispatch]);
+  const timeoutId = setTimeout(applyFiltersToImage, 50);
+  return () => clearTimeout(timeoutId);
+}, [processImage, imageState.currentBaseImage, filtersState, dispatch]);
+
 
   // UNMODIFIED: Image operations - flip and rotate work correctly
   const performImageOperation = async (operation, ...args) => {
@@ -199,60 +158,60 @@ function EditingPlatformInternal() {
   const performFlip = (direction) =>
     performImageOperation(performFlipBase, direction);
 
-  const performCrop = async (cropSettings, imageSource) => {
-    try {
-      console.log('=== CROP DEBUG: Starting crop operation ===');
-      console.log('Current currentBaseImage before crop:', imageState.currentBaseImage?.substring(0, 50));
-      console.log('Crop settings:', cropSettings);
-      
-      // Use the current preview or the provided image source
-      const sourceImage = imageSource || imageState.imagePreview || imageState.currentBaseImage;
-      console.log('Using source image:', sourceImage?.substring(0, 50));
-      
-      const result = await cropHook.performCrop(
-        cropSettings,
-        sourceImage,
-        (newBaseImage) => {
-          console.log('=== CROP DEBUG: Crop hook callback - updating currentBaseImage ===');
-          console.log('New base image from crop:', newBaseImage?.substring(0, 50));
-          dispatch(setCurrentBaseImage(newBaseImage));
-        }
-      );
-      
-      if (result) {
-        console.log('=== CROP DEBUG: Crop successful, updating all states ===');
-        console.log('Crop result:', result.substring(0, 50));
-        
-        // CRITICAL: Update currentBaseImage FIRST and IMMEDIATELY
-        dispatch(setCurrentBaseImage(result));
-        
-        // Small delay to ensure Redux state is updated
-        await new Promise(resolve => setTimeout(resolve, 10));
-        
-        // Then update preview
-        dispatch(setImagePreview(result));
-        
-        // Update the image reference immediately
-        if (imageRef.current) {
-          imageRef.current.src = result;
-        }
-        
-        // Reset all filters after crop to avoid conflicts
-        resetAllFilters();
-        
-        // Deactivate crop mode
-        dispatch(setCropActive(false));
-        
-        console.log('=== CROP DEBUG: Crop operation completed ===');
-        console.log('Final currentBaseImage should be:', result.substring(0, 50));
+const performCrop = async (cropSettings, imageSource) => {
+  try {
+    console.log('=== CROP DEBUG: Starting crop operation ===');
+    console.log('Current currentBaseImage before crop:', imageState.currentBaseImage?.substring(0, 50));
+    console.log('Crop settings:', cropSettings);
+    
+    // Use the current preview or the provided image source
+    const sourceImage = imageSource || imageState.imagePreview || imageState.currentBaseImage;
+    console.log('Using source image:', sourceImage?.substring(0, 50));
+    
+    const result = await cropHook.performCrop(
+      cropSettings,
+      sourceImage,
+      (newBaseImage) => {
+        console.log('=== CROP DEBUG: Crop hook callback - updating currentBaseImage ===');
+        console.log('New base image from crop:', newBaseImage?.substring(0, 50));
+        dispatch(setCurrentBaseImage(newBaseImage));
       }
-      return result;
-    } catch (error) {
-      console.error("Crop operation failed:", error);
+    );
+    
+    if (result) {
+      console.log('=== CROP DEBUG: Crop successful, updating all states ===');
+      console.log('Crop result:', result.substring(0, 50));
+      
+      // CRITICAL: Update currentBaseImage FIRST and IMMEDIATELY
+      dispatch(setCurrentBaseImage(result));
+      
+      // Small delay to ensure Redux state is updated
+      await new Promise(resolve => setTimeout(resolve, 10));
+      
+      // Then update preview
+      dispatch(setImagePreview(result));
+      
+      // Update the image reference immediately
+      if (imageRef.current) {
+        imageRef.current.src = result;
+      }
+      
+      // Reset all filters after crop to avoid conflicts
+      resetAllFilters();
+      
+      // Deactivate crop mode
       dispatch(setCropActive(false));
-      return null;
+      
+      console.log('=== CROP DEBUG: Crop operation completed ===');
+      console.log('Final currentBaseImage should be:', result.substring(0, 50));
     }
-  };
+    return result;
+  } catch (error) {
+    console.error("Crop operation failed:", error);
+    dispatch(setCropActive(false));
+    return null;
+  }
+};
 
   const performApplyFrame = (frameStyle, frameColor, frameWidth) =>
     performImageOperation(
@@ -261,7 +220,6 @@ function EditingPlatformInternal() {
       frameColor,
       frameWidth,
     );
-
   const performApplyFrameEffects = (shadow, spread, shadowColor) =>
     performImageOperation(
       frameHook.applyFrameEffects,
@@ -300,7 +258,7 @@ function EditingPlatformInternal() {
   };
 
   const handleFileChange = (event) => {
-    const file = event.target.files?.[0];
+    const file = event.target.files[0];
     if (!file) return;
 
     // Store only serializable file metadata instead of the File object
@@ -326,12 +284,8 @@ function EditingPlatformInternal() {
   };
 
   const handleUploadClick = () => fileInputRef.current?.click();
-
   const downloadImage = () => {
-    if (!imageState.imagePreview) {
-      alert("Please upload an image first.");
-      return;
-    }
+    if (!imageState.imagePreview) return alert("Please upload an image first.");
     const link = document.createElement("a");
     link.download = "edited-image.jpg";
     link.href = imageState.imagePreview;
@@ -365,8 +319,9 @@ function EditingPlatformInternal() {
     }
   }, [
     textState.textElements,
-    textHook,
+    textHook.applyTextToImage,
     toolsState.activeTool,
+    toolNames.TEXT,
     dispatch,
   ]);
 
@@ -387,13 +342,13 @@ function EditingPlatformInternal() {
       // Handle function updates
       const currentCategoryState = filtersState[category];
       const newValues = values(currentCategoryState);
-      updateFilterState(category, newValues);
+      updateFilterState(category, values);
     } else {
       updateFilterState(category, values);
     }
   };
 
-  const toolPanelProps = useMemo(() => ({
+  const toolPanelProps = {
     activeTool: toolsState.activeTool,
     activeAdjustTool: toolsState.activeTools.adjust,
     setActiveAdjustTool: (tool) =>
@@ -425,7 +380,7 @@ function EditingPlatformInternal() {
     toggleCrop,
     resetCropState,
     isCropActive: cropState.cropSettings.isActive,
-    basicAdjust: filtersState.basicAdjust,
+     basicAdjust: filtersState.basicAdjust,
     setBasicAdjust: createFilterSetter("basicAdjust"),
     colorAdjust: filtersState.colorAdjust,
     setColorAdjust: createFilterSetter("colorAdjust"),
@@ -446,30 +401,7 @@ function EditingPlatformInternal() {
     ...frameHook,
     ...textHook,
     ...styleHook,
-  }), [
-    toolsState,
-    uiState.isMobile,
-    dispatch,
-    imageRef,
-    performFlip,
-    performRotate,
-    performCrop,
-    handleBeautyFeature,
-    beautyState.beautySettings,
-    performApplyFrame,
-    performApplyFrameEffects,
-    cropState.cropSettings,
-    activateCropMode,
-    deactivateCropMode,
-    toggleCrop,
-    resetCropState,
-    filtersState,
-    createFilterSetter,
-    cropHook,
-    frameHook,
-    textHook,
-    styleHook,
-  ]);
+  };
 
   return (
     <div className="flex flex-col h-screen bg-gray-100 dark:bg-dark-bg">
@@ -523,7 +455,7 @@ function EditingPlatformInternal() {
       </div>
 
       {uiState.isMobile && (
-        <div className="fixed bottom-0 left-0 right-0 bg-gray-900 border-gray-700 z-30">
+        <div className="fixed bottom-0 left-0 right-0 bg-gray-900  border-gray-700 z-30">
           <BottomToolbar
             activeTool={toolsState.activeTool}
             setActiveTool={(tool) => dispatch(setActiveTool(tool))}
@@ -543,4 +475,4 @@ function EditingPlatformInternal() {
   );
 }
 
-export default EditingPlatformInternal;
+export default EditingPlatformInternal

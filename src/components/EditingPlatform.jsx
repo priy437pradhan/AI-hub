@@ -1,41 +1,43 @@
-"use client";
-import { useRef, useEffect, useMemo } from "react";
-import { useImageProcessor } from "../../src/components/EditingPlatform/components/ToolPanel/hooks/useImageProcessor";
+'use client';
 
-import Header from "../components/EditingPlatform/components/Header";
-import Sidebar from "../components/EditingPlatform/components/Sidebar";
-import ToolPanel from "../components/EditingPlatform/components/ToolPanel/ToolPanel";
-import BottomToolbar from "../components/EditingPlatform/components/ToolPanel/BottomToolbar";
-import ImageCanvas from "../components/EditingPlatform/components/ImageCanvas/ImageCanvas";
+import { useDispatch, useSelector } from 'react-redux';;
+import { useRef, useEffect, useMemo } from "react";
+import { useImageProcessor } from "./EditingPlatform/components/ToolPanel/hooks/useImageProcessor";
+
+import Header from "./EditingPlatform/components/Header";
+import Sidebar from "./EditingPlatform/components/Sidebar";
+import ToolPanel from "./EditingPlatform/components/ToolPanel/ToolPanel";
+import BottomToolbar from "./EditingPlatform/components/ToolPanel/BottomToolbar";
+import ImageCanvas from "./EditingPlatform/components/ImageCanvas/ImageCanvas";
 
 
 import {useAppDispatch,useImageState,useToolsState,useFiltersState,useUIState,useCropState,useTextState,
-useFrameState,useBeautyState,} from '../../src/app/store/hooks/redux';
+useFrameState,useBeautyState,} from '../app/store/hooks/redux';
 
 import {setUploadedImage,setImagePreview,setOriginalImage,setCurrentBaseImage,
-  resetToOriginal as resetImageToOriginal,} from '../../src/app/store/slices/imageSlice';
+  resetToOriginal as resetImageToOriginal,} from '../app/store/slices/imageSlice';
 
-import { setActiveTool, setActiveSubTool, toolNames,} from '../../src/app/store/slices/toolsSlice';
+import { setActiveTool, setActiveSubTool, toolNames,} from '../app/store/slices/toolsSlice';
 
-import { updateFilter, resetFilters,} from '../../src/app/store/slices/filtersSlice';
+import { updateFilter, resetFilters,} from '../app/store/slices/filtersSlice';
 
-import {setIsMobile,setSidebarOpen,setIsBottomSheetOpen,} from '../../src/app/store/slices/uiSlice';
+import {setIsMobile,setSidebarOpen,setIsBottomSheetOpen,} from '../app/store/slices/uiSlice';
 
-import {resetCrop,setCropActive,setCropSettings,toggleCropMode,} from '../../src/app/store/slices/cropSlice';
+import {resetCrop,setCropActive,setCropSettings,toggleCropMode,} from '../app/store/slices/cropSlice';
 
-import {clearAllText,} from '../../src/app/store/slices/textSlice';
+import {clearAllText,} from '../app/store/slices/textSlice';
 
-import {resetFrameSettings,} from '../../src/app/store/slices/frameSlice';
+import {resetFrameSettings,} from '../app/store/slices/frameSlice';
 
-import {resetBeautySettings,} from '../../src/app/store/slices/beautySlice';
+import {resetBeautySettings,} from '../app/store/slices/beautySlice';
 
 
-import { useFlipImage } from "../components/EditingPlatform/components/ToolPanel/ToolTypes/AdjustToolPanel/hooks/useFlipImage";
-import { useRotateImage } from "../components/EditingPlatform/components/ToolPanel/ToolTypes/AdjustToolPanel/hooks/useRotateImage";
-import { useFrames } from "../components/EditingPlatform/components/ToolPanel/hooks/useFrames";
-import { useTextEditor } from "../components/EditingPlatform/components/ToolPanel/hooks/useTextEditor";
-import { useTextStyles } from "../components/EditingPlatform/components/ToolPanel/hooks/useTextStyle";
-import { useCrop } from "../components/EditingPlatform/components/ToolPanel/ToolTypes/AdjustToolPanel/hooks/useCrop";
+import { useFlipImage } from "./EditingPlatform/components/ToolPanel/ToolTypes/AdjustToolPanel/hooks/useFlipImage";
+import { useRotateImage } from "./EditingPlatform/components/ToolPanel/ToolTypes/AdjustToolPanel/hooks/useRotateImage";
+import { useFrames } from "./EditingPlatform/components/ToolPanel/hooks/useFrames";
+import { useTextEditor } from "./EditingPlatform/components/ToolPanel/hooks/useTextEditor";
+import { useTextStyles } from "./EditingPlatform/components/ToolPanel/hooks/useTextStyle";
+import { useCrop } from "./EditingPlatform/components/ToolPanel/ToolTypes/AdjustToolPanel/hooks/useCrop";
 
 
 function EditingPlatformInternal() {

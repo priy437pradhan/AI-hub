@@ -1,15 +1,11 @@
-// "use client"
-// import Editpt from '../../pages/EditingPlatform'
+'use client';
+
 import dynamic from 'next/dynamic';
-const Editpt  = dynamic(() => import('../../pages/EditingPlatform'), {
-  ssr: false
+
+const Editpt = dynamic(() => import('../../components/EditingPlatform'), {
+  ssr: false,
 });
-export default function editpt() {
-  return (
-    <>
-   
-      <Editpt />
- 
-    </>
-  );
+
+export default function EditPtPage() {
+  return <Editpt />;
 }

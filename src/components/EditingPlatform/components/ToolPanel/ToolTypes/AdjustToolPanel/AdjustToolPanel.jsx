@@ -35,15 +35,14 @@ import {
   useCropState,
   useImageState,
 } from '../../../../../../app/store/hooks/redux';
-// ADD THIS IMPORT - This is what's missing!
 import {
   setActiveSubTool,
 } from '../../../../../../app/store/slices/toolsSlice';
 
-// ADD THIS IMPORT - For crop actions
 import {
   setCropActive,
   setCropSettings,
+  // setImagePreview,
 } from '../../../../../../app/store/slices/cropSlice';
 import {
   updateFilter,
@@ -55,7 +54,7 @@ import {
   toggleSliderExpansion,
 } from '../../../../../../app/store/slices/uiSlice';
 
-// Component imports (these would be your existing components)
+// Component imports
 import BlurComponent from "./components/BlurComponent";
 import MosaicComponent from "./components/MosaicComponent";
 import VignetteComponent from "./components/VignetteComponent";
@@ -260,10 +259,9 @@ const AdjustToolPanel = ({
   performResize,
   performCrop,
   performBackgroundRemoval,
-  setCropWithAspectRatio, // ADD THIS PROP
-  cancelCrop, // ADD THIS PROP
+  setCropWithAspectRatio, // ✅ CRITICAL: Receive this prop
+  cancelCrop, // ✅ CRITICAL: Receive this prop
   onBack,
-    
 }) => {
   const dispatch = useAppDispatch();
   
@@ -279,6 +277,13 @@ const AdjustToolPanel = ({
   const [previewMode, setPreviewMode] = useState(false);
   const [aspectRatio, setAspectRatio] = useState(" ");
 
+  // ✅ ADD DEBUG LOG
+  console.log('AdjustToolPanel received crop props:', {
+    setCropWithAspectRatio: !!setCropWithAspectRatio,
+    cancelCrop: !!cancelCrop,
+    performCrop: !!performCrop
+  });
+
   // Memoized values
   const isMobile = uiState.isMobile;
   const expandedSliders = new Set(uiState.expandedSliders);
@@ -293,7 +298,8 @@ const AdjustToolPanel = ({
     ),
     []
   );
- const cropOperations = useCropOperations(
+
+  const cropOperations = useCropOperations(
     imageRef,
     (preview) => dispatch(setImagePreview(preview))
   );
@@ -320,7 +326,6 @@ const AdjustToolPanel = ({
 
   const toggleSliderExpansionHandler = (sliderKey) => {
     dispatch(toggleSliderExpansion(sliderKey));
-    
   };
 
   const handleSectionClick = (sectionId) => {
@@ -328,11 +333,11 @@ const AdjustToolPanel = ({
       isMobile ? sectionId : activeSection === sectionId ? "" : sectionId,
     );
     // CRITICAL FIX: Update the activeAdjustTool when crop is selected
-  if (sectionId === 'crop') {
-    dispatch(setActiveSubTool({ toolType: 'adjust', subTool: 'crop' }));
-    // Also activate crop mode immediately
-    dispatch(setCropActive(true));
-    dispatch(setCropSettings({ 
+    if (sectionId === 'crop') {
+      dispatch(setActiveSubTool({ toolType: 'adjust', subTool: 'crop' }));
+      // Also activate crop mode immediately
+      dispatch(setCropActive(true));
+      dispatch(setCropSettings({ 
       x: 10, 
       y: 10, 
       width: 80, 

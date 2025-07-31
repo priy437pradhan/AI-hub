@@ -40,6 +40,11 @@ export const applyAllFiltersToCanvas = (canvas, ctx, originalImg, basicAdjust, c
     applyDenoiseFilters(data, originalData, canvas.width, canvas.height, denoiseAdjust);
     console.log('DENOISE FILTERS APPLIED');
   }
+  
+    if (basicAdjust && (basicAdjust.brightness !== 0 || basicAdjust.contrast !== 0 || basicAdjust.saturation !== 0 || basicAdjust.sharpness !== 0)) {
+    console.log('Applying basic filters:', basicAdjust);
+    applyBasicFilters(data, basicAdjust);
+  }
 
   // Apply basic adjustments (brightness, contrast, saturation, sharpness)
   if (basicAdjust && (basicAdjust.brightness !== 0 || basicAdjust.contrast !== 0 || basicAdjust.saturation !== 0 || basicAdjust.sharpness !== 0)) {

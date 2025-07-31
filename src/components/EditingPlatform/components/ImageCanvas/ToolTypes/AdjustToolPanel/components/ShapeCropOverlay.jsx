@@ -64,101 +64,80 @@ const getWhatsAppDPPath = (size) => {
           Q 0 0 ${r} 0 Z`;
 };
 
-// Function to get the appropriate shape path with proper dimensions
-const getShapePath = (shapeId, width, height) => {
-  switch (shapeId) {
-    case 'circle':
-    case 'fb-dp':
-      return null; 
-    case 'triangle':
-      return getTrianglePath(width, height);
-    case 'star':
-      return getStarPath(width, height);
-    case 'freeform':
-      return getFreeformPath(width, height);
-    case 'original':
-      return getRectanglePath(width, height);
-    case '1x1':
-      return getSquarePath(Math.min(width, height));
-    case 'whatsapp-dp':
-      return getWhatsAppDPPath(Math.min(width, height));
-   
-    case 'fb-cover':
-    case 'fb-post':
-    case 'yt-thumbnail':
-    case '4x5':
-    case '5x4':
-    case '3x4':
-    case '4x3':
-    case '2x3':
-    case '3x2':
-    case '9x16':
-    case '16x9':
-      return getRectanglePath(width, height);
-    default:
-      return getRectanglePath(width, height);
-  }
-};
-
 // Function to determine if shape should be rendered as a circle
 const isCircleShape = (shapeId) => {
-  return ['circle', 'fb-dp'].includes(shapeId);
+  return ['circle'].includes(shapeId);
 };
 
-// CRITICAL FIX: Function to get PROPER viewBox dimensions for each aspect ratio
-const getViewBoxAndAspect = (shapeId) => {
-  switch (shapeId) {
-    // Square shapes
-    case 'circle':
-    case 'fb-dp':
-    case '1x1':
-    case 'whatsapp-dp':
-      return { viewBox: '0 0 100 100', preserveAspectRatio: 'none' };
-    
-    // Special shapes that need square canvas
-    case 'triangle':
-    case 'star':
-    case 'freeform':
-      return { viewBox: '0 0 100 100', preserveAspectRatio: 'none' };
-    
-    // DIFFERENT RECTANGULAR RATIOS - EACH GETS UNIQUE VIEWBOX
-    case '4x5':
-      return { viewBox: '0 0 400 500', preserveAspectRatio: 'none' };
-    case '5x4':
-      return { viewBox: '0 0 500 400', preserveAspectRatio: 'none' };
-    case '3x4':
-      return { viewBox: '0 0 300 400', preserveAspectRatio: 'none' };
-    case '4x3':
-      return { viewBox: '0 0 400 300', preserveAspectRatio: 'none' };
-    case '2x3':
-      return { viewBox: '0 0 200 300', preserveAspectRatio: 'none' };
-    case '3x2':
-      return { viewBox: '0 0 300 200', preserveAspectRatio: 'none' };
-    case '9x16':
-      return { viewBox: '0 0 900 1600', preserveAspectRatio: 'none' };
-    case '16x9':
-      return { viewBox: '0 0 1600 900', preserveAspectRatio: 'none' };
-    
-    // Social media - simplified, no special decorations
-    case 'fb-cover':
-      return { viewBox: '0 0 820 312', preserveAspectRatio: 'none' };
-    case 'fb-post':
-      return { viewBox: '0 0 400 500', preserveAspectRatio: 'none' };
-    case 'yt-thumbnail':
-      return { viewBox: '0 0 1600 900', preserveAspectRatio: 'none' };
-    
-    default:
-      return { viewBox: '0 0 100 100', preserveAspectRatio: 'none' };
-  }
-};
-
-// Function to get shape path with correct viewBox dimensions
-const getShapePathForViewBox = (shapeId, viewBoxConfig) => {
-  const viewBoxDimensions = viewBoxConfig.viewBox.split(' ');
-  const width = parseInt(viewBoxDimensions[2]);
-  const height = parseInt(viewBoxDimensions[3]);
+// FIXED: Use percentage-based coordinate system to match crop positioning
+const getUnifiedViewBoxAndPath = (shapeId, cropSettings, imageWidth, imageHeight) => {
+  // CRITICAL FIX: Use percentage coordinates (0-100) instead of pixels
+  // This ensures the SVG coordinate system matches the crop positioning system
+  const viewBoxWidth = 100;
+  const viewBoxHeight = 100;
   
-  return getShapePath(shapeId, width, height);
+  console.log('Unified coordinates (FIXED):', {
+    shapeId,
+    viewBox: `0 0 ${viewBoxWidth} ${viewBoxHeight}`,
+    cropPercent: { width: cropSettings.width, height: cropSettings.height }
+  });
+
+  // Use the percentage-based viewBox
+  const viewBox = `0 0 ${viewBoxWidth} ${viewBoxHeight}`;
+  
+  let shapePath = null;
+  
+  switch (shapeId) {
+    case 'circle':
+      // Circle is handled as SVG element with percentage coordinates
+      break;
+      
+    case 'triangle':
+      shapePath = getTrianglePath(viewBoxWidth, viewBoxHeight);
+      break;
+      
+    case 'star':
+      shapePath = getStarPath(viewBoxWidth, viewBoxHeight);
+      break;
+      
+    case 'freeform':
+      shapePath = getFreeformPath(viewBoxWidth, viewBoxHeight);
+      break;
+      
+    case 'whatsapp-dp':
+      const minSize = Math.min(viewBoxWidth, viewBoxHeight);
+      shapePath = getWhatsAppDPPath(minSize);
+      break;
+      
+    case '1x1':
+      const squareSize = Math.min(viewBoxWidth, viewBoxHeight);
+      shapePath = getSquarePath(squareSize);
+      break;
+      
+    // All rectangular aspect ratios use the full viewBox dimensions
+    case 'original':
+    case 'fb-dp':
+    case 'fb-cover':
+    case 'fb-post':
+    case 'yt-thumbnail':
+    case '4x5':
+    case '5x4':
+    case '3x4':
+    case '4x3':
+    case '2x3':
+    case '3x2':
+    case '9x16':
+    case '16x9':
+    default:
+      shapePath = getRectanglePath(viewBoxWidth, viewBoxHeight);
+      break;
+  }
+
+  return {
+    viewBox,
+    shapePath,
+    preserveAspectRatio: 'none' // This ensures the shape stretches to fit the crop area exactly
+  };
 };
 
 // SIMPLIFIED: Function to get basic styling for different shapes
@@ -184,7 +163,9 @@ export const ShapeCropOverlay = ({
   getCropStyle,
   handlePointerDown,
   handleResize,
-  isDragging
+  isDragging,
+  imageWidth, // Still received but not used for viewBox calculations
+  imageHeight // Still received but not used for viewBox calculations
 }) => {
   const shapeId = cropSettings.aspectRatio?.id;
   
@@ -207,12 +188,18 @@ export const ShapeCropOverlay = ({
     return null;
   }
 
-  console.log('ShapeCropOverlay: Rendering shape crop for:', shapeId);
+  console.log('ShapeCropOverlay: Rendering shape crop for:', shapeId, 'with percentage-based coordinates');
 
   const isCircle = isCircleShape(shapeId);
   const styling = getShapeSpecificStyling(shapeId);
-  const viewBoxConfig = getViewBoxAndAspect(shapeId);
-  const shapePath = isCircle ? null : getShapePathForViewBox(shapeId, viewBoxConfig);
+  
+  // FIXED: Use percentage-based coordinate system
+  const { viewBox, shapePath, preserveAspectRatio } = getUnifiedViewBoxAndPath(
+    shapeId, 
+    cropSettings, 
+    imageWidth, 
+    imageHeight
+  );
 
   return (
     <div
@@ -224,8 +211,8 @@ export const ShapeCropOverlay = ({
       {/* SVG overlay for shapes */}
       <svg 
         className="absolute inset-0 w-full h-full pointer-events-none"
-        viewBox={viewBoxConfig.viewBox}
-        preserveAspectRatio={viewBoxConfig.preserveAspectRatio}
+        viewBox={viewBox}
+        preserveAspectRatio={preserveAspectRatio}
       >
         <defs>
           <mask id={`shapeCropMask-${shapeId}`}>

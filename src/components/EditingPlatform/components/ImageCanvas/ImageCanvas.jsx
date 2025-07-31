@@ -4,8 +4,8 @@ import { AdPlaceholder } from "./components/AdPlaceholder";
 import { EmptyImageState } from "./components/EmptyImageState";
 import { ImageDisplay } from "./components/ImageDisplay";
 import { ShapeCropOverlay } from "./ToolTypes/AdjustToolPanel/components/ShapeCropOverlay";
-// REMOVED: RectangularCropOverlay import since ShapeCropOverlay now handles everything
-
+// import { BlurManualAdjustmentOverlay } from '../../components/ToolPanel/ToolTypes/AdjustToolPanel/components/BlurComponent';
+import { BlurManualAdjustmentOverlay } from "./ToolTypes/AdjustToolPanel/components/BlurManualAdjustmentOverlay";
 import { 
   useAppDispatch, 
   useImageState, 
@@ -14,15 +14,17 @@ import {
   useTextState 
 } from '../../../../app/store/hooks/redux';
 
+import { useSelector } from 'react-redux';
 import { updateCropPosition, updateCropDimensions } from '../../../../app/store/slices/cropSlice';
 import { updateTextElement } from '../../../../app/store/slices/textSlice';
+import { updateFilter } from '../../../../app/store/slices/filtersSlice';
 
 export default function ImageCanvas({
   handleUploadClick,
   imageRef,
-  containerRef, // ✅ NOW RECEIVED FROM PARENT
+  containerRef,
   performCrop,
-  cropHook, // ✅ RECEIVE THE UNIFIED CROP HOOK
+  cropHook,
   showSideAd = false,
   showBottomAd = false,
 }) {
@@ -33,9 +35,13 @@ export default function ImageCanvas({
   const toolsState = useToolsState();
   const cropState = useCropState();
   const textState = useTextState();
+  
+  // Get blur state from Redux
+  const blurAdjust = useSelector(state => state.filters.blurAdjust);
 
   // Local state
   const [isImageLoaded, setIsImageLoaded] = useState(false);
+  const [imageInfo, setImageInfo] = useState({ width: 0, height: 0 });
 
   // Extract values from Redux state
   const imagePreview = imageState.imagePreview;
@@ -65,6 +71,11 @@ export default function ImageCanvas({
     normalizedCropSettings.isActive ||
     (activeTool === 'adjust' && toolsState.activeTool === 'adjust');
 
+  // Determine if blur overlay should be shown
+  const shouldShowBlurOverlay = 
+    (activeTool === 'adjust' && activeAdjustTool === 'blur') || 
+    (blurAdjust?.intensity > 0);
+
   console.log('Debug crop overlay:', {
     activeTool,
     activeAdjustTool, 
@@ -72,6 +83,14 @@ export default function ImageCanvas({
     shouldShow: shouldShowCropOverlay,
     cropSettings: normalizedCropSettings,
     shapeId: normalizedCropSettings.aspectRatio?.id
+  });
+
+  console.log('Debug blur overlay:', {
+    activeTool,
+    activeAdjustTool,
+    blurIntensity: blurAdjust?.intensity,
+    shouldShow: shouldShowBlurOverlay,
+    blurAdjust
   });
 
   // Redux-enabled update functions
@@ -85,6 +104,18 @@ export default function ImageCanvas({
 
   const reduxUpdateTextElement = (id, updates) => {
     dispatch(updateTextElement({ id, updates }));
+  };
+
+  // Blur adjustment handler
+  const handleBlurAdjustmentChange = (property, value) => {
+    const processedValue = property === 'type' ? value : parseInt(value);
+    
+    dispatch(updateFilter({
+      category: 'blurAdjust',
+      values: { 
+        [property]: processedValue
+      }
+    }));
   };
 
   const {
@@ -110,6 +141,7 @@ export default function ImageCanvas({
     console.log('=== CROP OVERLAY RENDER DEBUG ===');
     console.log('Crop settings:', normalizedCropSettings);
     console.log('Aspect ratio:', aspectRatio);
+    console.log('Image dimensions:', imageInfo);
 
     const shapeId = normalizedCropSettings.aspectRatio?.id;
 
@@ -118,7 +150,6 @@ export default function ImageCanvas({
       aspectRatio: normalizedCropSettings.aspectRatio 
     });
 
-    // SIMPLIFIED: Always use ShapeCropOverlay since it now handles all shapes and aspect ratios
     console.log('✓ Rendering ShapeCropOverlay for:', shapeId || 'default');
     return (
       <ShapeCropOverlay
@@ -128,12 +159,66 @@ export default function ImageCanvas({
         handlePointerDown={handlePointerDown}
         handleResize={handleResize}
         isDragging={isDragging}
+        imageWidth={imageInfo.width}
+        imageHeight={imageInfo.height}
       />
     );
   };
 
-  const handleImageLoad = () => {
+  // NEW: Render blur overlay function
+  const renderBlurOverlay = () => {
+    // Only render if blur should be shown and image is loaded
+    if (!shouldShowBlurOverlay || !isImageLoaded) {
+      console.log('Not showing blur overlay - conditions not met', {
+        shouldShow: shouldShowBlurOverlay,
+        imageLoaded: isImageLoaded,
+        blurIntensity: blurAdjust?.intensity
+      });
+      return null;
+    }
+
+    console.log('=== BLUR OVERLAY RENDER DEBUG ===');
+    console.log('Blur settings:', blurAdjust);
+    console.log('Image dimensions:', imageInfo);
+    console.log('✓ Rendering BlurManualAdjustmentOverlay');
+
+    return (
+      <BlurManualAdjustmentOverlay 
+        key="blur-overlay"
+        blurAdjust={blurAdjust}
+        onAdjustmentChange={handleBlurAdjustmentChange}
+        imageWidth={imageInfo.width}
+        imageHeight={imageInfo.height}
+      />
+    );
+  };
+
+  const handleImageLoad = (event) => {
     setIsImageLoaded(true);
+    
+    // Get the actual image dimensions
+    if (event && event.target) {
+      const img = event.target;
+      setImageInfo({
+        width: img.naturalWidth,
+        height: img.naturalHeight
+      });
+      console.log('Image loaded with dimensions:', {
+        width: img.naturalWidth,
+        height: img.naturalHeight
+      });
+    } else if (imageRef.current) {
+      // Fallback: get dimensions from imageRef
+      const img = imageRef.current;
+      setImageInfo({
+        width: img.naturalWidth,
+        height: img.naturalHeight
+      });
+      console.log('Image dimensions from ref:', {
+        width: img.naturalWidth,
+        height: img.naturalHeight
+      });
+    }
   };
 
   // Keyboard shortcuts
@@ -184,6 +269,7 @@ export default function ImageCanvas({
                   cropSettings={normalizedCropSettings}
                   containerRef={containerRef}
                   renderCropOverlay={renderCropOverlay}
+                  renderBlurOverlay={renderBlurOverlay} // NEW: Pass blur overlay renderer
                 />
               </div>
             ) : (

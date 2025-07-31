@@ -64,6 +64,10 @@ const ToolPanel = ({
   setElementColor,
   elementSize,
   setElementSize,
+  // ✅ CRITICAL CROP PROPS
+  setCropWithAspectRatio,
+  cancelCrop,
+  ...otherProps // Catch all remaining props
 }) => {
   const dispatch = useAppDispatch();
   const history = useHistory();
@@ -91,6 +95,13 @@ const ToolPanel = ({
   const isMobile = uiState.isMobile;
   const imagePreview = imageState.imagePreview;
 
+  // ✅ ADD DEBUG LOG TO VERIFY PROPS ARE RECEIVED
+  console.log('ToolPanel received crop props:', {
+    setCropWithAspectRatio: !!setCropWithAspectRatio,
+    cancelCrop: !!cancelCrop,
+    performCrop: !!performCrop
+  });
+
   // Initialize history when component mounts or when image changes
   useEffect(() => {
     if (imagePreview && !historyState.present) {
@@ -105,7 +116,6 @@ const ToolPanel = ({
     }
   }, [imagePreview, historyState.present]);
 
-
   useEffect(() => {
     if (!imagePreview) return;
 
@@ -116,7 +126,6 @@ const ToolPanel = ({
       frameState.frameSettings,
       beautyState.beautySettings
     );
-
 
     history.saveCurrentState(currentState);
   }, [filtersState, textState.textElements, frameState.frameSettings, beautyState.beautySettings]);
@@ -186,18 +195,6 @@ const ToolPanel = ({
     }
   };
 
-  // Crop functions from Redux hook
-  const {
-    setCropSettings,
-    performCrop: hookPerformCrop,
-    setCropWithAspectRatio,
-    toggleCropMode,
-    cancelCrop,
-    updateCropPosition,
-    updateCropDimensions,
-    resetCrop,
-  } = cropState;
-
   // Text functions from Redux state
   const {
     textElements,
@@ -207,24 +204,20 @@ const ToolPanel = ({
 
   // Redux text update functions (you'll need to implement these in your text hooks)
   const setTextSettings = (settings) => {
-    // This should dispatch to text slice
     console.log('setTextSettings should be implemented with Redux dispatch', settings);
   };
 
   const setStyleSettings = (settings) => {
-    // This should dispatch to text slice
     console.log('setStyleSettings should be implemented with Redux dispatch', settings);
   };
 
   const updateTextElement = (id, updates) => {
-    // This should dispatch to text slice
     console.log('updateTextElement should be implemented with Redux dispatch', id, updates);
   };
 
   // Frame settings from Redux
   const { frameSettings } = frameState;
   const setFrameSettings = (settings) => {
-    // This should dispatch to frame slice
     console.log('setFrameSettings should be implemented with Redux dispatch', settings);
   };
 
@@ -239,14 +232,10 @@ const ToolPanel = ({
     performRotate: wrappedPerformRotate,
     performResize,
     cropSettings: cropState, 
-    setCropSettings,
-    performCrop: wrappedPerformCrop || hookPerformCrop,
+    performCrop: wrappedPerformCrop,
+    // ✅ CRITICAL: Pass through crop functions from props
     setCropWithAspectRatio,
-    toggleCropMode,
     cancelCrop,
-    updateCropPosition,
-    updateCropDimensions,
-    resetCrop,
     imagePreview,
     performBackgroundRemoval,
     // Filter states and setters from Redux
@@ -364,10 +353,6 @@ const ToolPanel = ({
            
             <div className="pb-4 border-b border-gray-700">
               <div className="flex items-center justify-between mb-2">
-                {/* <h3 className="text-sm font-semibold text-gray-300 hidden md:block">History</h3> */}
-                {/* <span className="text-xs text-gray-500 hidden md:block">
-                  {historyState.past.length} steps
-                </span> */}
               </div>
               <UndoRedoControls
                 canUndo={historyState.canUndo}
@@ -379,9 +364,6 @@ const ToolPanel = ({
                 orientation="horizontal"
               />
             </div>
-
-            
-           
           </div>
            {toolPanels[activeTool] || toolPanels[toolNames.ADJUST]}
            </>

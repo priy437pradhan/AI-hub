@@ -10,7 +10,6 @@ import ToolPanel from "./EditingPlatform/components/ToolPanel/ToolPanel";
 import BottomToolbar from "./EditingPlatform/components/ToolPanel/BottomToolbar";
 import ImageCanvas from "./EditingPlatform/components/ImageCanvas/ImageCanvas";
 
-
 import {useAppDispatch,useImageState,useToolsState,useFiltersState,useUIState,useCropState,useTextState,
 useFrameState,useBeautyState,} from '../app/store/hooks/redux';
 
@@ -31,7 +30,6 @@ import {resetFrameSettings,} from '../app/store/slices/frameSlice';
 
 import {resetBeautySettings,} from '../app/store/slices/beautySlice';
 
-
 import { useFlipImage } from "./EditingPlatform/components/ToolPanel/ToolTypes/AdjustToolPanel/hooks/useFlipImage";
 import { useRotateImage } from "./EditingPlatform/components/ToolPanel/ToolTypes/AdjustToolPanel/hooks/useRotateImage";
 import { useFrames } from "./EditingPlatform/components/ToolPanel/hooks/useFrames";
@@ -39,11 +37,9 @@ import { useTextEditor } from "./EditingPlatform/components/ToolPanel/hooks/useT
 import { useTextStyles } from "./EditingPlatform/components/ToolPanel/hooks/useTextStyle";
 import { useCrop } from "./EditingPlatform/components/ToolPanel/ToolTypes/AdjustToolPanel/hooks/useCrop";
 
-
 function EditingPlatformInternal() {
   const dispatch = useAppDispatch();
   
- 
   const imageState = useImageState();
   const toolsState = useToolsState();
   const filtersState = useFiltersState();
@@ -59,16 +55,26 @@ function EditingPlatformInternal() {
   // Refs
   const fileInputRef = useRef(null);
   const imageRef = useRef(null);
-  const containerRef = useRef(null); // ✅ ADD THE MISSING containerRef
+  const containerRef = useRef(null);
 
   // Custom hooks (maintaining existing functionality)
   const { performFlipBase } = useFlipImage({ imageRef });
   const { performRotateBase } = useRotateImage({ imageRef });
- const cropHook = useCrop(
-  imageRef, 
-  (preview) => dispatch(setImagePreview(preview)),
-  containerRef
-);
+  const cropHook = useCrop(
+    imageRef, 
+    (preview) => dispatch(setImagePreview(preview)),
+    containerRef
+  );
+
+  // ✅ CRITICAL FIX: Initialize cropOperations hook properly
+  const cropOperations = useCropOperations(
+    imageRef,
+    (preview) => dispatch(setImagePreview(preview))
+  );
+
+  // Log to verify hook returns the function
+  console.log('cropOperations hook returns:', Object.keys(cropOperations));
+
   const frameHook = useFrames({ imageRef, setImagePreview: (preview) => dispatch(setImagePreview(preview)) });
   const textHook = useTextEditor({ imageRef, setImagePreview: (preview) => dispatch(setImagePreview(preview)) });
   const styleHook = useTextStyles({ imageRef, setImagePreview: (preview) => dispatch(setImagePreview(preview)) });
@@ -85,7 +91,6 @@ function EditingPlatformInternal() {
   // CROP CONTROL FUNCTIONS - Properly using setCropActive
   const activateCropMode = () => {
     dispatch(setCropActive(true));
-    // Also update the crop settings if needed
     dispatch(setCropSettings({ isActive: true }));
   };
 
@@ -105,36 +110,35 @@ function EditingPlatformInternal() {
   };
 
   useEffect(() => {
-  const applyFiltersToImage = async () => {
-    if (!imageRef.current || !imageState.currentBaseImage) return;
+    const applyFiltersToImage = async () => {
+      if (!imageRef.current || !imageState.currentBaseImage) return;
 
-    try {
-      console.log('Applying filters to current base image:', imageState.currentBaseImage.substring(0, 50));
-      
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
-      
-      const processedDataURL = await processImage(
-        imageRef, 
-        canvas, 
-        ctx,
-        imageState.currentBaseImage 
-      );
-      
-      if (processedDataURL && imageRef.current) {
-        console.log('Setting processed image as preview:', processedDataURL.substring(0, 50));
-        imageRef.current.src = processedDataURL;
-        dispatch(setImagePreview(processedDataURL));
+      try {
+        console.log('Applying filters to current base image:', imageState.currentBaseImage.substring(0, 50));
+        
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        
+        const processedDataURL = await processImage(
+          imageRef, 
+          canvas, 
+          ctx,
+          imageState.currentBaseImage 
+        );
+        
+        if (processedDataURL && imageRef.current) {
+          console.log('Setting processed image as preview:', processedDataURL.substring(0, 50));
+          imageRef.current.src = processedDataURL;
+          dispatch(setImagePreview(processedDataURL));
+        }
+      } catch (error) {
+        console.error("Failed to apply filters:", error);
       }
-    } catch (error) {
-      console.error("Failed to apply filters:", error);
-    }
-  };
+    };
 
-  const timeoutId = setTimeout(applyFiltersToImage, 50);
-  return () => clearTimeout(timeoutId);
-}, [processImage, imageState.currentBaseImage, filtersState, dispatch]);
-
+    const timeoutId = setTimeout(applyFiltersToImage, 50);
+    return () => clearTimeout(timeoutId);
+  }, [processImage, imageState.currentBaseImage, filtersState, dispatch]);
 
   // UNMODIFIED: Image operations - flip and rotate work correctly
   const performImageOperation = async (operation, ...args) => {
@@ -163,11 +167,8 @@ function EditingPlatformInternal() {
     performImageOperation(performRotateBase, direction);
   const performFlip = (direction) =>
     performImageOperation(performFlipBase, direction);
-const cropOperations = useCropOperations(
-  imageRef,
-  (preview) => dispatch(setImagePreview(preview))
-);
- const performCrop = async (cropSettings, imageSource) => {
+
+  const performCrop = async (cropSettings, imageSource) => {
     try {
       console.log('=== CROP DEBUG: Starting crop operation ===');
       
@@ -235,7 +236,7 @@ const cropOperations = useCropOperations(
       shadowColor: "#000000",
     });
     textHook.clearAllText();
-    resetCropState(); // Use the proper reset function
+    resetCropState();
   };
 
   const resetToOriginal = () => {
@@ -251,7 +252,6 @@ const cropOperations = useCropOperations(
     const file = event.target.files[0];
     if (!file) return;
 
-    // Store only serializable file metadata instead of the File object
     const fileMetadata = {
       name: file.name,
       size: file.size,
@@ -329,7 +329,6 @@ const cropOperations = useCropOperations(
   // Filter setter helpers
   const createFilterSetter = (category) => (values) => {
     if (typeof values === "function") {
-      // Handle function updates
       const currentCategoryState = filtersState[category];
       const newValues = values(currentCategoryState);
       updateFilterState(category, values);
@@ -338,8 +337,8 @@ const cropOperations = useCropOperations(
     }
   };
 
+  // ✅ FIXED: Properly combine all crop-related props
   const toolPanelProps = {
-    
     activeTool: toolsState.activeTool,
     activeAdjustTool: toolsState.activeTools.adjust,
     setActiveAdjustTool: (tool) =>
@@ -371,7 +370,9 @@ const cropOperations = useCropOperations(
     toggleCrop: () => dispatch(toggleCropMode()),
     resetCropState: () => dispatch(resetCrop()),
     isCropActive: cropState.cropSettings.isActive,
-     basicAdjust: filtersState.basicAdjust,
+    
+    // FILTER PROPS
+    basicAdjust: filtersState.basicAdjust,
     setBasicAdjust: createFilterSetter("basicAdjust"),
     colorAdjust: filtersState.colorAdjust,
     setColorAdjust: createFilterSetter("colorAdjust"),
@@ -388,17 +389,19 @@ const cropOperations = useCropOperations(
     blurAdjust: filtersState.blurAdjust,
     setBlurAdjust: createFilterSetter("blurAdjust"),
 
+    // ✅ CRITICAL FIX: Properly spread cropOperations to include setCropWithAspectRatio
+    ...cropOperations,
+    
+    // Also include cropHook functions
+    ...cropHook,
+    
+    // ✅ EXPLICITLY ENSURE CRITICAL CROP FUNCTIONS ARE AVAILABLE
     setCropWithAspectRatio: cropOperations.setCropWithAspectRatio,
     cancelCrop: () => dispatch(setCropActive(false)),
 
-   ...cropHook,
-  ...cropOperations,
     ...frameHook,
     ...textHook,
     ...styleHook,
-    performFlip,
-    performRotate,
-    performCrop,
   };
 
   return (
@@ -442,10 +445,9 @@ const cropOperations = useCropOperations(
             showBottomAd={true}
             handleUploadClick={handleUploadClick}
             imageRef={imageRef}
-            containerRef={containerRef} // ✅ PASS THE containerRef TO ImageCanvas
+            containerRef={containerRef}
             performCrop={performCrop}
-            // Pass crop state and controls to ImageCanvas
-              cropHook={cropHook}
+            cropHook={cropHook}
             cropSettings={cropState.cropSettings}
             isCropActive={cropState.cropSettings.isActive}
             activateCropMode={activateCropMode}
